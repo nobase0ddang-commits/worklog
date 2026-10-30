@@ -199,6 +199,69 @@ input,textarea,select{font:inherit;color:inherit}
 .s-tw{display:flex;height:100%}
 .s-sheets span.t.un{font-weight:700;color:#c0392b}
 #err{position:fixed;left:0;right:0;top:0;z-index:99;background:#c0392b;color:#fff;font-size:12px;padding:6px 10px;word-break:break-all}
+/* ---------- 채팅 기능(공통) ---------- */
+.bw{display:flex;flex-direction:column;align-items:flex-start;max-width:100%;min-width:0}
+.ch-m .bw{align-items:flex-end}
+.mt{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:none}
+.row .mt{align-items:flex-start}
+.rc{color:#e0a800;font-size:11px;font-weight:700}
+.ch-bub.big{background:none!important;border:0!important;padding:0}
+.ch-bub.big::before,.ch-bub.big::after{display:none}
+.bigemo{font-size:52px;line-height:1.15}
+.bigwrap .bigemo{font-size:44px}
+.s-grid .bigemo{font-size:22px}
+.ch-bub.del,.gone{color:#999;font-style:italic}
+.ch-m .ch-bub.del{background:#f4f4f4!important;border-color:#ddd!important}
+.quote{border-left:3px solid #bbb;padding:2px 8px;margin:0 0 5px;font-size:12px;color:#555;cursor:pointer;max-width:260px}
+.quote b{display:block;font-size:11.5px}
+.quote span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ch-m .quote{border-color:#b89b00}
+.reacts{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.rchip{font-size:12px;background:#fff;border:1px solid #d4d4d8;border-radius:11px;padding:0 7px;line-height:20px;cursor:pointer;user-select:none}
+.rchip.on{border-color:#bd1d63;background:#fdeef4}
+.fcard{display:flex;align-items:center;gap:8px;cursor:pointer;min-width:160px}
+.fcard i{font-style:normal;font-size:24px}
+.fcard b{display:block;font-weight:600;word-break:break-all}
+.fcard small{color:#777;font-size:11px}
+.txt a{color:#2a5bd7;text-decoration:underline;word-break:break-all}
+.ch-unread{display:flex;align-items:center;margin:14px 0;font-size:11.5px;color:#bd1d63}
+.ch-unread::before,.ch-unread::after{content:"";flex:1;height:1px;background:#e3a4bf}
+.ch-unread span{padding:0 8px}
+.c-unread{color:#d6455d}
+.flash{animation:fl 1.5s}
+@keyframes fl{0%,60%{background:rgba(255,214,0,.45)}100%{background:transparent}}
+mark{background:#ffe066;color:inherit;padding:0}
+mark.cur{background:#ff9f1c}
+.replyBar{display:flex;align-items:center;gap:8px;padding:6px 12px;background:#f1f2f6;border-top:1px solid #dcdde3;font-size:12px;color:#444;flex:none}
+.replyBar span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.replyBar button,.pinBar button{width:24px;height:24px;border-radius:50%;color:#777;flex:none}
+.pinBar{display:flex;align-items:center;gap:8px;padding:7px 12px;background:#fff8e1;border-bottom:1px solid #f0e2b0;font-size:12.5px;flex:none}
+.pinBar .pt{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
+.srchBar{display:flex;align-items:center;gap:6px;padding:6px 10px;background:#fff;border-bottom:1px solid #dcdcdc;flex:none}
+.srchBar input{flex:1;height:28px;border:1px solid #ccc;border-radius:4px;padding:0 8px;font-size:13px;min-width:0}
+.srchBar .cnt{font-size:11.5px;color:#777;min-width:34px;text-align:center}
+.srchBar button{width:26px;height:26px;border-radius:4px;background:#f0f0f3;font-size:11px;flex:none}
+#emoPanel{position:fixed;z-index:40;background:#fff;border:1px solid #d6d6dc;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.18);overflow:hidden}
+#emoPanel .et{display:flex;overflow-x:auto;border-bottom:1px solid #eee;background:#fafafa}
+#emoPanel .et span{padding:7px 9px;cursor:pointer;font-size:17px;white-space:nowrap;flex:none}
+#emoPanel .et span:first-child{font-size:12px;font-weight:600;color:#bd1d63;align-self:center}
+#emoPanel .et span.on{background:#fff;box-shadow:inset 0 -2px #bd1d63}
+#emoPanel .eg{display:grid;grid-template-columns:repeat(8,1fr);height:220px;overflow-y:auto;padding:6px}
+#emoPanel .eg.big{grid-template-columns:repeat(5,1fr)}
+#emoPanel .eg span{font-size:22px;text-align:center;padding:4px 0;cursor:pointer;border-radius:6px}
+#emoPanel .eg.big span{font-size:36px}
+#emoPanel .eg span:hover{background:#f2f2f5}
+#emoPanel .eg p{grid-column:1/-1;color:#999;font-size:12px;text-align:center;padding:30px 0}
+#menu{position:fixed;z-index:45;background:#fff;border:1px solid #d6d6dc;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.2);min-width:190px;padding:6px;display:flex;flex-direction:column}
+#menu .mq{display:flex;justify-content:space-between;padding:2px 2px 6px;border-bottom:1px solid #eee;margin-bottom:4px}
+#menu .mq span{font-size:21px;cursor:pointer;padding:2px 4px;border-radius:6px}
+#menu .mq span.on{background:#fdeef4}
+#menu button{text-align:left;padding:8px 10px;border-radius:6px;font-size:13px}
+#menu button:hover{background:#f3f3f6}
+#menu .dg{color:#d33}
+@media (hover:none){#list [data-mid]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}}
+.c-msg .cb .txt{line-height:1.55}
+.c-box .pb{margin-right:2px}
 #toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#333;color:#fff;padding:8px 14px;border-radius:6px;font-size:12px;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none}
 #toast.show{opacity:.95}
 img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;min-height:40px;cursor:zoom-in;background:#ddd}
@@ -253,6 +316,7 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
       <option value="sheet">엑셀 시트형</option>
     </select>
     <label class="chk"><input id="fAuto" type="checkbox"> 창을 벗어나면 자동으로 업무 화면으로 전환</label>
+    <label class="chk"><input id="fRead" type="checkbox"> 읽음 표시 보내기 (상대 화면의 노란 숫자 1이 사라짐, 전송 건수 조금 더 씀)</label>
     <div id="fNtfBox"><label>이 기기로 알림 받기</label>
       <div class="ntf"><span id="fNtfTxt">꺼짐</span><button type="button" id="fNtf">알림 켜기</button></div></div>
     <div class="warn" id="fWarn"></div>
@@ -264,6 +328,9 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
 </div>
 <div id="toast"></div>
 <input type="file" id="picFile" accept="image/*" hidden>
+<input type="file" id="anyFile" hidden>
+<div id="emoPanel" class="hidden"></div>
+<div id="menu" class="hidden"></div>
 <div id="viewer" class="hidden"><img alt=""></div>
 
 <script>
@@ -381,7 +448,8 @@ async function doConnect() {
     const d = await derive(rm.pass);
     const sk = d.topic.slice(2, 10);
     const msgs = load('msgs_' + sk, []);
-    R[rm.id] = {pass: rm.pass, key: d.key, raw: d.raw, topic: d.topic, sk, msgs, seen: new Set(msgs.map(m => m.id)), unread: 0, nn: load('nn_' + sk, [])};
+    R[rm.id] = {pass: rm.pass, key: d.key, raw: d.raw, topic: d.topic, sk, msgs, seen: new Set(msgs.map(m => m.id)), unread: 0, nn: load('nn_' + sk, []),
+      ext: Object.assign({react: {}, del: {}, pin: null, read: {}}, load('ext_' + sk, {})), myRead: load('mr_' + sk, 0), divTs: 0};
   }
   if (!view || (isRoom(view) && !room(view))) view = cfg.rooms[0].id;
   if (isRoom(view)) lastRoom = view;
@@ -405,12 +473,62 @@ async function onEvent(byTopic, e) {
   if (r.seen.has(d.id)) return;
   const o = await unseal(r.key, d.message || '');
   if (!o || r.seen.has(d.id)) return;
-  if (o.sys === 'notify') { r.seen.add(d.id); setNotifyName(id, String(o.n || ''), o.on !== false); return; }
+  if (o.sys) { r.seen.add(d.id); applySys(id, o); return; }
   if (typeof o.t !== 'string') return;
   const m = {id: d.id, n: String(o.n || ''), t: o.t, ts: Number(o.ts) || d.time * 1000};
+  if (o.re && typeof o.re.id === 'string') m.re = {id: o.re.id, n: String(o.re.n || ''), t: String(o.re.t || '').slice(0, 80)};
   if (o.img && d.attachment) Object.assign(m, {t: '사진', img: 1, u: d.attachment.url, x: d.attachment.expires * 1000, mime: o.mime});
+  if (o.file && d.attachment) Object.assign(m, {t: '파일: ' + String(o.fname || ''), file: 1, fname: String(o.fname || '파일'), fsize: Number(o.fsize) || 0, u: d.attachment.url, x: d.attachment.expires * 1000, mime: o.mime});
   add(id, m);
-  if (m.img) fetchPic(id, m);
+  if (m.img || m.file) fetchPic(id, m);
+}
+
+// 방 안의 부가 신호: 공감·삭제·공지·읽음·알림 수신
+function applySys(id, o) {
+  const r = R[id], x = r.ext, n = String(o.n || '');
+  if (o.sys === 'notify') return setNotifyName(id, n, o.on !== false);
+  if (o.sys === 'react' && typeof o.id === 'string') {
+    const k = x.react[o.id] || (x.react[o.id] = {});
+    if (o.e) k[n] = String(o.e).slice(0, 16); else delete k[n];
+  } else if (o.sys === 'del' && typeof o.id === 'string') {
+    const m = r.msgs.find(z => z.id === o.id);
+    if (m && m.n !== n) return;   // 보낸 사람만 지울 수 있다
+    x.del[o.id] = 1;
+  } else if (o.sys === 'pin') {
+    x.pin = o.id ? {id: String(o.id), n, t: String(o.t || '').slice(0, 80)} : null;
+  } else if (o.sys === 'read') {
+    if (n === cfg.me || (x.read[n] || 0) >= o.ts) return;
+    x.read[n] = Number(o.ts) || 0;
+  } else return;
+  save('ext_' + r.sk, x);
+  if (view === id) renderList();
+  paintSide();
+}
+async function sendSys(id, obj) {
+  const r = R[id];
+  const o = Object.assign({n: cfg.me, ts: Date.now()}, obj);
+  applySys(id, o);
+  try {
+    const res = await fetch(`${RELAY}/${r.topic}`, {method: 'POST', body: await seal(r.key, o)});
+    if (res.status === 429) toast('오늘 보낼 수 있는 양을 다 썼어요');
+    refreshQuota();
+  } catch (_) { toast('전송 실패 — 네트워크를 확인하세요'); }
+}
+
+// 읽음 표시: 방을 보고 있을 때 상대 메시지를 어디까지 읽었는지 몇 초 모아서 한 번 보낸다
+const readTimers = {};
+function markRead(id) {
+  // PC는 창이 활성일 때만, 폰(터치)은 화면에 보이면 읽은 것으로
+  const touch = window.matchMedia('(hover: none)').matches;
+  if (!cfg || cfg.readRcpt === false || view !== id || mobileSide || document.hidden || (!touch && !document.hasFocus())) return;
+  const r = R[id];
+  let lastOther = 0;
+  for (let i = r.msgs.length - 1; i >= 0; i--) if (!mine(r.msgs[i])) { lastOther = r.msgs[i].ts; break; }
+  if (lastOther <= r.myRead) return;
+  r.myRead = lastOther;
+  save('mr_' + r.sk, lastOther);
+  clearTimeout(readTimers[id]);
+  readTimers[id] = setTimeout(() => sendSys(id, {sys: 'read', ts: r.myRead}), 4000);
 }
 
 function setNotifyName(id, n, on) {
@@ -454,14 +572,19 @@ async function send(text) {
   if (!text) return false;
   const r = R[rm.id];
   const payload = {n: cfg.me, t: text, ts: Date.now()};
+  if (replyTo) payload.re = replyTo;
   if (te.encode(JSON.stringify(payload)).length > MAX_BYTES) { toast('메시지가 너무 길어요. 나눠서 보내주세요.'); return false; }
   try {
     const res = await fetch(`${RELAY}/${r.topic}`, {method: 'POST', body: await seal(r.key, payload)});
     if (res.status === 429) { toast('오늘 보낼 수 있는 양을 다 썼어요 (하루 250건)'); return false; }
     if (!res.ok) throw new Error(res.status);
     const d = await res.json();
-    add(rm.id, {id: d.id, n: payload.n, t: payload.t, ts: payload.ts});
+    const m = {id: d.id, n: payload.n, t: payload.t, ts: payload.ts};
+    if (payload.re) m.re = payload.re;
+    setReply(null);
+    add(rm.id, m);
     ping(rm.id, text);
+    recentEmoji(text);
     refreshQuota();
     return true;
   } catch (_) { toast('전송 실패 — 네트워크를 확인하세요'); return false; }
@@ -546,29 +669,46 @@ async function shrink(file) {
   throw new Error('too big');
 }
 
+// 사진은 줄여서, 그 밖의 파일은 그대로(2MB까지) 보낸다
 async function sendPic(file) {
   const rm = cur();
-  if (!rm || !file || !/^image\//.test(file.type)) return;
+  if (!rm || !file) return;
   const r = R[rm.id];
-  toast('사진 보내는 중…');
+  const isImg = /^image\/(jpeg|png|gif|webp|heic|heif|bmp)/.test(file.type);
+  if (!isImg && file.size > PIC_MAX) { toast('파일은 2MB까지 보낼 수 있어요'); return; }
+  toast(isImg ? '사진 보내는 중…' : '파일 보내는 중…');
   try {
-    const blob = await shrink(file);
+    const blob = isImg ? await shrink(file) : file;
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const ct = new Uint8Array(await crypto.subtle.encrypt({name: 'AES-GCM', iv}, r.key, await blob.arrayBuffer()));
     const body = new Uint8Array(12 + ct.length); body.set(iv); body.set(ct, 12);
-    const payload = {n: cfg.me, t: '', img: 1, mime: blob.type, ts: Date.now()};
+    const mime = blob.type || 'application/octet-stream';
+    const payload = isImg ? {n: cfg.me, t: '', img: 1, mime, ts: Date.now()}
+                          : {n: cfg.me, t: '', file: 1, fname: file.name.slice(0, 80), fsize: file.size, mime, ts: Date.now()};
     const res = await fetch(`${RELAY}/${r.topic}`, {method: 'PUT', body, headers: {'Filename': 'p.bin', 'X-Message': await seal(r.key, payload)}});
     if (res.status === 429) { toast('오늘 보낼 수 있는 양을 다 썼어요'); return; }
     if (!res.ok) throw new Error(res.status);
     const d = await res.json();
     await idbPut(PICDB, 'p', d.id, blob);
-    picUrls.set(d.id, URL.createObjectURL(blob));
+    if (isImg) picUrls.set(d.id, URL.createObjectURL(blob));
     const at = d.attachment || {};
-    add(rm.id, {id: d.id, n: cfg.me, t: '사진', img: 1, u: at.url, x: (at.expires || 0) * 1000, mime: blob.type, ts: payload.ts});
-    ping(rm.id, '');
+    const m = {id: d.id, n: cfg.me, u: at.url, x: (at.expires || 0) * 1000, mime, ts: payload.ts};
+    Object.assign(m, isImg ? {t: '사진', img: 1} : {t: '파일: ' + payload.fname, file: 1, fname: payload.fname, fsize: payload.fsize});
+    add(rm.id, m);
+    ping(rm.id, isImg ? '' : m.t);
     refreshQuota();
-    toast('사진을 보냈어요');
-  } catch (e) { toast(e.message === 'too big' ? '사진이 너무 커요' : '사진 전송 실패 — 네트워크를 확인하세요'); }
+    toast(isImg ? '사진을 보냈어요' : '파일을 보냈어요');
+  } catch (e) { toast(e.message === 'too big' ? '사진이 너무 커요' : '전송 실패 — 네트워크를 확인하세요'); }
+}
+// 받은 파일 저장(기기에 보관된 것 → 없으면 서버에서 받아 복호화)
+async function saveFile(rid, mid) {
+  const m = R[rid] && R[rid].msgs.find(z => z.id === mid);
+  if (!m) return;
+  let blob = await idbGet(PICDB, 'p', mid);
+  if (!blob && m.u && Date.now() < m.x) { await fetchPic(rid, m); blob = await idbGet(PICDB, 'p', mid); }
+  if (!blob) { toast('파일 보관 기간(3시간)이 지났어요'); return; }
+  const a = Object.assign(document.createElement('a'), {href: URL.createObjectURL(blob), download: m.fname || 'file'});
+  document.body.appendChild(a); a.click(); a.remove();
 }
 
 async function refreshQuota() {
@@ -577,6 +717,210 @@ async function refreshQuota() {
     quota = d.stats.messages_remaining;
     paintStatus();
   } catch (_) {}
+}
+
+// ---------- 메시지 내용 그리기(세 화면 공통) ----------
+const linkify = s => esc(s).replace(/https?:\/\/[^\s<]+/g, u => `<a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a>`);
+const EMO_RE = /\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic}|\p{Emoji_Modifier})*️?/gu;
+// 이모지만 1~3개면 이모티콘처럼 크게
+function isBig(t) {
+  const s = (t || '').replace(/\s/g, '');
+  const em = s.match(EMO_RE);
+  return !!em && em.length <= 3 && em.join('') === s;
+}
+const kb = n => n < 1024 * 1024 ? Math.max(1, Math.round(n / 1024)) + 'KB' : (n / 1048576).toFixed(1) + 'MB';
+const isDel = (rid, m) => !!R[rid].ext.del[m.id];
+function prevOf(rid, m) {
+  if (!m) return '';
+  if (isDel(rid, m)) return '삭제된 메시지입니다.';
+  return m.img ? '사진' : (m.t || '').split('\n')[0];
+}
+// 말풍선 안쪽 내용 → {kind, html}
+function bodyOf(rm, m) {
+  if (isDel(rm.id, m)) return {kind: 'del', html: '<span class="gone">삭제된 메시지입니다.</span>'};
+  let q = '';
+  if (m.re) q = `<div class="quote" data-jump="${esc(m.re.id)}"><b>${esc(m.re.n === cfg.me ? cfg.me : nameOnly(rm.group ? m.re.n : rm.name))}</b><span>${esc(m.re.t)}</span></div>`;
+  if (m.img) return {kind: 'img', html: q + picTag(m.id)};
+  if (m.file) return {kind: 'file', html: q + `<span class="fcard" data-file="${esc(m.id)}"><i>📄</i><span><b>${esc(m.fname)}</b><small>${kb(m.fsize)} · 눌러서 저장</small></span></span>`};
+  if (!q && isBig(m.t)) return {kind: 'big', html: `<span class="bigemo">${esc(m.t)}</span>`};
+  return {kind: 'txt', html: q + `<span class="txt">${linkify(m.t)}</span>`};
+}
+function reactHTML(rm, m) {
+  const k = R[rm.id].ext.react[m.id];
+  if (!k || isDel(rm.id, m)) return '';
+  const g = {};
+  Object.keys(k).forEach(n => { (g[k[n]] = g[k[n]] || []).push(n); });
+  const es = Object.keys(g);
+  if (!es.length) return '';
+  return `<div class="reacts">${es.map(e => `<span class="rchip${g[e].indexOf(cfg.me) >= 0 ? ' on' : ''}" data-react="${esc(m.id)}" data-e="${esc(e)}" title="${esc(g[e].join(', '))}">${e} ${g[e].length}</span>`).join('')}</div>`;
+}
+// 내 메시지를 아직 안 읽은 사람 수(노란 숫자)
+function unreadCount(rm, m) {
+  if (!mine(m) || isDel(rm.id, m)) return 0;
+  const rd = R[rm.id].ext.read;
+  const ppl = members(rm.id);
+  Object.keys(rd).forEach(n => { if (n !== cfg.me && ppl.indexOf(n) < 0) ppl.push(n); });
+  if (!ppl.length) return rm.group ? 0 : 1;
+  return ppl.filter(n => (rd[n] || 0) < m.ts).length;
+}
+
+// ---------- 답장 ----------
+let replyTo = null;
+function setReply(m) {
+  const rm = cur();
+  replyTo = (m && rm) ? {id: m.id, n: m.n, t: prevOf(rm.id, m).slice(0, 80)} : null;
+  const bar = $('#replyBar');
+  if (!bar) return;
+  bar.classList.toggle('hidden', !replyTo);
+  if (replyTo) bar.querySelector('span').textContent = `↳ ${replyTo.n === cfg.me ? '나' : nameOnly(rm.group ? replyTo.n : rm.name)}에게 답장: ${replyTo.t}`;
+}
+
+// ---------- 이모지 ----------
+const EMO = [
+  ['😀', '😀😃😄😁😆😅🤣😂🙂😉😊😇🥰😍🤩😘😗😚😋😛😜🤪😝🤗🤭🤫🤔😐😑😶😏😒🙄😬😌😔😪😴😷🤒🤕🥵🥶😵🤯🤠🥳😎🤓🧐😕😟🙁😮😯😲😳🥺😦😧😨😰😥😢😭😱😖😣😞😓😩😫🥱😤😡😠🤬😈💀💩🤡👻👽🤖'],
+  ['👍', '👋🤚✋🖖👌🤌🤏✌️🤞🫰🤟🤘🤙👈👉👆👇☝️👍👎✊👊🤛🤜👏🙌🫶👐🤲🤝🙏💪🙇‍♀️🙆‍♀️🙅‍♀️🤷‍♀️🙋‍♀️💁‍♀️🏃‍♀️💃🕺👫💏💑'],
+  ['❤️', '❤️🧡💛💚💙💜🖤🤍🤎💔❣️💕💞💓💗💖💘💝💟💋💌'],
+  ['🐶', '🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐸🐵🙈🙉🙊🐔🐧🐦🐤🦄🐝🐛🦋🐌🐞🐢🐍🐙🐬🐳🐟🐠'],
+  ['🍔', '🍎🍊🍋🍌🍉🍇🍓🍒🍑🍍🥝🍅🥑🍞🥐🧀🍗🍖🍔🍟🍕🌭🥪🌮🍜🍝🍣🍱🍙🍚🍛🍤🍦🍰🎂🍩🍪🍫🍬☕🍵🧋🍺🍻🍷🥂🍾'],
+  ['🎉', '⚽🏀⚾🎾🏐🎳⛳🎮🎲🎯🎤🎧🎬🎨🎉🎊🎁🎈✨⭐🌟💫🔥💧🌈☀️🌙⛅☔❄️⛄🌸🌹🌷🌻💐'],
+  ['✈️', '🚗🚕🚌🏎️🚓🚑🚲🛴✈️🚀🚁⛵🚢🏠🏢🏥🏫🗼🗽⛰️🏖️🏝️🎡🎢'],
+  ['💡', '⌚📱💻🖥️📷📺📞⏰💡💰💳💎🔑🔒📌📎✂️📝📚✏️📦🎀✅❌⭕❗❓💯🆗🆕💤💢💥💦💨']
+];
+// 이모티콘 탭: 누르면 바로 크게 보내진다
+const STICKERS = '🥰😘😍🤗🥺😭🤣😂😆😎🤔😴😤😡🤯😱🙄😋🤤🫶👍👏🙏💪🎉💕💯🔥☕🍚🍻😇🙈'.match(EMO_RE);
+function recentEmoji(t) {
+  const em = (t || '').match(EMO_RE);
+  if (!em) return;
+  let rec = load('emoRecent', []);
+  em.forEach(e => { rec = [e].concat(rec.filter(x => x !== e)); });
+  save('emoRecent', rec.slice(0, 32));
+}
+let emoTab = 0;
+function openEmo(btn) {
+  const pn = $('#emoPanel');
+  if (!pn.classList.contains('hidden')) { pn.classList.add('hidden'); return; }
+  const tabs = [['이모티콘', STICKERS], ['🕘', load('emoRecent', [])]].concat(EMO.map(x => [x[0], x[1].match(EMO_RE)]));
+  const paint = () => {
+    const big = emoTab === 0;
+    pn.innerHTML = `<div class="et">${tabs.map((t, i) => `<span data-t="${i}" class="${i === emoTab ? 'on' : ''}">${t[0]}</span>`).join('')}</div>
+      <div class="eg${big ? ' big' : ''}">${(tabs[emoTab][1] || []).map(e => `<span data-e="${e}">${e}</span>`).join('') || '<p>최근 쓴 이모지가 없어요</p>'}</div>`;
+    pn.querySelectorAll('[data-t]').forEach(el => el.addEventListener('click', ev => { ev.stopPropagation(); emoTab = +el.dataset.t; paint(); }));
+    pn.querySelectorAll('[data-e]').forEach(el => el.addEventListener('click', ev => {
+      ev.stopPropagation();
+      const e = el.dataset.e;
+      if (big) { pn.classList.add('hidden'); send(e); return; }
+      const inp = $('#inp');
+      if (!inp) return;
+      if (inp.setRangeText && document.activeElement === inp) inp.setRangeText(e, inp.selectionStart, inp.selectionEnd, 'end');
+      else inp.value += e;
+      recentEmoji(e);
+    }));
+  };
+  paint();
+  pn.classList.remove('hidden');
+  const b = btn.getBoundingClientRect(), w = Math.min(330, window.innerWidth - 16);
+  pn.style.width = w + 'px';
+  pn.style.left = Math.max(8, Math.min(b.left, window.innerWidth - w - 8)) + 'px';
+  pn.style.bottom = Math.max(8, window.innerHeight - b.top + 8) + 'px';
+}
+
+// ---------- 메시지 메뉴(PC 오른쪽 클릭, 폰 길게 누르기) ----------
+const QUICK = ['❤️', '👍', '😂', '😮', '😢', '🙏'];
+function openMenu(mid, x, y) {
+  const rm = cur();
+  if (!rm) return;
+  const m = R[rm.id].msgs.find(z => z.id === mid);
+  if (!m || isDel(rm.id, m)) return;
+  const myE = (R[rm.id].ext.react[mid] || {})[cfg.me];
+  const mn = $('#menu');
+  mn.innerHTML = `<div class="mq">${QUICK.map(e => `<span data-e="${e}" class="${e === myE ? 'on' : ''}">${e}</span>`).join('')}</div>
+    <button data-a="reply">답장</button>${m.img || m.file ? '' : '<button data-a="copy">복사</button>'}
+    <button data-a="pin">공지로 등록</button>${mine(m) ? '<button data-a="del" class="dg">삭제</button>' : ''}`;
+  mn.classList.remove('hidden');
+  const w = mn.offsetWidth, h = mn.offsetHeight;
+  mn.style.left = Math.max(8, Math.min(x, window.innerWidth - w - 8)) + 'px';
+  mn.style.top = Math.max(8, Math.min(y, window.innerHeight - h - 8)) + 'px';
+  mn.querySelectorAll('[data-e]').forEach(el => el.addEventListener('click', () => {
+    mn.classList.add('hidden');
+    sendSys(rm.id, {sys: 'react', id: mid, e: el.dataset.e === myE ? '' : el.dataset.e});
+  }));
+  mn.querySelectorAll('[data-a]').forEach(el => el.addEventListener('click', () => {
+    mn.classList.add('hidden');
+    const a = el.dataset.a;
+    if (a === 'reply') { setReply(m); const i = $('#inp'); if (i) i.focus(); }
+    else if (a === 'copy') { (navigator.clipboard ? navigator.clipboard.writeText(m.t) : Promise.reject()).then(() => toast('복사했어요'), () => toast('복사하지 못했어요')); }
+    else if (a === 'pin') sendSys(rm.id, {sys: 'pin', id: mid, t: prevOf(rm.id, m)});
+    else if (a === 'del' && confirm('이 메시지를 삭제할까요? 상대 화면에서도 지워져요.')) sendSys(rm.id, {sys: 'del', id: mid});
+  }));
+}
+function jumpTo(mid) {
+  const el = document.querySelector(`#list [data-mid="${CSS.escape(mid)}"]`);
+  if (!el) { toast('원래 메시지를 찾을 수 없어요'); return; }
+  el.scrollIntoView({block: 'center', behavior: 'smooth'});
+  el.classList.add('flash');
+  setTimeout(() => el.classList.remove('flash'), 1500);
+}
+
+// ---------- 공지 띠 ----------
+function paintPin() {
+  const bar = $('#pinBar');
+  if (!bar) return;
+  const rm = cur(), p = rm && R[rm.id].ext.pin;
+  bar.classList.toggle('hidden', !p);
+  if (!p) return;
+  bar.innerHTML = `<span class="pi">📢</span><span class="pt"></span><button title="공지 내리기">✕</button>`;
+  bar.querySelector('.pt').textContent = p.t;
+  bar.querySelector('.pt').addEventListener('click', () => jumpTo(p.id));
+  bar.querySelector('button').addEventListener('click', () => { if (confirm('공지를 내릴까요?')) sendSys(rm.id, {sys: 'pin', id: null}); });
+}
+
+// ---------- 대화 검색 ----------
+let searchQ = '', searchIdx = 0, searchJump = false;
+function toggleSearch() {
+  const bar = $('#srchBar');
+  if (!bar) return;
+  const show = bar.classList.contains('hidden');
+  bar.classList.toggle('hidden', !show);
+  if (show) bar.querySelector('input').focus();
+  else { searchQ = ''; bar.querySelector('input').value = ''; renderList(); }
+}
+function paintSearch(jump) {
+  const list = $('#list'), bar = $('#srchBar');
+  if (!list || !bar) return;
+  const marks = [];
+  if (searchQ) {
+    const q = searchQ.toLowerCase();
+    list.querySelectorAll('.txt').forEach(el => {
+      if (el.querySelector('.txt')) return;   // 안쪽 글자만(겹쳐 칠하지 않게)
+      const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      while (w.nextNode()) nodes.push(w.currentNode);
+      nodes.forEach(nd => {
+        const s = nd.nodeValue, low = s.toLowerCase();
+        let i = low.indexOf(q);
+        if (i < 0) return;
+        const frag = document.createDocumentFragment();
+        let p = 0;
+        while (i >= 0) {
+          frag.appendChild(document.createTextNode(s.slice(p, i)));
+          const mk = document.createElement('mark');
+          mk.textContent = s.slice(i, i + q.length);
+          frag.appendChild(mk); marks.push(mk);
+          p = i + q.length; i = low.indexOf(q, p);
+        }
+        frag.appendChild(document.createTextNode(s.slice(p)));
+        nd.parentNode.replaceChild(frag, nd);
+      });
+    });
+  }
+  bar.querySelector('.cnt').textContent = searchQ ? (marks.length ? `${Math.min(searchIdx, marks.length - 1) + 1}/${marks.length}` : '없음') : '';
+  if (marks.length && jump) {
+    searchIdx = ((searchIdx % marks.length) + marks.length) % marks.length;
+    const mk = marks[marks.length - 1 - searchIdx];   // 최근 것부터
+    mk.classList.add('cur');
+    mk.scrollIntoView({block: 'center'});
+    bar.querySelector('.cnt').textContent = `${searchIdx + 1}/${marks.length}`;
+  }
 }
 
 // ---------- 알림(웹 푸시) ----------
@@ -662,10 +1006,18 @@ const FAKE = [
 const fakeOf = k => FAKE.find(f => f.k === k);
 
 function setView(v) {
+  if (isRoom(view) && R[view] && view !== v) R[view].divTs = 0;
   view = v;
-  if (isRoom(v)) { lastRoom = v; if (R[v]) R[v].unread = 0; }
-  else lastDecoy = v;
+  if (isRoom(v) && R[v]) {
+    lastRoom = v;
+    const r = R[v];
+    // "여기까지 읽었습니다" 선: 안 읽은 첫 메시지 앞
+    if (r.unread) { const others = r.msgs.filter(m => !mine(m)); const f = others[others.length - r.unread]; r.divTs = f ? f.ts : 0; }
+    r.unread = 0;
+  } else if (!isRoom(v)) lastDecoy = v;
   mobileSide = false;
+  setReply(null);
+  searchQ = '';
   render();
 }
 function decoy() {
@@ -712,23 +1064,55 @@ function render() {
     const btn = $('#sendBtn');
     if (btn) btn.addEventListener('click', async () => { const t = inp.value; if (await send(t) && inp.value === t) inp.value = ''; inp.focus(); });
     inp.addEventListener('paste', e => {
-      const f = Array.from((e.clipboardData && e.clipboardData.files) || []).find(f => /^image\//.test(f.type));
+      const f = Array.from((e.clipboardData && e.clipboardData.files) || [])[0];
       if (f) { e.preventDefault(); sendPic(f); }
     });
+    // 답장 띠·검색 띠는 입력창/목록 앞에 공통으로 붙인다
+    const host = inp.closest('.ch-comp, .c-comp, .s-fx');
+    if (host && cur()) {
+      host.insertAdjacentHTML('beforebegin', '<div class="replyBar hidden" id="replyBar"><span></span><button type="button">✕</button></div>');
+      $('#replyBar button').addEventListener('click', () => setReply(null));
+      if (replyTo) { const k = replyTo; replyTo = null; setReply(R[view].msgs.find(m => m.id === k.id)); }
+    }
+  }
+  const list = $('#list');
+  if (list && cur()) {
+    list.insertAdjacentHTML('beforebegin', '<div class="pinBar hidden" id="pinBar"></div><div class="srchBar hidden" id="srchBar"><input placeholder="대화 내용 검색"><span class="cnt"></span><button type="button" data-d="1" title="이전">▲</button><button type="button" data-d="-1" title="다음">▼</button><button type="button" data-d="0" title="닫기">✕</button></div>');
+    const sb = $('#srchBar'), si = sb.querySelector('input');
+    const go = d => { searchIdx += d; searchJump = true; renderList(); };
+    si.addEventListener('input', () => { searchQ = si.value.trim(); searchIdx = 0; searchJump = true; renderList(); });
+    si.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(e.shiftKey ? -1 : 1); } });
+    sb.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      const d = +b.dataset.d;
+      if (!d) return toggleSearch();
+      go(d);
+    }));
+    if (searchQ) { sb.classList.remove('hidden'); si.value = searchQ; }
   }
   app.querySelectorAll('.picBtn').forEach(el => el.addEventListener('click', () => { if (cur()) $('#picFile').click(); }));
+  app.querySelectorAll('.fileBtn').forEach(el => el.addEventListener('click', () => { if (cur()) $('#anyFile').click(); }));
+  app.querySelectorAll('.emoBtn').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); if (cur()) openEmo(el); }));
+  app.querySelectorAll('.srchBtn').forEach(el => el.addEventListener('click', () => { if (cur()) toggleSearch(); }));
   renderList(); paintSide(); paintTitle(); setStatus(status);
 }
 function renderList() {
   const list = $('#list'); if (!list) return;
+  const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
+  const keep = list.scrollTop;
   list.innerHTML = SKINS[cfg.skin].list();
   if (SKINS[cfg.skin].after) SKINS[cfg.skin].after(list);
   if (cfg.skin !== 'sheet') {
-    list.scrollTop = list.scrollHeight;
-    // 사진이 늦게 뜨며 높이가 바뀌어도 맨 아래 유지
-    list.querySelectorAll('img.pic').forEach(im => im.addEventListener('load', () => { list.scrollTop = list.scrollHeight; }, {once: true}));
+    // 위로 올려 지난 대화를 보는 중이면 자리를 지키고, 아니면 맨 아래로
+    if (atBottom) {
+      list.scrollTop = list.scrollHeight;
+      list.querySelectorAll('img.pic').forEach(im => im.addEventListener('load', () => { list.scrollTop = list.scrollHeight; }, {once: true}));
+    } else list.scrollTop = keep;
   }
   fillPics();
+  paintPin();
+  if (searchQ || searchJump) paintSearch(searchJump);
+  searchJump = false;
+  if (cur()) markRead(view);
 }
 function paintSide() { if (cfg && SKINS[cfg.skin].side) SKINS[cfg.skin].side(); }
 function paintTitle() {
@@ -870,13 +1254,13 @@ const SKINS = {
         </section>
         <section class="ch-chat">
           <header class="ch-head">
-            <div class="r1"><span class="back">${IC.left}</span><span id="hdAv" style="display:contents">${hd}</span><span class="hi">${IC.grid}</span><span class="hi">${IC.search}</span></div>
+            <div class="r1"><span class="back">${IC.left}</span><span id="hdAv" style="display:contents">${hd}</span><span class="hi">${IC.grid}</span><span class="hi srchBtn" title="대화 검색">${IC.search}</span></div>
             <div class="r2"><span id="hdR2" style="display:contents">${r2}</span><i class="sp"></i><span class="cb">${IC.bell}</span><span class="cb">${IC.kebab}</span></div>
           </header>
           <div class="ch-msgs" id="list"></div>
           <div class="ch-comp"><div class="ch-grip"></div>
             <textarea id="inp" placeholder="채팅 입력 [줄 바꿈 : Ctrl + Enter]"></textarea>
-            <div class="ch-bar"><span class="b">${IC.emo}</span><span class="b">${IC.smile}</span><span class="b">${IC.tt}</span><span class="b picBtn" title="사진">${IC.clip}</span>
+            <div class="ch-bar"><span class="b emoBtn" title="이모티콘">${IC.emo}</span><span class="b emoBtn" title="이모지">${IC.smile}</span><span class="b">${IC.tt}</span><span class="b fileBtn" title="파일">${IC.clip}</span>
               <span class="b picBtn" title="사진">${IC.folder}</span><span class="b">${IC.crop}</span><span class="b">${IC.down}</span><i class="sp"></i><button id="sendBtn">전송</button></div>
           </div>
         </section></div>`;
@@ -899,7 +1283,7 @@ const SKINS = {
         const r = R[rm.id], lr = last(r.msgs);
         return {v: rm.id, f: lr ? (mine(lr) ? '나' : nameOnly(who(rm, lr))) : nameOnly(rm.name), w: lr ? listTime(lr.ts) : '',
           l2: rm.group ? `<span class="ps">${IC.person}</span>${members(rm.id).length + 1}&nbsp; ${esc(rm.name)}` : esc(rm.name),
-          l3: lr ? lr.t.split('\n')[0] : '', badge: r.unread, av: roomAv(rm)};
+          l3: prevOf(rm.id, lr), badge: r.unread, av: roomAv(rm)};
       }).concat(['team', 'notice', 'lab'].map(k => {
         const c = CHC[k], ln = last(c.lines);
         return {v: k, f: ln[0], w: dayStr(c.ago) + ' ' + ln[1], l3: ln[2],
@@ -913,25 +1297,35 @@ const SKINS = {
     },
     list() {
       const rm = cur();
-      let src;
+      let src, cell, meta;
       if (!rm) {
         src = CHC[view].lines.map(l => ({me: l[0] === '나', n: l[0], t: l[1], x: l[2], day: '오늘'}));
+        cell = r => `<div class="bw"><div class="ch-bub txt">${esc(r.x)}</div></div>`;
+        meta = r => `<span class="mt"><time>${r.t}</time></span>`;
       } else {
-        const ms = R[rm.id].msgs;
+        const R0 = R[rm.id], ms = R0.msgs;
         if (!ms.length) return `<div class="ch-empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
-        src = ms.map(m => ({me: mine(m), n: nameOnly(who(rm, m)), t: chatTime(m.ts), x: m.t, day: chatDay(m.ts), pic: m.img ? m.id : null}));
+        let divDone = false;
+        src = ms.map(m => {
+          const div = !divDone && R0.divTs && !mine(m) && m.ts >= R0.divTs;
+          if (div) divDone = true;
+          return {m, id: m.id, me: mine(m), n: nameOnly(who(rm, m)), t: chatTime(m.ts), day: chatDay(m.ts), div};
+        });
+        cell = r => { const b = bodyOf(rm, r.m); return `<div class="bw"><div class="ch-bub ${b.kind}">${b.html}</div>${reactHTML(rm, r.m)}</div>`; };
+        meta = r => { const c = unreadCount(rm, r.m); return `<span class="mt">${c ? `<b class="rc">${c}</b>` : ''}<time>${r.t}</time></span>`; };
       }
-      const bub = r => r.pic ? `<div class="ch-bub im">${picTag(r.pic)}</div>` : `<div class="ch-bub txt">${esc(r.x)}</div>`;
+      const mid = r => r.id ? ` data-mid="${esc(r.id)}"` : '';
       let out = '', day = '', i = 0;
       while (i < src.length) {
         const m = src[i];
         if (m.day !== day) { day = m.day; out += `<div class="ch-day"><span>${esc(day)}</span></div>`; }
-        let j = i;
-        while (j < src.length && src[j].me === m.me && src[j].n === m.n && src[j].day === day) j++;
+        if (m.div) out += '<div class="ch-unread"><span>여기까지 읽었습니다</span></div>';
+        let j = i + 1;
+        while (j < src.length && src[j].me === m.me && src[j].n === m.n && src[j].day === day && !src[j].div) j++;
         const run = src.slice(i, j);
-        if (m.me) out += run.map((r, k) => `<div class="ch-m${k ? '' : ' first'}"><time>${r.t}</time>${bub(r)}</div>`).join('');
-        else out += `<div class="ch-o">${avOf(m.n)}<div><div class="nm">${esc(m.n)}</div>
-          ${run.map(r => `<div class="row">${bub(r)}<time>${r.t}</time></div>`).join('')}</div></div>`;
+        if (m.me) out += run.map((r, k) => `<div class="ch-m${k ? '' : ' first'}"${mid(r)}>${meta(r)}${cell(r)}</div>`).join('');
+        else out += `<div class="ch-o">${avOf(m.n)}<div class="oc"><div class="nm">${esc(m.n)}</div>
+          ${run.map(r => `<div class="row"${mid(r)}>${cell(r)}${meta(r)}</div>`).join('')}</div></div>`;
         i = j;
       }
       return out;
@@ -948,9 +1342,9 @@ const SKINS = {
           <nav class="c-nav" id="nav"></nav>
         </aside>
         <section class="c-main">
-          <header class="c-head"><button class="ic back">‹</button><b>${esc(title)}</b><small>${rm ? '<span id="qt"></span>' : ''}</small></header>
+          <header class="c-head"><button class="ic back">‹</button><b>${esc(title)}</b><small>${rm ? '<span id="qt"></span>' : ''}</small><i style="flex:1"></i><button class="ic srchBtn" title="대화 검색">🔍</button></header>
           <div class="c-list" id="list"></div>
-          <div class="c-comp"><div class="c-box"><button class="picBtn pb" title="사진">＋</button><textarea id="inp" placeholder="${esc(title)}에 메시지 보내기"></textarea><button id="sendBtn">➤</button></div></div>
+          <div class="c-comp"><div class="c-box"><button class="fileBtn pb" title="파일·사진">＋</button><button class="emoBtn pb" title="이모지">☺</button><textarea id="inp" placeholder="${esc(title)}에 메시지 보내기"></textarea><button id="sendBtn">➤</button></div></div>
         </section></div>`;
     },
     side() {
@@ -966,17 +1360,19 @@ const SKINS = {
       nav.querySelectorAll('[data-r]').forEach(el => el.addEventListener('click', () => setView(el.dataset.r)));
     },
     list() {
-      const item = (n, t, x, cont) => `<div class="c-msg${cont ? ' cont' : ''}"><div class="av" style="background:${colorOf(n)}">${esc(initial(n))}</div>
-        <div class="bd">${cont ? '' : `<div class="hd"><b>${esc(n)}</b><time>${t}</time></div>`}<div class="txt">${x}</div></div></div>`;
+      const item = (n, t, x, cont, id) => `<div class="c-msg${cont ? ' cont' : ''}"${id ? ` data-mid="${esc(id)}"` : ''}><div class="av" style="background:${colorOf(n)}">${esc(initial(n))}</div>
+        <div class="bd">${cont ? '' : `<div class="hd"><b>${esc(n)}</b><time>${t}</time></div>`}<div class="cb">${x}</div></div></div>`;
       const rm = cur();
-      if (!rm) return fakeOf(view).lines.map(l => item(l[0] === '나' ? cfg.me : l[0], l[1], esc(l[2]))).join('');
+      if (!rm) return fakeOf(view).lines.map(l => item(l[0] === '나' ? cfg.me : l[0], l[1], `<span class="txt">${esc(l[2])}</span>`)).join('');
       const ms = R[rm.id].msgs;
       if (!ms.length) return `<div class="empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
       let out = '', day = '', prev = null;
       for (const m of ms) {
         if (ymd(m.ts) !== day) { day = ymd(m.ts); out += `<div class="c-day">${dayLabel(m.ts)}</div>`; prev = null; }
         const cont = prev && prev.n === m.n && m.ts - prev.ts < 5 * 60e3;
-        out += item(who(rm, m), hm(m.ts), m.img ? picTag(m.id) : esc(m.t), cont);
+        if (R[rm.id].divTs && !mine(m) && m.ts >= R[rm.id].divTs && !out.includes('c-unread')) out += '<div class="c-day c-unread">여기까지 읽었습니다</div>';
+        const b = bodyOf(rm, m), c = unreadCount(rm, m);
+        out += item(who(rm, m), hm(m.ts) + (c ? ` <b class="rc">${c}</b>` : ''), `<div class="${b.kind === 'big' ? 'bigwrap' : ''}">${b.html}</div>${reactHTML(rm, m)}`, cont, m.id);
         prev = m;
       }
       return out;
@@ -1015,8 +1411,12 @@ const SKINS = {
       if (rm) {
         const ms = R[rm.id].msgs;
         rows.push(`<tr class="hd"><th>${r++}</th><td>No</td><td>일자</td><td>시간</td><td>담당</td><td>내용</td><td>비고</td></tr>`);
-        ms.forEach((m, i) => rows.push(`<tr class="${mine(m) ? 'me' : ''}"><th>${r++}</th><td class="ce">${i + 1}</td><td class="ce">${ymd(m.ts)}</td><td class="ce">${hm(m.ts)}</td>
-          <td class="d">${esc(who(rm, m))}</td><td class="e">${m.img ? picTag(m.id) : esc(m.t)}</td><td></td></tr>`));
+        ms.forEach((m, i) => {
+          const b = bodyOf(rm, m), c = unreadCount(rm, m), k = R[rm.id].ext.react[m.id];
+          const note = (c ? `미확인 ${c}` : '') + (k && Object.keys(k).length ? ' ' + Object.keys(k).map(n => k[n]).join('') : '');
+          rows.push(`<tr class="${mine(m) ? 'me' : ''}" data-mid="${esc(m.id)}"><th>${r++}</th><td class="ce">${i + 1}</td><td class="ce">${ymd(m.ts)}</td><td class="ce">${hm(m.ts)}</td>
+          <td class="d">${esc(who(rm, m))}</td><td class="e">${b.html}</td><td>${esc(note)}</td></tr>`);
+        });
         const sel = r;
         rows.push(`<tr><th>${r++}</th><td class="ce">${ms.length + 1}</td><td></td><td></td><td></td><td class="sel"></td><td></td></tr>`);
         this.selRow = sel;
@@ -1072,6 +1472,7 @@ function openSetup() {
   (cfg ? cfg.rooms : [{}]).forEach(rm => box.appendChild(roomRow(rm)));
   $('#fSkin').value = cfg ? cfg.skin : 'msg';
   $('#fAuto').checked = !!(cfg && cfg.autoHide);
+  $('#fRead').checked = !cfg || cfg.readRcpt !== false;
   $('#fCancel').classList.toggle('hidden', !cfg);
   $('#fClear').classList.toggle('hidden', !cfg);
   $('#fNtfBox').classList.toggle('hidden', !cfg);
@@ -1101,7 +1502,7 @@ $('#fSave').addEventListener('click', async () => {
   if (new Set(rooms.map(r => r.pass)).size !== rooms.length) return warn('방마다 암호를 다르게 해주세요.');
   rooms.forEach(r => { if (!r.name) r.name = r.group ? '단톡방' : '상대'; });
   const old = cfg;
-  cfg = {me, skin: $('#fSkin').value, autoHide: $('#fAuto').checked, notify: !!(old && old.notify), rooms};
+  cfg = {me, skin: $('#fSkin').value, autoHide: $('#fAuto').checked, readRcpt: $('#fRead').checked, notify: !!(old && old.notify), rooms};
   save('cfg', cfg);
   $('#fSave').disabled = true;
   try { await connectAll(); } finally { $('#fSave').disabled = false; }
@@ -1110,29 +1511,61 @@ $('#fSave').addEventListener('click', async () => {
 });
 
 // ---------- 키·창 이벤트 ----------
+const closePops = () => { $('#emoPanel').classList.add('hidden'); $('#menu').classList.add('hidden'); };
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && cfg && $('#setup').classList.contains('hidden')) {
     e.preventDefault();
+    closePops();
     if (!$('#viewer').classList.contains('hidden')) { $('#viewer').classList.add('hidden'); decoy(); return; }
     toggleDecoy();
   }
 });
 $('#picFile').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) sendPic(f); });
+$('#anyFile').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) sendPic(f); });
 $('#viewer').addEventListener('click', () => $('#viewer').classList.add('hidden'));
 document.addEventListener('click', e => {
-  const im = e.target.closest && e.target.closest('img.pic[src]');
-  if (im) { $('#viewer img').src = im.src; $('#viewer').classList.remove('hidden'); }
+  const t = e.target;
+  if (!t.closest) return;
+  if (!t.closest('#emoPanel') && !t.closest('#menu')) closePops();
+  const im = t.closest('img.pic[src]');
+  if (im) { $('#viewer img').src = im.src; $('#viewer').classList.remove('hidden'); return; }
+  const rc = t.closest('[data-react]');
+  if (rc && cur()) {   // 공감 칩: 누르면 같은 공감 넣기/빼기
+    const my = (R[view].ext.react[rc.dataset.react] || {})[cfg.me];
+    sendSys(view, {sys: 'react', id: rc.dataset.react, e: my === rc.dataset.e ? '' : rc.dataset.e});
+    return;
+  }
+  const q = t.closest('[data-jump]');
+  if (q) { jumpTo(q.dataset.jump); return; }
+  const fc = t.closest('[data-file]');
+  if (fc && cur()) saveFile(view, fc.dataset.file);
 });
+// 메시지 메뉴: PC는 오른쪽 클릭, 폰은 길게 누르기
+document.addEventListener('contextmenu', e => {
+  const el = e.target.closest && e.target.closest('#list [data-mid]');
+  if (!el || !cur() || (e.target.closest('a'))) return;
+  e.preventDefault();
+  openMenu(el.dataset.mid, e.clientX, e.clientY);
+});
+let pressT = null;
+document.addEventListener('touchstart', e => {
+  const el = e.target.closest && e.target.closest('#list [data-mid]');
+  if (!el || !cur()) return;
+  const tc = e.touches[0];
+  pressT = setTimeout(() => { pressT = null; openMenu(el.dataset.mid, tc.clientX, tc.clientY); }, 500);
+}, {passive: true});
+['touchend', 'touchmove', 'touchcancel'].forEach(n => document.addEventListener(n, () => { if (pressT) { clearTimeout(pressT); pressT = null; } }, {passive: true}));
 document.addEventListener('dragover', e => { if (cur()) e.preventDefault(); });
 document.addEventListener('drop', e => {
   if (!cur()) return;
   e.preventDefault();
-  const f = Array.from((e.dataTransfer && e.dataTransfer.files) || []).find(f => /^image\//.test(f.type));
+  const f = Array.from((e.dataTransfer && e.dataTransfer.files) || [])[0];
   if (f) sendPic(f);
 });
 window.addEventListener('blur', () => { if (cfg && cfg.autoHide && cur()) decoy(); });
+window.addEventListener('focus', () => { if (cur()) markRead(view); });
 document.addEventListener('visibilitychange', () => {
-  if (cfg && !document.hidden && cur() && !mobileSide) { R[view].unread = 0; paintSide(); paintTitle(); }
+  if (cfg && !document.hidden && cur() && !mobileSide) { R[view].unread = 0; paintSide(); paintTitle(); markRead(view); }
 });
 
 (async () => {
