@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#bd1d63">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="메신저">
 <title>CH Messenger</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -168,7 +173,7 @@ input,textarea,select{font:inherit;color:inherit}
 .s-sheets .st{padding:0 12px;color:#666}
 
 /* ---------- 설정 ---------- */
-.modal{position:fixed;inset:0;background:rgba(20,24,32,.45);display:grid;place-items:center;padding:16px;z-index:10}
+.modal{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(20,24,32,.45);display:grid;place-items:center;padding:16px;z-index:10}
 .card{width:min(380px,100%);background:#fff;border-radius:10px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.2)}
 .card h2{font-size:16px;margin-bottom:4px}
 .card p.d{color:#777;font-size:12px;line-height:1.6;margin-bottom:14px}
@@ -181,6 +186,19 @@ input,textarea,select{font:inherit;color:inherit}
 .card .warn{color:#c0392b;font-size:12px;margin-top:8px;min-height:16px}
 .card .tip{color:#888;font-size:11px;margin-top:12px;line-height:1.6}
 .card .lnk{color:#c0392b;font-size:12px;text-decoration:underline;margin-top:10px}
+.card{width:min(440px,100%);max-height:calc(100vh - 32px);overflow:auto}
+.rm{border:1px solid #e3e5e9;border-radius:8px;padding:8px;margin-bottom:8px;background:#fafbfc}
+.rm1{display:flex;gap:6px;margin-bottom:6px}
+.card .rm select{width:76px;flex:none}
+.card .rm .rn{flex:1;min-width:0}
+.rm .rx{width:36px;flex:none;border-radius:6px;background:#eef0f3;color:#888}
+.card .add{width:100%;height:34px;border:1px dashed #b9bec7;border-radius:6px;color:#3b6fd4;font-size:13px}
+.ntf{display:flex;align-items:center;gap:8px;font-size:12px;color:#555;line-height:1.5}
+.ntf span{flex:1}
+.ntf button{flex:none;height:32px;padding:0 12px;border-radius:6px;background:#bd1d63;color:#fff;font-weight:600}
+.s-tw{display:flex;height:100%}
+.s-sheets span.t.un{font-weight:700;color:#c0392b}
+#err{position:fixed;left:0;right:0;top:0;z-index:99;background:#c0392b;color:#fff;font-size:12px;padding:6px 10px;word-break:break-all}
 #toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#333;color:#fff;padding:8px 14px;border-radius:6px;font-size:12px;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none}
 #toast.show{opacity:.95}
 img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;min-height:40px;cursor:zoom-in;background:#ddd}
@@ -190,7 +208,7 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
 .c-box .pb{width:30px;height:30px;border-radius:6px;background:#eceef1;color:#555;font-size:16px}
 .s-tabs .picBtn{cursor:pointer}
 .picBtn{cursor:pointer}
-#viewer{position:fixed;inset:0;background:rgba(0,0,0,.85);display:grid;place-items:center;z-index:30;cursor:zoom-out;padding:12px}
+#viewer{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.85);display:grid;place-items:center;z-index:30;cursor:zoom-out;padding:12px}
 #viewer img{max-width:100%;max-height:100%;object-fit:contain}
 
 @media (max-width:860px){
@@ -222,13 +240,12 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
 <div id="setup" class="modal hidden">
   <div class="card">
     <h2>환경 설정</h2>
-    <p class="d">같은 방 암호를 넣은 사람끼리 연결됩니다. 대화는 이 암호로 암호화돼서 오가요.</p>
-    <label for="fPass">방 암호 (8자 이상 권장)</label>
-    <input id="fPass" type="password" autocomplete="off">
-    <label for="fMe">내 이름 (상대와 다르게)</label>
+    <p class="d">방마다 암호를 정해요. 같은 암호를 넣은 사람끼리 그 방에서 연결되고, 대화는 그 암호로 암호화돼요.</p>
+    <label for="fMe">내 이름 (같은 방 사람들과 겹치지 않게)</label>
     <input id="fMe" type="text" maxlength="20">
-    <label for="fPeer">상대 표시 이름 (내 화면에서만 보임)</label>
-    <input id="fPeer" type="text" maxlength="20" placeholder="예: 품질팀 김대리">
+    <label>대화방</label>
+    <div id="fRooms"></div>
+    <button class="add" id="fAdd" type="button">+ 대화방 추가</button>
     <label for="fSkin">화면 스타일</label>
     <select id="fSkin">
       <option value="msg">사내 메신저형</option>
@@ -236,11 +253,13 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
       <option value="sheet">엑셀 시트형</option>
     </select>
     <label class="chk"><input id="fAuto" type="checkbox"> 창을 벗어나면 자동으로 업무 화면으로 전환</label>
+    <div id="fNtfBox"><label>이 기기로 알림 받기</label>
+      <div class="ntf"><span id="fNtfTxt">꺼짐</span><button type="button" id="fNtf">알림 켜기</button></div></div>
     <div class="warn" id="fWarn"></div>
-    <div class="btns"><button id="fCancel">취소</button><button id="fSave" class="pri">저장</button></div>
-    <button class="lnk" id="fClear">이 기기의 대화 기록 지우기</button>
+    <div class="btns"><button id="fCancel" type="button">취소</button><button id="fSave" class="pri" type="button">저장</button></div>
+    <button class="lnk" id="fClear" type="button">이 기기의 대화 기록 지우기</button>
     <p class="tip">오늘 남은 전송: <span id="qtm">-</span>건</p>
-    <p class="tip">Esc 키: 업무 화면 ↔ 대화 전환 · Enter 전송, Shift+Enter 줄바꿈<br>서버에는 최근 12시간치만 남고, 기록은 각자 기기에 저장돼요.</p>
+    <p class="tip">1:1 방 이름은 내 화면에서만 보이는 상대 표시 이름이에요. 단톡방에서는 각자의 '내 이름'으로 보여요.<br>Esc 키: 업무 화면 ↔ 대화 전환 · Enter 전송, Ctrl+Enter 줄바꿈<br>서버에는 글 12시간·사진 3시간만 남고, 기록은 각자 기기에 저장돼요.</p>
   </div>
 </div>
 <div id="toast"></div>
@@ -248,21 +267,36 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
 <div id="viewer" class="hidden"><img alt=""></div>
 
 <script>
+function showErr(msg) {
+  var el = document.getElementById('err');
+  if (!el) { el = document.createElement('div'); el.id = 'err'; el.onclick = function () { el.remove(); }; document.body.appendChild(el); }
+  el.textContent = '오류: ' + msg + ' (' + (navigator.userAgent.match(/OS [\d_]+|Chrome\/\d+|Version\/[\d.]+/g) || []).join(' ') + ')';
+}
+window.addEventListener('error', function (e) { showErr(e.message || '알 수 없는 오류'); });
+window.addEventListener('unhandledrejection', function (e) { showErr(String((e.reason && e.reason.message) || e.reason)); });
+</script>
+<script>
 'use strict';
 const RELAY = 'https://ntfy.sh';
+const VAPID = 'BEMjM0sNxh41x0a6Lz3YaqkJ7AUhZefxsOQgw-at69i0fM1CybVBcj7-QQXf4N_tPCgFnOXdRbQ5jrSrr9Yg9Lc';   // ntfy.sh 웹 푸시 공개키
 const MAX_BYTES = 2800;   // 암호화 후 ntfy 본문 한도(4096바이트) 안에 들도록
 
 // ?p=xx 로 같은 브라우저에서 프로필을 나눠 쓸 수 있다(테스트용)
 const P = new URLSearchParams(location.search).get('p') || '';
 const K = k => 'wt' + P + '_' + k;
-const load = (k, d) => { try { const v = localStorage.getItem(K(k)); return v ? JSON.parse(v) : d; } catch { return d; } };
-const save = (k, v) => { try { localStorage.setItem(K(k), JSON.stringify(v)); } catch {} };
+const load = (k, d) => { try { const v = localStorage.getItem(K(k)); return v ? JSON.parse(v) : d; } catch (_) { return d; } };
+const save = (k, v) => { try { localStorage.setItem(K(k), JSON.stringify(v)); } catch (_) {} };
 
+// 설정: {me, skin, autoHide, notify, rooms: [{id, name, pass, group}]}
 let cfg = load('cfg', null);
-let msgs = [], seen = new Set();
-let view = 'real', lastDecoy = null, unread = 0, mobileSide = false;
+if (cfg && !cfg.rooms) {   // 방 하나짜리 옛 설정 이어받기
+  cfg = {me: cfg.me, skin: cfg.skin || 'msg', autoHide: !!cfg.autoHide, rooms: [{id: 'r_main', name: cfg.peer || '상대', pass: cfg.pass, group: false}]};
+  save('cfg', cfg);
+}
+const R = {};   // 방 id → {pass, key, raw, topic, sk, msgs, seen, unread, nn(알림 받는 이름들)}
+let es = null, status = '', quota = null;
+let view = null, lastRoom = null, lastDecoy = null, mobileSide = false;
 let chTab = 'chat', selNote = 0;   // 메신저형 왼쪽 목록: 대화 / 쪽지
-let key = null, topic = null, es = null, status = '', quota = null;
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -273,148 +307,235 @@ const dayLabel = ts => { const d = new Date(ts); return `${d.getFullYear()}년 $
 const COLORS = ['#5b7fd6', '#d6875b', '#4ea786', '#9b6bd1', '#d65b7f', '#5ba8d6'];
 const colorOf = s => COLORS[[...s].reduce((a, c) => a + c.charCodeAt(0), 0) % COLORS.length];
 const initial = s => (s.replace(/^.*\s/, '') || s).slice(0, 1);
+const last = a => a[a.length - 1];
 const mine = m => m.n === cfg.me;
+const isRoom = v => !!v && v.indexOf('r_') === 0;
+const room = id => cfg.rooms.find(r => r.id === id);
+const cur = () => (isRoom(view) && R[view]) ? room(view) : null;
+const totalUnread = () => Object.keys(R).reduce((a, id) => a + R[id].unread, 0);
+const newId = () => 'r_' + Math.random().toString(36).slice(2, 9);
+// 보낸 사람 표시: 단톡은 각자 이름, 1:1은 내가 정한 상대 표시 이름
+const who = (rm, m) => mine(m) ? cfg.me : (rm.group ? (m.n || '?') : rm.name);
+// 단톡 참여자(나 제외, 최근 말한 순)
+function members(id) {
+  const out = [];
+  const ms = R[id] ? R[id].msgs : [];
+  for (let i = ms.length - 1; i >= 0; i--) if (!mine(ms[i]) && ms[i].n && out.indexOf(ms[i].n) < 0) out.push(ms[i].n);
+  return out;
+}
 
 function toast(t) {
   const el = $('#toast'); el.textContent = t; el.classList.add('show');
-  clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove('show'), 2500);
+  clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
 // ---------- 암호화 ----------
 const te = new TextEncoder(), td = new TextDecoder();
-const b64 = u8 => btoa(String.fromCharCode(...u8));
+const b64 = u8 => btoa(String.fromCharCode.apply(null, u8));
 const ub64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const ub64u = s => ub64(s.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - s.length % 4) % 4));
 
 async function derive(pass) {
   const base = await crypto.subtle.importKey('raw', te.encode(pass), 'PBKDF2', false, ['deriveBits']);
   const bits = new Uint8Array(await crypto.subtle.deriveBits(
     {name: 'PBKDF2', salt: te.encode('worktalk-v1'), iterations: 200000, hash: 'SHA-256'}, base, 512));
-  key = await crypto.subtle.importKey('raw', bits.slice(0, 32), 'AES-GCM', false, ['encrypt', 'decrypt']);
-  topic = 'wt' + [...bits.slice(32, 48)].map(b => b.toString(16).padStart(2, '0')).join('');
+  const raw = bits.slice(0, 32);
+  return {
+    raw,
+    key: await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']),
+    topic: 'wt' + Array.from(bits.slice(32, 48), b => b.toString(16).padStart(2, '0')).join('')
+  };
 }
-async function seal(obj) {
+async function seal(key, obj) {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const ct = new Uint8Array(await crypto.subtle.encrypt({name: 'AES-GCM', iv}, key, te.encode(JSON.stringify(obj))));
   return b64(iv) + '.' + b64(ct);
 }
-async function unseal(s) {
+async function unseal(key, s) {
   try {
-    const [a, b] = s.split('.');
-    const pt = await crypto.subtle.decrypt({name: 'AES-GCM', iv: ub64(a)}, key, ub64(b));
+    const parts = s.split('.');
+    const pt = await crypto.subtle.decrypt({name: 'AES-GCM', iv: ub64(parts[0])}, key, ub64(parts[1]));
     return JSON.parse(td.decode(pt));
-  } catch { return null; }
+  } catch (_) { return null; }
+}
+// 사람별 알림함 토픽: 방 토픽 + 이름의 해시 (방 암호를 아는 사람만 계산 가능)
+async function inboxOf(id, name) {
+  const h = new Uint8Array(await crypto.subtle.digest('SHA-256', te.encode(R[id].topic + '|inbox|' + name)));
+  return 'wn' + Array.from(h.slice(0, 16), b => b.toString(16).padStart(2, '0')).join('');
 }
 
 // ---------- 송수신 ----------
-function setStatus(s) { status = s; document.querySelectorAll('.dot').forEach(d => d.className = 'dot ' + s); paintStatus(); }
+function setStatus(s) { status = s; document.querySelectorAll('.dot').forEach(d => { d.className = 'dot ' + s; }); paintStatus(); }
 
-function connect() {
-  if (es) es.close();
-  msgs = load('msgs_' + topic.slice(2, 10), []);
-  seen = new Set(msgs.map(m => m.id));
+// 설정 저장이 연결 중에 겹쳐도 꼬이지 않게 한 번에 하나씩
+let connecting = Promise.resolve();
+function connectAll() {
+  connecting = connecting.then(doConnect, doConnect);
+  return connecting;
+}
+async function doConnect() {
+  if (es) { es.close(); es = null; }
+  for (const id of Object.keys(R)) if (!room(id) || R[id].pass !== room(id).pass) delete R[id];
+  for (const rm of cfg.rooms) {
+    if (R[rm.id]) continue;
+    const d = await derive(rm.pass);
+    const sk = d.topic.slice(2, 10);
+    const msgs = load('msgs_' + sk, []);
+    R[rm.id] = {pass: rm.pass, key: d.key, raw: d.raw, topic: d.topic, sk, msgs, seen: new Set(msgs.map(m => m.id)), unread: 0, nn: load('nn_' + sk, [])};
+  }
+  if (!view || (isRoom(view) && !room(view))) view = cfg.rooms[0].id;
+  if (isRoom(view)) lastRoom = view;
+  const byTopic = {};
+  cfg.rooms.forEach(rm => { byTopic[R[rm.id].topic] = rm.id; });
   setStatus('');
-  es = new EventSource(`${RELAY}/${topic}/sse?since=12h`);
+  es = new EventSource(`${RELAY}/${Object.keys(byTopic).join(',')}/sse?since=12h`);
   es.onopen = () => setStatus('on');
   es.onerror = () => setStatus('off');
-  es.onmessage = async e => {
-    let d; try { d = JSON.parse(e.data); } catch { return; }
-    if (d.event !== 'message' || seen.has(d.id)) return;
-    const o = await unseal(d.message || '');
-    if (!o || typeof o.t !== 'string') return;
-    const m = {id: d.id, n: String(o.n || ''), t: o.t, ts: Number(o.ts) || d.time * 1000};
-    if (o.img && d.attachment) Object.assign(m, {t: '사진', img: 1, u: d.attachment.url, x: d.attachment.expires * 1000, mime: o.mime});
-    add(m);
-    if (m.img) fetchPic(m);
-  };
+  es.onmessage = e => onEvent(byTopic, e);
   refreshQuota();
   render();
+  if (cfg.notify) refreshPush(false).catch(() => {});
 }
 
-function add(m) {
-  if (seen.has(m.id)) return;
-  seen.add(m.id);
-  msgs.push(m);
-  msgs.sort((a, b) => a.ts - b.ts);
-  if (msgs.length > 3000) msgs = msgs.slice(-3000);
-  save('msgs_' + topic.slice(2, 10), msgs);
-  if (!mine(m) && (view !== 'real' || mobileSide || document.hidden)) unread++;
-  renderList(); paintSide(); paintTitle();
+async function onEvent(byTopic, e) {
+  let d; try { d = JSON.parse(e.data); } catch (_) { return; }
+  const id = byTopic[d.topic];
+  if (d.event !== 'message' || !id || !R[id]) return;
+  const r = R[id];
+  if (r.seen.has(d.id)) return;
+  const o = await unseal(r.key, d.message || '');
+  if (!o || r.seen.has(d.id)) return;
+  if (o.sys === 'notify') { r.seen.add(d.id); setNotifyName(id, String(o.n || ''), o.on !== false); return; }
+  if (typeof o.t !== 'string') return;
+  const m = {id: d.id, n: String(o.n || ''), t: o.t, ts: Number(o.ts) || d.time * 1000};
+  if (o.img && d.attachment) Object.assign(m, {t: '사진', img: 1, u: d.attachment.url, x: d.attachment.expires * 1000, mime: o.mime});
+  add(id, m);
+  if (m.img) fetchPic(id, m);
+}
+
+function setNotifyName(id, n, on) {
+  const r = R[id];
+  if (!n || n === cfg.me) return;
+  const i = r.nn.indexOf(n);
+  if (on && i < 0) r.nn.push(n);
+  else if (!on && i >= 0) r.nn.splice(i, 1);
+  else return;
+  save('nn_' + r.sk, r.nn);
+}
+
+function add(id, m) {
+  const r = R[id];
+  if (r.seen.has(m.id)) return;
+  r.seen.add(m.id);
+  r.msgs.push(m);
+  r.msgs.sort((a, b) => a.ts - b.ts);
+  if (r.msgs.length > 3000) r.msgs = r.msgs.slice(-3000);
+  save('msgs_' + r.sk, r.msgs);
+  if (!mine(m) && (view !== id || mobileSide || document.hidden)) r.unread++;
+  if (view === id) renderList();
+  paintSide(); paintTitle();
+}
+
+// 알림을 켠 상대에게 짧은 알림 신호를 보낸다(상대 알림함 토픽으로)
+async function ping(id, text) {
+  const r = R[id];
+  for (const n of r.nn) {
+    if (n === cfg.me) continue;
+    try {
+      await fetch(`${RELAY}/${await inboxOf(id, n)}`, {method: 'POST', body: await seal(r.key, {n: cfg.me, t: text.slice(0, 100), ts: Date.now()})});
+    } catch (_) {}
+  }
 }
 
 async function send(text) {
   text = text.trim();
-  if (view !== 'real') return true;   // 위장 화면에서 친 내용은 보내지 않고 지우기만
-  if (!text || !key) return false;
+  const rm = cur();
+  if (!rm) return true;   // 위장 화면에서 친 내용은 보내지 않고 지우기만
+  if (!text) return false;
+  const r = R[rm.id];
   const payload = {n: cfg.me, t: text, ts: Date.now()};
   if (te.encode(JSON.stringify(payload)).length > MAX_BYTES) { toast('메시지가 너무 길어요. 나눠서 보내주세요.'); return false; }
   try {
-    const r = await fetch(`${RELAY}/${topic}`, {method: 'POST', body: await seal(payload)});
-    if (r.status === 429) { toast('오늘 보낼 수 있는 양을 다 썼어요 (하루 250건)'); return false; }
-    if (!r.ok) throw new Error(r.status);
-    const d = await r.json();
-    add({id: d.id, n: payload.n, t: payload.t, ts: payload.ts});
+    const res = await fetch(`${RELAY}/${r.topic}`, {method: 'POST', body: await seal(r.key, payload)});
+    if (res.status === 429) { toast('오늘 보낼 수 있는 양을 다 썼어요 (하루 250건)'); return false; }
+    if (!res.ok) throw new Error(res.status);
+    const d = await res.json();
+    add(rm.id, {id: d.id, n: payload.n, t: payload.t, ts: payload.ts});
+    ping(rm.id, text);
     refreshQuota();
     return true;
-  } catch { toast('전송 실패 — 네트워크를 확인하세요'); return false; }
+  } catch (_) { toast('전송 실패 — 네트워크를 확인하세요'); return false; }
 }
 
 // ---------- 사진 ----------
-// 사진은 이 방 키로 암호화한 바이트를 ntfy 첨부로 올린다(서버 보관 3시간). 받은 사진은 기기의 IndexedDB에 보관.
+// 사진은 방 키로 암호화한 바이트를 ntfy 첨부로 올린다(서버 보관 3시간). 받은 사진은 기기의 IndexedDB에 보관.
 const PIC_MAX = 1.9 * 1024 * 1024;   // ntfy 익명 첨부 한도 2MB
 const picUrls = new Map(), picBusy = new Set();
-let dbp = null;
-function picDb() {
-  return dbp ||= new Promise((res, rej) => {
-    const r = indexedDB.open('wt' + P + '_pics', 1);
-    r.onupgradeneeded = () => r.result.createObjectStore('p');
+const dbs = {};
+function openDb(name) {
+  if (!dbs[name]) dbs[name] = new Promise((res, rej) => {
+    const r = indexedDB.open(name, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore(name === 'wt_push' ? 'k' : 'p');
     r.onsuccess = () => res(r.result);
     r.onerror = () => rej(r.error);
   });
+  return dbs[name];
 }
-async function picGet(id) {
+async function idbGet(name, store, k) {
   try {
-    const db = await picDb();
-    return await new Promise(res => { const q = db.transaction('p').objectStore('p').get(id); q.onsuccess = () => res(q.result); q.onerror = () => res(null); });
-  } catch { return null; }
+    const db = await openDb(name);
+    return await new Promise(res => { const q = db.transaction(store).objectStore(store).get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(null); });
+  } catch (_) { return null; }
 }
-async function picPut(id, blob) {
+async function idbPut(name, store, k, v) {
   try {
-    const db = await picDb();
-    await new Promise(res => { const t = db.transaction('p', 'readwrite'); t.objectStore('p').put(blob, id); t.oncomplete = t.onerror = () => res(); });
-  } catch {}
+    const db = await openDb(name);
+    await new Promise(res => { const t = db.transaction(store, 'readwrite'); t.objectStore(store).put(v, k); t.oncomplete = t.onerror = () => res(); });
+  } catch (_) {}
 }
+const PICDB = 'wt' + P + '_pics';
 const picTag = id => `<img class="pic" data-pic="${esc(id)}" alt="사진">`;
 
-async function fetchPic(m) {
-  if (picBusy.has(m.id) || !m.u) return;
+async function fetchPic(id, m) {
+  if (picBusy.has(m.id) || !m.u || !R[id]) return;
   picBusy.add(m.id);
   try {
     const buf = new Uint8Array(await (await fetch(m.u)).arrayBuffer());
-    const pt = await crypto.subtle.decrypt({name: 'AES-GCM', iv: buf.slice(0, 12)}, key, buf.slice(12));
+    const pt = await crypto.subtle.decrypt({name: 'AES-GCM', iv: buf.slice(0, 12)}, R[id].key, buf.slice(12));
     const blob = new Blob([pt], {type: m.mime || 'image/jpeg'});
-    await picPut(m.id, blob);
+    await idbPut(PICDB, 'p', m.id, blob);
     picUrls.set(m.id, URL.createObjectURL(blob));
-  } catch {}
+  } catch (_) {}
   picBusy.delete(m.id);
   fillPics();
 }
 async function fillPics() {
+  const rm = cur();
   for (const el of document.querySelectorAll('img.pic[data-pic]:not([src])')) {
-    const id = el.dataset.pic;
-    if (!picUrls.has(id)) {
-      const blob = await picGet(id);
-      if (blob) picUrls.set(id, URL.createObjectURL(blob));
+    const pid = el.dataset.pic;
+    if (!picUrls.has(pid)) {
+      const blob = await idbGet(PICDB, 'p', pid);
+      if (blob) picUrls.set(pid, URL.createObjectURL(blob));
     }
-    if (picUrls.has(id)) { el.src = picUrls.get(id); continue; }
-    const m = msgs.find(x => x.id === id);
-    if (m && m.u && Date.now() < m.x) { el.alt = '사진 받는 중…'; fetchPic(m); }
+    if (picUrls.has(pid)) { el.src = picUrls.get(pid); continue; }
+    const m = rm && R[rm.id].msgs.find(x => x.id === pid);
+    if (m && m.u && Date.now() < m.x) { el.alt = '사진 받는 중…'; fetchPic(rm.id, m); }
     else el.replaceWith(Object.assign(document.createElement('span'), {className: 'pic-gone', textContent: '사진 (보관 기간이 지났어요)'}));
   }
 }
 
+function loadImage(file) {
+  if (window.createImageBitmap) return createImageBitmap(file);
+  return new Promise((res, rej) => {   // 옛 사파리
+    const im = new Image();
+    im.onload = () => res(im);
+    im.onerror = rej;
+    im.src = URL.createObjectURL(file);
+  });
+}
 async function shrink(file) {
   if (file.type === 'image/gif' && file.size <= PIC_MAX) return file;
-  const bmp = await createImageBitmap(file);
+  const bmp = await loadImage(file);
   const s = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
   const cv = Object.assign(document.createElement('canvas'), {width: Math.round(bmp.width * s), height: Math.round(bmp.height * s)});
   cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
@@ -426,21 +547,25 @@ async function shrink(file) {
 }
 
 async function sendPic(file) {
-  if (view !== 'real' || !key || !file || !file.type.startsWith('image/')) return;
+  const rm = cur();
+  if (!rm || !file || !/^image\//.test(file.type)) return;
+  const r = R[rm.id];
   toast('사진 보내는 중…');
   try {
     const blob = await shrink(file);
     const iv = crypto.getRandomValues(new Uint8Array(12));
-    const ct = new Uint8Array(await crypto.subtle.encrypt({name: 'AES-GCM', iv}, key, await blob.arrayBuffer()));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({name: 'AES-GCM', iv}, r.key, await blob.arrayBuffer()));
     const body = new Uint8Array(12 + ct.length); body.set(iv); body.set(ct, 12);
     const payload = {n: cfg.me, t: '', img: 1, mime: blob.type, ts: Date.now()};
-    const r = await fetch(`${RELAY}/${topic}`, {method: 'PUT', body, headers: {'Filename': 'p.bin', 'X-Message': await seal(payload)}});
-    if (r.status === 429) { toast('오늘 보낼 수 있는 양을 다 썼어요'); return; }
-    if (!r.ok) throw new Error(r.status);
-    const d = await r.json();
-    await picPut(d.id, blob);
+    const res = await fetch(`${RELAY}/${r.topic}`, {method: 'PUT', body, headers: {'Filename': 'p.bin', 'X-Message': await seal(r.key, payload)}});
+    if (res.status === 429) { toast('오늘 보낼 수 있는 양을 다 썼어요'); return; }
+    if (!res.ok) throw new Error(res.status);
+    const d = await res.json();
+    await idbPut(PICDB, 'p', d.id, blob);
     picUrls.set(d.id, URL.createObjectURL(blob));
-    add({id: d.id, n: cfg.me, t: '사진', img: 1, u: d.attachment?.url, x: (d.attachment?.expires || 0) * 1000, mime: blob.type, ts: payload.ts});
+    const at = d.attachment || {};
+    add(rm.id, {id: d.id, n: cfg.me, t: '사진', img: 1, u: at.url, x: (at.expires || 0) * 1000, mime: blob.type, ts: payload.ts});
+    ping(rm.id, '');
     refreshQuota();
     toast('사진을 보냈어요');
   } catch (e) { toast(e.message === 'too big' ? '사진이 너무 커요' : '사진 전송 실패 — 네트워크를 확인하세요'); }
@@ -451,7 +576,73 @@ async function refreshQuota() {
     const d = await (await fetch(`${RELAY}/v1/account`)).json();
     quota = d.stats.messages_remaining;
     paintStatus();
-  } catch {}
+  } catch (_) {}
+}
+
+// ---------- 알림(웹 푸시) ----------
+// 알림을 켠 기기는 방마다 '내 알림함' 토픽을 ntfy 웹 푸시에 등록하고, 방에 알림 수신 신호(sys:notify)를 보낸다.
+// 상대는 메시지를 보낼 때 그 알림함으로 짧은 신호를 함께 보낸다 → 내가 보낸 메시지는 나에게 알림이 오지 않는다.
+const pushOK = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const standalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const pushOn = () => !!(cfg && cfg.notify && pushOK() && Notification.permission === 'granted');
+
+async function enablePush() {   // 버튼 클릭 안에서 바로 호출해야 함(사파리)
+  if (!cfg || !Object.keys(R).length) { toast('먼저 저장해 주세요'); return; }
+  if (!pushOK()) {
+    toast(isIOS && !standalone() ? '공유 버튼 → 홈 화면에 추가 후, 홈 화면 아이콘으로 열어서 눌러주세요' : '이 브라우저는 알림을 지원하지 않아요');
+    return;
+  }
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') { toast('알림이 허용되지 않았어요. 설정에서 알림을 허용해 주세요'); return; }
+  try {
+    await navigator.serviceWorker.register('sw.js');
+    cfg.notify = true; save('cfg', cfg);
+    await refreshPush(true);
+    toast('알림을 켰어요');
+  } catch (e) { cfg.notify = false; save('cfg', cfg); toast('알림 설정 실패: ' + (e.message || e)); }
+  paintNtf();
+}
+
+async function refreshPush(announce) {
+  if (!pushOn()) return;
+  await navigator.serviceWorker.register('sw.js');
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) sub = await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: ub64u(VAPID)});
+  const j = sub.toJSON();
+  const rooms = [];
+  for (const rm of cfg.rooms) rooms.push({inbox: await inboxOf(rm.id, cfg.me), key: R[rm.id].raw, name: rm.name, group: !!rm.group});
+  await idbPut('wt_push', 'k', 'push', {rooms});
+  const res = await fetch(`${RELAY}/v1/webpush`, {method: 'POST', body: JSON.stringify({endpoint: j.endpoint, auth: j.keys.auth, p256dh: j.keys.p256dh, topics: rooms.map(x => x.inbox)})});
+  if (!res.ok) throw new Error('webpush ' + res.status);
+  for (const rm of cfg.rooms) {   // 8시간마다 "나 알림 받아요" 신호(서버 기록은 12시간만 남으므로)
+    const r = R[rm.id], k = 'ann_' + r.sk;
+    if (!announce && Date.now() - load(k, 0) < 8 * 3600e3) continue;
+    try {
+      await fetch(`${RELAY}/${r.topic}`, {method: 'POST', body: await seal(r.key, {n: cfg.me, sys: 'notify', on: true, ts: Date.now()})});
+      save(k, Date.now());
+    } catch (_) {}
+  }
+}
+
+async function disablePush() {
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sub = reg && await reg.pushManager.getSubscription();
+    if (sub) {
+      await fetch(`${RELAY}/v1/webpush`, {method: 'DELETE', body: JSON.stringify({endpoint: sub.endpoint})});
+      await sub.unsubscribe();
+    }
+  } catch (_) {}
+  for (const rm of cfg.rooms) {
+    const r = R[rm.id];
+    try { await fetch(`${RELAY}/${r.topic}`, {method: 'POST', body: await seal(r.key, {n: cfg.me, sys: 'notify', on: false, ts: Date.now()})}); } catch (_) {}
+    save('ann_' + r.sk, 0);
+  }
+  cfg.notify = false; save('cfg', cfg);
+  toast('알림을 껐어요');
+  paintNtf();
 }
 
 // ---------- 위장용 고정 내용 ----------
@@ -472,8 +663,8 @@ const fakeOf = k => FAKE.find(f => f.k === k);
 
 function setView(v) {
   view = v;
-  if (v !== 'real') lastDecoy = v;
-  else unread = 0;
+  if (isRoom(v)) { lastRoom = v; if (R[v]) R[v].unread = 0; }
+  else lastDecoy = v;
   mobileSide = false;
   render();
 }
@@ -483,14 +674,24 @@ function decoy() {
   mobileSide = true;
   render();
 }
-function toggleDecoy() { if (view === 'real' && !mobileSide) decoy(); else setView('real'); }
+function toggleDecoy() {
+  if (isRoom(view) && !mobileSide) decoy();
+  else setView(lastRoom && room(lastRoom) ? lastRoom : cfg.rooms[0].id);
+}
+// 실제 방(최근 대화 순)
+function roomsByRecent() {
+  return cfg.rooms.filter(rm => R[rm.id]).slice().sort((a, b) => {
+    const la = last(R[a.id].msgs), lb = last(R[b.id].msgs);
+    return (lb ? lb.ts : 0) - (la ? la.ts : 0);
+  });
+}
 
 // ---------- 공통 그리기 ----------
 function render() {
-  if (!cfg) return;
+  if (!cfg || !Object.keys(R).length) return;
   const app = $('#app');
   app.innerHTML = SKINS[cfg.skin].layout();
-  SKINS[cfg.skin].bind?.();
+  if (SKINS[cfg.skin].bind) SKINS[cfg.skin].bind();
   app.querySelectorAll('[data-v]').forEach(el => el.addEventListener('click', () => setView(el.dataset.v)));
   app.querySelectorAll('.gear').forEach(el => el.addEventListener('click', openSetup));
   app.querySelectorAll('.back').forEach(el => el.addEventListener('click', () => { mobileSide = true; render(); }));
@@ -499,28 +700,29 @@ function render() {
     inp.addEventListener('keydown', async e => {
       if (e.key === 'Enter' && e.ctrlKey) {   // Ctrl+Enter 줄바꿈
         e.preventDefault();
-        inp.setRangeText?.('\n', inp.selectionStart, inp.selectionEnd, 'end');
+        if (inp.setRangeText) inp.setRangeText('\n', inp.selectionStart, inp.selectionEnd, 'end');
         return;
       }
-      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) {
         e.preventDefault();
         const t = inp.value;
         if (await send(t) && inp.value === t) inp.value = '';
       }
     });
-    $('#sendBtn')?.addEventListener('click', async () => { const t = inp.value; if (await send(t) && inp.value === t) inp.value = ''; inp.focus(); });
+    const btn = $('#sendBtn');
+    if (btn) btn.addEventListener('click', async () => { const t = inp.value; if (await send(t) && inp.value === t) inp.value = ''; inp.focus(); });
     inp.addEventListener('paste', e => {
-      const f = [...(e.clipboardData?.files || [])].find(f => f.type.startsWith('image/'));
+      const f = Array.from((e.clipboardData && e.clipboardData.files) || []).find(f => /^image\//.test(f.type));
       if (f) { e.preventDefault(); sendPic(f); }
     });
   }
-  app.querySelectorAll('.picBtn').forEach(el => el.addEventListener('click', () => { if (view === 'real') $('#picFile').click(); }));
+  app.querySelectorAll('.picBtn').forEach(el => el.addEventListener('click', () => { if (cur()) $('#picFile').click(); }));
   renderList(); paintSide(); paintTitle(); setStatus(status);
 }
 function renderList() {
   const list = $('#list'); if (!list) return;
   list.innerHTML = SKINS[cfg.skin].list();
-  SKINS[cfg.skin].after?.(list);
+  if (SKINS[cfg.skin].after) SKINS[cfg.skin].after(list);
   if (cfg.skin !== 'sheet') {
     list.scrollTop = list.scrollHeight;
     // 사진이 늦게 뜨며 높이가 바뀌어도 맨 아래 유지
@@ -528,10 +730,11 @@ function renderList() {
   }
   fillPics();
 }
-function paintSide() { SKINS[cfg.skin].side?.(); }
+function paintSide() { if (cfg && SKINS[cfg.skin].side) SKINS[cfg.skin].side(); }
 function paintTitle() {
   const base = {msg: 'CH Messenger', collab: '업무공간', sheet: '업무관리대장.xlsx'}[cfg.skin];
-  document.title = (unread && cfg.skin === 'collab') ? `(${unread}) ${base}` : base;
+  const n = totalUnread();
+  document.title = (n && cfg.skin === 'collab') ? `(${n}) ${base}` : base;
   document.querySelector('meta[name=theme-color]').content = {msg: '#bd1d63', collab: '#2b2f3a', sheet: '#1f6e43'}[cfg.skin];
 }
 function paintStatus() {
@@ -539,8 +742,6 @@ function paintStatus() {
   const el = $('#qt'); if (!el) return;
   el.textContent = quota == null ? '' : (cfg.skin === 'sheet' ? `잔여 ${quota}` : `· 잔여 ${quota}`);
 }
-function lastReal() { return msgs[msgs.length - 1]; }
-
 
 // ---------- 메신저형(CH) 전용 ----------
 const svg = d => `<svg viewBox="0 0 24 24">${d}</svg>`;
@@ -593,7 +794,6 @@ const CHC = {
     ['나', '오후 1:58', '도윤님 내일 회의 2시로 변경됐어요'],
     ['이도윤', '오후 2:07', '넵!!']]}
 };
-const chatOf = v => v === 'real' ? {name: cfg.peer} : CHC[v];
 function NOTES() {
   const d = ago => new Date(Date.now() - ago * 864e5);
   const kr = x => `${x.getFullYear()}년 ${x.getMonth() + 1}월 ${x.getDate()}일 식품안전정보`;
@@ -612,17 +812,50 @@ function NOTES() {
   ];
 }
 
+const avOf = name => `<div class="av">${esc(initial(name))}</div>`;
+function roomAv(rm) {
+  if (!rm.group) return avOf(rm.name);
+  const mem = members(rm.id);
+  return mem.length ? grpAv(mem) : avOf(rm.name);
+}
+
 // ---------- 스킨 ----------
 const SKINS = {
   msg: {
+    // 단톡은 새 사람이 말하면 머리글(참여자 수·사진)이 바뀌므로 목록 그릴 때마다 다시 채운다
+    after() {
+      const h = this.head(), a = $('#hdAv'), b = $('#hdR2');
+      if (a) a.innerHTML = h.hd;
+      if (b) { b.innerHTML = h.r2; setStatus(status); }
+    },
     layout() {
-      const c = chatOf(view);
-      const hd = c.grp ? grpAv(c.grp) : `<div class="av">${esc(initial(c.name))}</div>`;
+      const {hd, r2} = this.head();
+      const n = totalUnread();
+      return this.shell(hd, r2, n);
+    },
+    head() {
+      const rm = cur();
+      let hd, r2;
+      if (rm && rm.group) {
+        hd = roomAv(rm);
+        r2 = `<span style="color:#4b6fd0;width:14px;height:14px;display:inline-block">${IC.person}</span>${members(rm.id).length + 1}<span>${esc(rm.name)}</span><span class="dot"></span>`;
+      } else if (rm) {
+        hd = avOf(rm.name);
+        r2 = `${avOf(rm.name)}<span>${esc(nameOnly(rm.name))}</span><span class="dot"></span>`;
+      } else {
+        const c = CHC[view];
+        hd = c.grp ? grpAv(c.grp) : avOf(c.name);
+        r2 = c.grp ? `<span style="color:#4b6fd0;width:14px;height:14px;display:inline-block">${IC.person}</span>${c.grp.length + 1}<span>${esc(c.grp.join(','))}</span>`
+                   : `${avOf(c.name)}<span>${esc(nameOnly(c.name))}</span>`;
+      }
+      return {hd, r2};
+    },
+    shell(hd, r2, n) {
       return `<div class="ch${mobileSide ? ' side' : ''}">
         <section class="ch-main">
           <div class="ch-tool">
             <span class="t" title="즐겨찾기">${IC.star}</span><span class="t" title="조직도">${IC.org}</span><span class="t" title="검색">${IC.search}</span>
-            <span class="t" data-tab="note" title="쪽지">${IC.note}</span><span class="t" data-tab="chat" title="대화">${IC.chat}${unread ? `<i class="badge">${unread}</i>` : ''}</span>
+            <span class="t" data-tab="note" title="쪽지">${IC.note}</span><span class="t" data-tab="chat" title="대화" id="chatIc">${IC.chat}${n ? `<i class="badge">${n}</i>` : ''}</span>
             <span class="t gear" title="설정">${IC.more}</span><i class="sp"></i><span class="bell">${IC.bell}</span>
           </div>
           <div class="ch-body">
@@ -637,10 +870,8 @@ const SKINS = {
         </section>
         <section class="ch-chat">
           <header class="ch-head">
-            <div class="r1"><span class="back">${IC.left}</span>${hd}<span class="hi">${IC.grid}</span><span class="hi">${IC.search}</span></div>
-            <div class="r2">${c.grp ? `<span style="color:#4b6fd0;width:14px;height:14px;display:inline-block">${IC.person}</span>${c.grp.length + 1}` : `<div class="av">${esc(initial(c.name))}</div>`}
-              <span>${esc(c.grp ? c.grp.join(',') : nameOnly(c.name))}</span>${view === 'real' ? '<span class="dot"></span>' : ''}<i class="sp"></i>
-              <span class="cb">${IC.bell}</span><span class="cb">${IC.kebab}</span></div>
+            <div class="r1"><span class="back">${IC.left}</span><span id="hdAv" style="display:contents">${hd}</span><span class="hi">${IC.grid}</span><span class="hi">${IC.search}</span></div>
+            <div class="r2"><span id="hdR2" style="display:contents">${r2}</span><i class="sp"></i><span class="cb">${IC.bell}</span><span class="cb">${IC.kebab}</span></div>
           </header>
           <div class="ch-msgs" id="list"></div>
           <div class="ch-comp"><div class="ch-grip"></div>
@@ -652,9 +883,10 @@ const SKINS = {
     },
     bind() {
       document.querySelectorAll('[data-tab]').forEach(el => el.addEventListener('click', () => { chTab = el.dataset.tab; mobileSide = true; render(); }));
-      document.querySelector('.ch-head .back')?.addEventListener('click', () => { mobileSide = true; render(); });
     },
     side() {
+      const ic = $('#chatIc');
+      if (ic) { const n = totalUnread(), b = ic.querySelector('.badge'); if (b) b.remove(); if (n) ic.insertAdjacentHTML('beforeend', `<i class="badge">${n}</i>`); }
       const ul = $('#rooms'); if (!ul) return;
       if (chTab === 'note') {
         ul.innerHTML = NOTES().map((n, i) => `<li data-n="${i}" class="${selNote === i ? 'on' : ''}"><div class="av">${esc(n.f[0])}</div>
@@ -663,14 +895,16 @@ const SKINS = {
         ul.querySelectorAll('li').forEach(li => li.addEventListener('click', () => { selNote = +li.dataset.n; paintSide(); }));
         return;
       }
-      const lr = lastReal();
-      const items = [
-        {v: 'real', f: lr ? (mine(lr) ? '나' : nameOnly(cfg.peer)) : nameOnly(cfg.peer), w: lr ? listTime(lr.ts) : '', l2: esc(cfg.peer), l3: lr ? lr.t.split('\n')[0] : '', badge: unread, av: `<div class="av">${esc(initial(cfg.peer))}</div>`}
-      ].concat(['team', 'notice', 'lab'].map(k => {
-        const c = CHC[k], last = c.lines.at(-1);
-        return {v: k, f: last[0], w: dayStr(c.ago) + ' ' + last[1], l3: last[2],
+      const items = roomsByRecent().map(rm => {
+        const r = R[rm.id], lr = last(r.msgs);
+        return {v: rm.id, f: lr ? (mine(lr) ? '나' : nameOnly(who(rm, lr))) : nameOnly(rm.name), w: lr ? listTime(lr.ts) : '',
+          l2: rm.group ? `<span class="ps">${IC.person}</span>${members(rm.id).length + 1}&nbsp; ${esc(rm.name)}` : esc(rm.name),
+          l3: lr ? lr.t.split('\n')[0] : '', badge: r.unread, av: roomAv(rm)};
+      }).concat(['team', 'notice', 'lab'].map(k => {
+        const c = CHC[k], ln = last(c.lines);
+        return {v: k, f: ln[0], w: dayStr(c.ago) + ' ' + ln[1], l3: ln[2],
           l2: c.grp ? `<span class="ps">${IC.person}</span>${c.grp.length + 1}&nbsp; ${esc(c.grp.join(','))}` : esc(c.name),
-          av: c.grp ? grpAv(c.grp) : `<div class="av">${esc(initial(c.name))}</div>`};
+          av: c.grp ? grpAv(c.grp) : avOf(c.name)};
       }));
       ul.innerHTML = items.map(r => `<li data-r="${r.v}" class="${view === r.v ? 'on' : ''}">${r.av}
         <div class="meta"><div class="l1"><b>From ${esc(r.f)}</b><small>${r.w}</small>${r.badge ? `<i class="badge">${r.badge}</i>` : ''}</div>
@@ -678,13 +912,14 @@ const SKINS = {
       ul.querySelectorAll('li').forEach(li => li.addEventListener('click', () => setView(li.dataset.r)));
     },
     list() {
-      const peer = nameOnly(cfg.peer);
+      const rm = cur();
       let src;
-      if (view !== 'real') {
-        src = CHC[view].lines.map(([n, t, x]) => ({me: n === '나', n, t, x, day: '오늘'}));
+      if (!rm) {
+        src = CHC[view].lines.map(l => ({me: l[0] === '나', n: l[0], t: l[1], x: l[2], day: '오늘'}));
       } else {
-        if (!msgs.length) return `<div class="ch-empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
-        src = msgs.map(m => ({me: mine(m), n: peer, t: chatTime(m.ts), x: m.t, day: chatDay(m.ts), pic: m.img ? m.id : null}));
+        const ms = R[rm.id].msgs;
+        if (!ms.length) return `<div class="ch-empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
+        src = ms.map(m => ({me: mine(m), n: nameOnly(who(rm, m)), t: chatTime(m.ts), x: m.t, day: chatDay(m.ts), pic: m.img ? m.id : null}));
       }
       const bub = r => r.pic ? `<div class="ch-bub im">${picTag(r.pic)}</div>` : `<div class="ch-bub txt">${esc(r.x)}</div>`;
       let out = '', day = '', i = 0;
@@ -695,7 +930,7 @@ const SKINS = {
         while (j < src.length && src[j].me === m.me && src[j].n === m.n && src[j].day === day) j++;
         const run = src.slice(i, j);
         if (m.me) out += run.map((r, k) => `<div class="ch-m${k ? '' : ' first'}"><time>${r.t}</time>${bub(r)}</div>`).join('');
-        else out += `<div class="ch-o"><div class="av">${esc(initial(m.n))}</div><div><div class="nm">${esc(m.n)}</div>
+        else out += `<div class="ch-o">${avOf(m.n)}<div><div class="nm">${esc(m.n)}</div>
           ${run.map(r => `<div class="row">${bub(r)}<time>${r.t}</time></div>`).join('')}</div></div>`;
         i = j;
       }
@@ -705,36 +940,43 @@ const SKINS = {
 
   collab: {
     layout() {
-      const title = view === 'real' ? cfg.peer : '# ' + fakeOf(view).name;
+      const rm = cur();
+      const title = rm ? (rm.group ? '# ' + rm.name : rm.name) : '# ' + fakeOf(view).name;
       return `<div class="c${mobileSide ? ' side' : ''}">
         <aside class="c-side">
           <div class="c-ws"><b>업무공간</b><span class="dot"></span><button class="ic gear" title="설정">⚙</button></div>
           <nav class="c-nav" id="nav"></nav>
         </aside>
         <section class="c-main">
-          <header class="c-head"><button class="ic back">‹</button><b>${esc(title)}</b><small>${view === 'real' ? '<span id="qt"></span>' : ''}</small></header>
+          <header class="c-head"><button class="ic back">‹</button><b>${esc(title)}</b><small>${rm ? '<span id="qt"></span>' : ''}</small></header>
           <div class="c-list" id="list"></div>
           <div class="c-comp"><div class="c-box"><button class="picBtn pb" title="사진">＋</button><textarea id="inp" placeholder="${esc(title)}에 메시지 보내기"></textarea><button id="sendBtn">➤</button></div></div>
         </section></div>`;
     },
     side() {
       const nav = $('#nav'); if (!nav) return;
-      const ch = v => `<div class="c-ch${view === v ? ' on' : ''}" data-r="${v}"><span class="h">#</span><span>${esc(fakeOf(v).name)}</span></div>`;
-      nav.innerHTML = `<div class="c-sec">채널</div>${ch('notice')}${ch('team')}${ch('lab')}
-        <div class="c-sec">다이렉트 메시지</div>
-        <div class="c-ch${view === 'real' ? ' on' : ''}${unread ? ' unread' : ''}" data-r="real"><span class="h">●</span><span>${esc(cfg.peer)}</span>${unread ? `<i class="badge">${unread}</i>` : ''}</div>`;
+      const real = (rm, h) => {
+        const u = R[rm.id].unread;
+        return `<div class="c-ch${view === rm.id ? ' on' : ''}${u ? ' unread' : ''}" data-r="${rm.id}"><span class="h">${h}</span><span>${esc(rm.name)}</span>${u ? `<i class="badge">${u}</i>` : ''}</div>`;
+      };
+      const fake = v => `<div class="c-ch${view === v ? ' on' : ''}" data-r="${v}"><span class="h">#</span><span>${esc(fakeOf(v).name)}</span></div>`;
+      const rs = cfg.rooms.filter(rm => R[rm.id]);
+      nav.innerHTML = `<div class="c-sec">채널</div>${fake('notice')}${fake('team')}${rs.filter(r => r.group).map(r => real(r, '#')).join('')}${fake('lab')}
+        <div class="c-sec">다이렉트 메시지</div>${rs.filter(r => !r.group).map(r => real(r, '●')).join('')}`;
       nav.querySelectorAll('[data-r]').forEach(el => el.addEventListener('click', () => setView(el.dataset.r)));
     },
     list() {
       const item = (n, t, x, cont) => `<div class="c-msg${cont ? ' cont' : ''}"><div class="av" style="background:${colorOf(n)}">${esc(initial(n))}</div>
         <div class="bd">${cont ? '' : `<div class="hd"><b>${esc(n)}</b><time>${t}</time></div>`}<div class="txt">${x}</div></div></div>`;
-      if (view !== 'real') return fakeOf(view).lines.map(([n, t, x]) => item(n === '나' ? cfg.me : n, t, esc(x))).join('');
-      if (!msgs.length) return `<div class="empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
+      const rm = cur();
+      if (!rm) return fakeOf(view).lines.map(l => item(l[0] === '나' ? cfg.me : l[0], l[1], esc(l[2]))).join('');
+      const ms = R[rm.id].msgs;
+      if (!ms.length) return `<div class="empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
       let out = '', day = '', prev = null;
-      for (const m of msgs) {
+      for (const m of ms) {
         if (ymd(m.ts) !== day) { day = ymd(m.ts); out += `<div class="c-day">${dayLabel(m.ts)}</div>`; prev = null; }
         const cont = prev && prev.n === m.n && m.ts - prev.ts < 5 * 60e3;
-        out += item(mine(m) ? cfg.me : cfg.peer, hm(m.ts), m.img ? picTag(m.id) : esc(m.t), cont);
+        out += item(who(rm, m), hm(m.ts), m.img ? picTag(m.id) : esc(m.t), cont);
         prev = m;
       }
       return out;
@@ -750,28 +992,38 @@ const SKINS = {
           <span class="tb"><b>가</b></span><span class="tb"><i>가</i></span><span class="tb"><u>가</u></span><span class="sep"></span>
           <span class="tb">≡</span><span class="tb">병합하고 가운데 맞춤</span><span class="sep"></span><span class="bx">일반</span><span class="tb">%</span><span class="tb">,</span>
           <span class="sep"></span><span class="tb">조건부 서식</span><span class="tb">표 서식</span><span class="tb">셀 스타일</span></div>
-        <div class="s-fx"><span class="s-ref" id="ref">E2</span><span class="s-fxl">fx</span><input id="inp" autocomplete="off" ${view === 'real' ? '' : 'readonly'}></div>
+        <div class="s-fx"><span class="s-ref" id="ref">E2</span><span class="s-fxl">fx</span><input id="inp" autocomplete="off" ${cur() ? '' : 'readonly'}></div>
         <div class="s-grid" id="list"></div>
-        <div class="s-sheets"><span class="t${view === 'real' ? ' on' : ''}" data-v="real">업무일지</span><span class="t${view === 'team' ? ' on' : ''}" data-v="team">집계</span><span class="t">Sheet3</span>
-          <i class="sp"></i><span class="st">준비 <span class="dot"></span> <span id="qt"></span></span></div></div>`;
+        <div class="s-sheets"><span class="s-tw" id="sheets"></span><i class="sp"></i><span class="st">준비 <span class="dot"></span> <span id="qt"></span></span></div></div>`;
+    },
+    side() {
+      const el = $('#sheets'); if (!el) return;
+      const rs = cfg.rooms.filter(rm => R[rm.id]);
+      el.innerHTML = rs.map(rm => `<span class="t${view === rm.id ? ' on' : ''}${R[rm.id].unread ? ' un' : ''}" data-r="${rm.id}">${esc(rm.name)}</span>`).join('')
+        + `<span class="t${view === 'team' ? ' on' : ''}" data-r="team">집계</span><span class="t">Sheet3</span>`;
+      el.querySelectorAll('[data-r]').forEach(t => t.addEventListener('click', () => setView(t.dataset.r)));
+      paintStatus();
     },
     list() {
       const cols = ['', 'A', 'B', 'C', 'D', 'E', 'F'];
       const widths = [40, 48, 92, 60, 110, null, 120];
-      let head = `<colgroup>${widths.map(w => `<col${w ? ` style="width:${w}px"` : ''}>`).join('')}</colgroup>
+      const head = `<colgroup>${widths.map(w => `<col${w ? ` style="width:${w}px"` : ''}>`).join('')}</colgroup>
         <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>`;
-      let rows = [], r = 1;
-      if (view === 'real') {
+      const rows = [];
+      let r = 1;
+      const rm = cur();
+      if (rm) {
+        const ms = R[rm.id].msgs;
         rows.push(`<tr class="hd"><th>${r++}</th><td>No</td><td>일자</td><td>시간</td><td>담당</td><td>내용</td><td>비고</td></tr>`);
-        msgs.forEach((m, i) => rows.push(`<tr class="${mine(m) ? 'me' : ''}"><th>${r++}</th><td class="ce">${i + 1}</td><td class="ce">${ymd(m.ts)}</td><td class="ce">${hm(m.ts)}</td>
-          <td class="d">${esc(mine(m) ? cfg.me : cfg.peer)}</td><td class="e">${m.img ? picTag(m.id) : esc(m.t)}</td><td></td></tr>`));
+        ms.forEach((m, i) => rows.push(`<tr class="${mine(m) ? 'me' : ''}"><th>${r++}</th><td class="ce">${i + 1}</td><td class="ce">${ymd(m.ts)}</td><td class="ce">${hm(m.ts)}</td>
+          <td class="d">${esc(who(rm, m))}</td><td class="e">${m.img ? picTag(m.id) : esc(m.t)}</td><td></td></tr>`));
         const sel = r;
-        rows.push(`<tr><th>${r++}</th><td class="ce">${msgs.length + 1}</td><td></td><td></td><td></td><td class="sel"></td><td></td></tr>`);
+        rows.push(`<tr><th>${r++}</th><td class="ce">${ms.length + 1}</td><td></td><td></td><td></td><td class="sel"></td><td></td></tr>`);
         this.selRow = sel;
       } else {
         const months = ['7월', '8월', '9월', '10월'];
         const data = [['이물', 14, 11, 16, 12], ['변질', 6, 9, 5, 7], ['포장불량', 8, 7, 10, 6], ['표시사항', 2, 1, 3, 2], ['기타', 4, 5, 3, 4]];
-        rows.push(`<tr class="hd"><th>${r++}</th><td>No</td><td>구분</td>${months.slice(0, 3).map(m => `<td>${m}</td>`).join('')}<td>${months[3]}</td></tr>`);
+        rows.push(`<tr class="hd"><th>${r++}</th><td>No</td><td>구분</td>${months.map(m => `<td>${m}</td>`).join('')}</tr>`);
         data.forEach((d, i) => rows.push(`<tr><th>${r++}</th><td class="ce">${i + 1}</td><td>${d[0]}</td>${d.slice(1).map(v => `<td class="ri">${v}</td>`).join('')}</tr>`));
         const sum = j => data.reduce((a, d) => a + d[j], 0);
         rows.push(`<tr><th>${r++}</th><td></td><td><b>합계</b></td>${[1, 2, 3, 4].map(j => `<td class="ri"><b>${sum(j)}</b></td>`).join('')}</tr>`);
@@ -784,40 +1036,77 @@ const SKINS = {
       const ref = $('#ref'); if (ref) ref.textContent = this.selRow ? 'E' + this.selRow : 'A1';
       const sel = list.querySelector('td.sel');
       if (sel) list.scrollTop = Math.max(0, sel.offsetTop - list.clientHeight + 60);
-    },
-    side() { paintStatus(); }
+    }
   }
 };
 
 // ---------- 설정 ----------
+function roomRow(rm) {
+  const div = document.createElement('div');
+  div.className = 'rm';
+  div.dataset.id = rm.id || newId();
+  div.innerHTML = `<div class="rm1"><select class="rt"><option value="1">1:1</option><option value="g">단톡</option></select>
+    <input class="rn" type="text" maxlength="30"><button class="rx" type="button" title="이 방 빼기">✕</button></div>
+    <input class="rp" type="password" placeholder="방 암호 (상대와 똑같이)" autocomplete="new-password">`;
+  const rt = div.querySelector('.rt'), rn = div.querySelector('.rn');
+  rt.value = rm.group ? 'g' : '1';
+  rn.value = rm.name || '';
+  div.querySelector('.rp').value = rm.pass || '';
+  const ph = () => { rn.placeholder = rt.value === 'g' ? '단톡방 이름 (예: 대학 친구들)' : '상대 표시 이름 (예: 김지은(품질관리팀))'; };
+  rt.addEventListener('change', ph); ph();
+  div.querySelector('.rx').addEventListener('click', () => div.remove());
+  return div;
+}
+function paintNtf() {
+  const t = $('#fNtfTxt'), b = $('#fNtf');
+  if (pushOn()) { t.textContent = '켜짐 — 새 메시지가 오면 이 기기로 알림이 와요'; b.textContent = '알림 끄기'; return; }
+  b.textContent = '알림 켜기';
+  if (!pushOK() && isIOS && !standalone()) t.textContent = '아이폰은 공유 버튼 → "홈 화면에 추가" 후, 홈 화면 아이콘으로 열어야 켤 수 있어요';
+  else if (!pushOK()) t.textContent = '이 브라우저는 알림을 지원하지 않아요';
+  else t.textContent = '꺼짐';
+}
 function openSetup() {
-  $('#fPass').value = cfg?.pass || '';
-  $('#fMe').value = cfg?.me || '';
-  $('#fPeer').value = cfg?.peer || '';
-  $('#fSkin').value = cfg?.skin || 'msg';
-  $('#fAuto').checked = !!cfg?.autoHide;
+  $('#fMe').value = cfg ? cfg.me : '';
+  const box = $('#fRooms');
+  box.innerHTML = '';
+  (cfg ? cfg.rooms : [{}]).forEach(rm => box.appendChild(roomRow(rm)));
+  $('#fSkin').value = cfg ? cfg.skin : 'msg';
+  $('#fAuto').checked = !!(cfg && cfg.autoHide);
   $('#fCancel').classList.toggle('hidden', !cfg);
   $('#fClear').classList.toggle('hidden', !cfg);
+  $('#fNtfBox').classList.toggle('hidden', !cfg);
   $('#fWarn').textContent = '';
+  paintNtf();
   $('#setup').classList.remove('hidden');
-  ($('#fPass').value ? $('#fMe') : $('#fPass')).focus();
+  if (!cfg) $('#fMe').focus();
 }
+$('#fAdd').addEventListener('click', () => { const row = roomRow({}); $('#fRooms').appendChild(row); row.querySelector('.rn').focus(); });
 $('#fCancel').addEventListener('click', () => $('#setup').classList.add('hidden'));
+$('#fNtf').addEventListener('click', () => { if (pushOn()) disablePush(); else enablePush(); });
 $('#fClear').addEventListener('click', () => {
-  if (!confirm('이 기기에 저장된 대화 기록을 지울까요? (상대 기기에는 남아요)')) return;
-  msgs = []; seen = new Set(); save('msgs_' + topic.slice(2, 10), []);
+  if (!confirm('이 기기에 저장된 모든 방의 대화 기록을 지울까요? (상대 기기에는 남아요)')) return;
+  Object.keys(R).forEach(id => { R[id].msgs = []; R[id].seen = new Set(); save('msgs_' + R[id].sk, []); });
   $('#setup').classList.add('hidden'); render();
 });
 $('#fSave').addEventListener('click', async () => {
-  const pass = $('#fPass').value, me = $('#fMe').value.trim(), peer = $('#fPeer').value.trim() || '상대';
-  if (pass.length < 4) { $('#fWarn').textContent = '방 암호를 4자 이상 넣어주세요.'; return; }
-  if (!me) { $('#fWarn').textContent = '내 이름을 넣어주세요.'; return; }
-  const passChanged = !cfg || cfg.pass !== pass;
-  cfg = {pass, me, peer, skin: $('#fSkin').value, autoHide: $('#fAuto').checked};
+  const warn = t => { $('#fWarn').textContent = t; };
+  const me = $('#fMe').value.trim();
+  const rooms = Array.from(document.querySelectorAll('#fRooms .rm')).map(d => ({
+    id: d.dataset.id, group: d.querySelector('.rt').value === 'g',
+    name: d.querySelector('.rn').value.trim(), pass: d.querySelector('.rp').value
+  }));
+  if (!me) return warn('내 이름을 넣어주세요.');
+  if (!rooms.length) return warn('대화방을 하나 이상 넣어주세요.');
+  if (rooms.some(r => r.pass.length < 4)) return warn('방 암호는 4자 이상으로 넣어주세요.');
+  if (new Set(rooms.map(r => r.pass)).size !== rooms.length) return warn('방마다 암호를 다르게 해주세요.');
+  rooms.forEach(r => { if (!r.name) r.name = r.group ? '단톡방' : '상대'; });
+  const old = cfg;
+  cfg = {me, skin: $('#fSkin').value, autoHide: $('#fAuto').checked, notify: !!(old && old.notify), rooms};
   save('cfg', cfg);
+  $('#fSave').disabled = true;
+  try { await connectAll(); } finally { $('#fSave').disabled = false; }
   $('#setup').classList.add('hidden');
-  if (passChanged) { $('#fWarn').textContent = ''; await derive(pass); connect(); }
-  else render();
+  if (cfg.notify) refreshPush(!old || old.me !== me || JSON.stringify(old.rooms) !== JSON.stringify(rooms)).catch(() => {});
 });
 
 // ---------- 키·창 이벤트 ----------
@@ -831,26 +1120,25 @@ document.addEventListener('keydown', e => {
 $('#picFile').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) sendPic(f); });
 $('#viewer').addEventListener('click', () => $('#viewer').classList.add('hidden'));
 document.addEventListener('click', e => {
-  const im = e.target.closest?.('img.pic[src]');
+  const im = e.target.closest && e.target.closest('img.pic[src]');
   if (im) { $('#viewer img').src = im.src; $('#viewer').classList.remove('hidden'); }
 });
-document.addEventListener('dragover', e => { if (cfg && view === 'real') e.preventDefault(); });
+document.addEventListener('dragover', e => { if (cur()) e.preventDefault(); });
 document.addEventListener('drop', e => {
-  if (!cfg || view !== 'real') return;
+  if (!cur()) return;
   e.preventDefault();
-  const f = [...(e.dataTransfer?.files || [])].find(f => f.type.startsWith('image/'));
+  const f = Array.from((e.dataTransfer && e.dataTransfer.files) || []).find(f => /^image\//.test(f.type));
   if (f) sendPic(f);
 });
-window.addEventListener('blur', () => { if (cfg?.autoHide && view === 'real') decoy(); });
+window.addEventListener('blur', () => { if (cfg && cfg.autoHide && cur()) decoy(); });
 document.addEventListener('visibilitychange', () => {
-  if (cfg && !document.hidden && view === 'real' && !mobileSide) { unread = 0; paintSide(); paintTitle(); }
+  if (cfg && !document.hidden && cur() && !mobileSide) { R[view].unread = 0; paintSide(); paintTitle(); }
 });
 
 (async () => {
-  if (!window.isSecureContext || !crypto.subtle) { document.body.innerHTML = '<p class="empty">이 브라우저에서는 실행할 수 없어요 (보안 연결 필요).</p>'; return; }
+  if (!window.isSecureContext || !window.crypto || !crypto.subtle) { showErr('보안 연결(https)에서 열어주세요'); return; }
   if (!cfg) { openSetup(); return; }
-  await derive(cfg.pass);
-  connect();
+  await connectAll();
 })();
 </script>
 </body>
