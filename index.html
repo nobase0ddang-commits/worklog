@@ -450,7 +450,7 @@ async function doConnect() {
     const sk = d.topic.slice(2, 10);
     const msgs = load('msgs_' + sk, []);
     R[rm.id] = {pass: rm.pass, key: d.key, raw: d.raw, topic: d.topic, sk, msgs, seen: new Set(msgs.map(m => m.id)), unread: 0, nn: load('nn_' + sk, []),
-      ext: Object.assign({react: {}, del: {}, pin: null, read: {}}, load('ext_' + sk, {})), myRead: load('mr_' + sk, 0), divTs: 0};
+      ext: Object.assign({react: {}, del: {}, pin: null, read: {}}, load('ext_' + sk, {})), myRead: load('mr2_' + sk, 0), divTs: 0};   // mr2: 옛 기록은 버리고 한 번 다시 보낸다
   }
   if (!view || (isRoom(view) && !room(view))) view = cfg.rooms[0].id;
   if (isRoom(view)) lastRoom = view;
@@ -499,9 +499,10 @@ async function onItem(id, k, v) {
   if (m.img || m.file) fetchPic(id, m);
 }
 // 방에 한 건 올리기(메시지·신호 공통) → 저장 키
-async function post(id, obj) {
+async function post(id, obj, keepalive) {
   const r = R[id];
-  const res = await fetch(`${DB}/m/${r.topic}.json`, {method: 'POST', body: JSON.stringify({d: await seal(r.key, obj), t: {'.sv': 'timestamp'}})});
+  // keepalive: 앱을 닫거나 내려도 요청이 끝까지 가게
+  const res = await fetch(`${DB}/m/${r.topic}.json`, {method: 'POST', keepalive: !!keepalive, body: JSON.stringify({d: await seal(r.key, obj), t: {'.sv': 'timestamp'}})});
   if (!res.ok) throw new Error(res.status);
   return (await res.json()).name;
 }
@@ -545,7 +546,8 @@ async function sendSys(id, obj) {
   try { r.seen.add(await post(id, o)); } catch (_) { toast('전송 실패 — 네트워크를 확인하세요'); }
 }
 
-// 읽음 표시: 방을 보고 있을 때 상대 메시지를 어디까지 읽었는지 몇 초 모아서 한 번 보낸다
+// 읽음 표시: 방을 보고 있을 때 상대 메시지를 어디까지 읽었는지 잠깐 모아서 한 번 보낸다.
+// 서버가 받은 뒤에만 '보냄'으로 기록한다(폰에서 금방 앱을 내리면 못 보내고 끝나던 문제).
 const readTimers = {};
 function markRead(id) {
   // PC는 창이 활성일 때만, 폰(터치)은 화면에 보이면 읽은 것으로
@@ -554,12 +556,26 @@ function markRead(id) {
   const r = R[id];
   let lastOther = 0;
   for (let i = r.msgs.length - 1; i >= 0; i--) if (!mine(r.msgs[i])) { lastOther = r.msgs[i].ts; break; }
-  if (lastOther <= r.myRead) return;
-  r.myRead = lastOther;
-  save('mr_' + r.sk, lastOther);
+  if (lastOther <= r.myRead || lastOther <= (r.pendRead || 0)) return;
+  r.pendRead = lastOther;
   clearTimeout(readTimers[id]);
-  readTimers[id] = setTimeout(() => sendSys(id, {sys: 'read', ts: r.myRead}), 4000);
+  readTimers[id] = setTimeout(() => flushRead(id), 1000);
 }
+async function flushRead(id, keepalive) {
+  const r = R[id];
+  clearTimeout(readTimers[id]);
+  if (!r || !r.pendRead || r.pendRead <= r.myRead || r.reading) return;
+  const ts = r.pendRead;
+  r.reading = true;
+  try {
+    r.seen.add(await post(id, {n: cfg.me, sys: 'read', ts, at: Date.now()}, keepalive));
+    if (ts > r.myRead) { r.myRead = ts; save('mr2_' + r.sk, ts); }
+  } catch (_) {
+    setTimeout(() => flushRead(id), 5000);   // 실패하면 다시
+  }
+  r.reading = false;
+}
+const flushAllReads = () => Object.keys(R).forEach(id => flushRead(id, true));
 
 function setNotifyName(id, n, on) {
   const r = R[id];
@@ -1601,7 +1617,9 @@ document.addEventListener('drop', e => {
 });
 window.addEventListener('blur', () => { if (cfg && cfg.autoHide && cur()) decoy(); });
 window.addEventListener('focus', () => { if (cur()) markRead(view); });
+window.addEventListener('pagehide', () => { if (cfg) flushAllReads(); });
 document.addEventListener('visibilitychange', () => {
+  if (cfg && document.hidden) flushAllReads();   // 앱을 내리는 순간 남은 읽음 신호를 바로 보냄
   if (cfg && !document.hidden) heartbeat();
   if (cfg && !document.hidden && cur() && !mobileSide) { R[view].unread = 0; paintSide(); paintTitle(); markRead(view); }
 });
