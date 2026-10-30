@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>메신저</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:"Malgun Gothic","맑은 고딕",system-ui,-apple-system,sans-serif;font-size:13px;color:#222;background:#fff;overflow:hidden}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input,textarea,select{font:inherit;color:inherit}
+#app{height:100%}
+.hidden{display:none!important}
+.ic{width:28px;height:28px;border-radius:6px;display:inline-grid;place-items:center;font-size:15px;opacity:.75}
+.ic:hover{background:rgba(0,0,0,.07);opacity:1}
+.back{display:none}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#aaa;vertical-align:middle}
+.dot.on{background:#2fb35a}.dot.off{background:#d9534f}
+.badge{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#e5483f;color:#fff;font-size:11px;font-weight:700;display:inline-grid;place-items:center}
+.txt{white-space:pre-wrap;word-break:break-word}
+.empty{color:#999;text-align:center;padding:40px 16px;line-height:1.7}
+
+/* ---------- 메신저형 ---------- */
+.m{display:flex;height:100%;background:#f4f5f7}
+.m-side{width:270px;flex:none;background:#fff;border-right:1px solid #dde0e5;display:flex;flex-direction:column}
+.m-top{height:52px;display:flex;align-items:center;gap:8px;padding:0 12px 0 16px;border-bottom:1px solid #eceef1}
+.m-top b{font-size:15px;flex:1}
+.m-search{padding:10px 12px}
+.m-search input{width:100%;height:30px;border:1px solid #dde0e5;border-radius:4px;padding:0 10px;background:#f7f8fa}
+.m-rooms{list-style:none;overflow:auto;flex:1}
+.m-rooms li{display:flex;gap:10px;align-items:center;padding:10px 14px;cursor:pointer}
+.m-rooms li:hover{background:#f3f5f8}
+.m-rooms li.on{background:#e8eef8}
+.av{width:36px;height:36px;border-radius:12px;flex:none;display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px}
+.m-rooms .meta{flex:1;min-width:0}
+.m-rooms .nm{display:flex;justify-content:space-between;gap:6px}
+.m-rooms .nm b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m-rooms .nm small{color:#999;font-size:11px;flex:none}
+.m-rooms .pv{display:flex;justify-content:space-between;gap:6px;margin-top:3px;color:#888;font-size:12px}
+.m-rooms .pv span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m-main{flex:1;display:flex;flex-direction:column;min-width:0}
+.m-head{height:52px;display:flex;align-items:center;gap:10px;padding:0 16px;background:#fff;border-bottom:1px solid #dde0e5}
+.m-head .av{width:32px;height:32px;font-size:13px}
+.m-head b{font-size:14px;display:block}
+.m-head small{color:#888;font-size:11px}
+.m-list{flex:1;overflow:auto;padding:14px 18px}
+.m-day{text-align:center;margin:12px 0;color:#888;font-size:11px}
+.m-day span{background:#e6e8ec;border-radius:10px;padding:3px 10px}
+.m-row{display:flex;gap:8px;margin:6px 0;align-items:flex-end}
+.m-row .av{width:30px;height:30px;font-size:12px;align-self:flex-start}
+.m-row .who{font-size:11px;color:#666;margin-bottom:3px}
+.m-bub{max-width:min(520px,70vw);padding:8px 11px;border-radius:4px 12px 12px 12px;background:#fff;border:1px solid #e1e4e8;line-height:1.5}
+.m-row.me{justify-content:flex-end}
+.m-row.me .m-bub{background:#dce8fb;border-color:#c9daf5;border-radius:12px 4px 12px 12px}
+.m-row time{font-size:10px;color:#999;flex:none}
+.m-comp{display:flex;gap:8px;padding:10px 12px;background:#fff;border-top:1px solid #dde0e5}
+.m-comp textarea{flex:1;resize:none;border:1px solid #dde0e5;border-radius:4px;padding:8px 10px;height:60px;outline:none}
+.m-comp textarea:focus{border-color:#7da2e0}
+.m-comp button{width:64px;border-radius:4px;background:#3b6fd4;color:#fff;font-weight:600}
+
+/* ---------- 협업툴형 ---------- */
+.c{display:flex;height:100%}
+.c-side{width:240px;flex:none;background:#2b2f3a;color:#c9ccd4;display:flex;flex-direction:column}
+.c-ws{height:50px;display:flex;align-items:center;gap:6px;padding:0 10px 0 16px;border-bottom:1px solid #3a3f4c;color:#fff}
+.c-ws b{flex:1;font-size:15px}
+.c-ws .ic{opacity:.6}
+.c-ws .ic:hover{background:#3a3f4c}
+.c-nav{overflow:auto;flex:1;padding:10px 0}
+.c-sec{padding:12px 16px 4px;font-size:12px;color:#8d929e}
+.c-ch{display:flex;align-items:center;gap:8px;padding:5px 16px;cursor:pointer}
+.c-ch:hover{background:#353a46}
+.c-ch.on{background:#4a6fd8;color:#fff}
+.c-ch .h{width:16px;text-align:center;opacity:.7}
+.c-ch span:nth-child(2){flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-ch.unread span:nth-child(2){color:#fff;font-weight:700}
+.c-main{flex:1;display:flex;flex-direction:column;min-width:0;background:#fff}
+.c-head{height:50px;display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:1px solid #e3e5e8}
+.c-head b{font-size:15px}
+.c-head small{color:#888}
+.c-list{flex:1;overflow:auto;padding:8px 0 12px}
+.c-day{display:flex;align-items:center;gap:10px;margin:14px 18px 4px;color:#666;font-size:12px;font-weight:600}
+.c-day::before,.c-day::after{content:"";flex:1;height:1px;background:#e3e5e8}
+.c-msg{display:flex;gap:10px;padding:5px 18px}
+.c-msg:hover{background:#f7f8f9}
+.c-msg .av{width:34px;height:34px;border-radius:6px;font-size:13px}
+.c-msg .bd{min-width:0;flex:1}
+.c-msg .hd b{margin-right:6px}
+.c-msg .hd time{font-size:11px;color:#999}
+.c-msg .txt{line-height:1.55;margin-top:1px}
+.c-msg.cont{padding-top:1px}
+.c-msg.cont .av{visibility:hidden;height:0}
+.c-comp{padding:0 18px 16px}
+.c-box{display:flex;align-items:flex-end;gap:6px;border:1px solid #c9ccd2;border-radius:8px;padding:8px 8px 8px 12px}
+.c-box:focus-within{border-color:#4a6fd8}
+.c-box textarea{flex:1;border:0;outline:none;resize:none;height:44px;line-height:1.5}
+.c-box button{width:34px;height:30px;border-radius:6px;background:#4a6fd8;color:#fff;font-size:13px}
+
+/* ---------- 시트형 ---------- */
+.s{display:flex;flex-direction:column;height:100%;background:#f3f3f3;font-size:12px}
+.s-tabs{display:flex;align-items:center;gap:2px;padding:0 8px;height:32px;background:#1f6e43;color:#fff}
+.s-tabs span{padding:6px 10px;opacity:.9}
+.s-tabs span.on{background:#f3f3f3;color:#1f6e43;border-radius:3px 3px 0 0;align-self:flex-end;font-weight:600}
+.s-tabs .sp{flex:1}
+.s-tabs .ic{color:#fff}
+.s-tabs .ic:hover{background:rgba(255,255,255,.15)}
+.s-tool{display:flex;align-items:center;gap:4px;height:38px;padding:0 10px;border-bottom:1px solid #d4d4d4;color:#444;overflow:hidden;white-space:nowrap}
+.s-tool .bx{border:1px solid #c8c8c8;background:#fff;padding:2px 8px;border-radius:2px}
+.s-tool .tb{padding:3px 7px;border-radius:2px}
+.s-tool .tb:hover{background:#e1e1e1}
+.s-tool .sep{width:1px;height:20px;background:#d0d0d0;margin:0 6px}
+.s-fx{display:flex;align-items:center;height:28px;background:#fff;border-bottom:1px solid #d4d4d4}
+.s-ref{width:70px;height:100%;border-right:1px solid #d4d4d4;display:grid;place-items:center;color:#333}
+.s-fxl{width:36px;text-align:center;color:#777;font-style:italic;font-family:Georgia,serif}
+.s-fx input{flex:1;height:100%;border:0;outline:none;padding:0 6px;background:#fff}
+.s-grid{flex:1;overflow:auto;background:#fff}
+.s-grid table{border-collapse:collapse;table-layout:fixed;min-width:760px;width:100%}
+.s-grid th,.s-grid td{border:1px solid #e1e1e1;height:22px;padding:2px 5px;vertical-align:top;overflow:hidden}
+.s-grid thead th{position:sticky;top:0;background:#efefef;color:#555;font-weight:400;border-color:#d4d4d4;z-index:1}
+.s-grid tbody th{background:#efefef;color:#666;font-weight:400;border-color:#d4d4d4;width:40px;text-align:center}
+.s-grid tr.hd td{background:#ddebe2;font-weight:600;text-align:center}
+.s-grid td.ce{text-align:center}
+.s-grid td.ri{text-align:right}
+.s-grid td.e{white-space:pre-wrap;word-break:break-word}
+.s-grid tr.me td.d{color:#1f6e43}
+.s-grid td.sel{outline:2px solid #1f6e43;outline-offset:-2px}
+.s-sheets{display:flex;align-items:center;height:28px;background:#f3f3f3;border-top:1px solid #d4d4d4;padding-left:30px}
+.s-sheets span.t{padding:0 16px;height:100%;display:grid;place-items:center;cursor:pointer;border-right:1px solid #d4d4d4}
+.s-sheets span.t.on{background:#fff;color:#1f6e43;font-weight:600;border-bottom:2px solid #1f6e43}
+.s-sheets .sp{flex:1}
+.s-sheets .st{padding:0 12px;color:#666}
+
+/* ---------- 설정 ---------- */
+.modal{position:fixed;inset:0;background:rgba(20,24,32,.45);display:grid;place-items:center;padding:16px;z-index:10}
+.card{width:min(380px,100%);background:#fff;border-radius:10px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+.card h2{font-size:16px;margin-bottom:4px}
+.card p.d{color:#777;font-size:12px;line-height:1.6;margin-bottom:14px}
+.card label{display:block;font-size:12px;color:#555;margin:10px 0 4px}
+.card input[type=text],.card input[type=password],.card select{width:100%;height:36px;border:1px solid #d3d6db;border-radius:6px;padding:0 10px;font-size:14px;background:#fff}
+.card .chk{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:12px;color:#444}
+.card .btns{display:flex;gap:8px;margin-top:18px}
+.card .btns button{flex:1;height:38px;border-radius:6px;background:#eef0f3}
+.card .btns button.pri{background:#3b6fd4;color:#fff;font-weight:600}
+.card .warn{color:#c0392b;font-size:12px;margin-top:8px;min-height:16px}
+.card .tip{color:#888;font-size:11px;margin-top:12px;line-height:1.6}
+.card .lnk{color:#c0392b;font-size:12px;text-decoration:underline;margin-top:10px}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#333;color:#fff;padding:8px 14px;border-radius:6px;font-size:12px;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.show{opacity:.95}
+
+@media (max-width:700px){
+  .m-side,.c-side{width:100%}
+  .m:not(.side) .m-side,.c:not(.side) .c-side{display:none}
+  .m.side .m-main,.c.side .c-main{display:none}
+  .back{display:inline-grid}
+  .m-head,.c-head{padding:0 8px}
+  .m-comp textarea,.c-box textarea,.s-fx input{font-size:16px}
+  .m-list{padding:12px 10px}
+  .m-bub{max-width:76vw}
+  .m-comp{padding-bottom:max(10px,env(safe-area-inset-bottom))}
+  .c-comp{padding:0 10px max(10px,env(safe-area-inset-bottom))}
+  .s-tool{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="setup" class="modal hidden">
+  <div class="card">
+    <h2>환경 설정</h2>
+    <p class="d">같은 방 암호를 넣은 사람끼리 연결됩니다. 대화는 이 암호로 암호화돼서 오가요.</p>
+    <label for="fPass">방 암호 (8자 이상 권장)</label>
+    <input id="fPass" type="password" autocomplete="off">
+    <label for="fMe">내 이름 (상대와 다르게)</label>
+    <input id="fMe" type="text" maxlength="20">
+    <label for="fPeer">상대 표시 이름 (내 화면에서만 보임)</label>
+    <input id="fPeer" type="text" maxlength="20" placeholder="예: 품질팀 김대리">
+    <label for="fSkin">화면 스타일</label>
+    <select id="fSkin">
+      <option value="msg">사내 메신저형</option>
+      <option value="collab">업무 협업툴형</option>
+      <option value="sheet">엑셀 시트형</option>
+    </select>
+    <label class="chk"><input id="fAuto" type="checkbox"> 창을 벗어나면 자동으로 업무 화면으로 전환</label>
+    <div class="warn" id="fWarn"></div>
+    <div class="btns"><button id="fCancel">취소</button><button id="fSave" class="pri">저장</button></div>
+    <button class="lnk" id="fClear">이 기기의 대화 기록 지우기</button>
+    <p class="tip">Esc 키: 업무 화면 ↔ 대화 전환 · Enter 전송, Shift+Enter 줄바꿈<br>서버에는 최근 12시간치만 남고, 기록은 각자 기기에 저장돼요.</p>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+const RELAY = 'https://ntfy.sh';
+const MAX_BYTES = 2800;   // 암호화 후 ntfy 본문 한도(4096바이트) 안에 들도록
+
+// ?p=xx 로 같은 브라우저에서 프로필을 나눠 쓸 수 있다(테스트용)
+const P = new URLSearchParams(location.search).get('p') || '';
+const K = k => 'wt' + P + '_' + k;
+const load = (k, d) => { try { const v = localStorage.getItem(K(k)); return v ? JSON.parse(v) : d; } catch { return d; } };
+const save = (k, v) => { try { localStorage.setItem(K(k), JSON.stringify(v)); } catch {} };
+
+let cfg = load('cfg', null);
+let msgs = [], seen = new Set();
+let view = 'real', lastDecoy = null, unread = 0, mobileSide = false;
+let key = null, topic = null, es = null, status = '', quota = null;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const hm = ts => { const d = new Date(ts); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+const ymd = ts => { const d = new Date(ts); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const dayLabel = ts => { const d = new Date(ts); return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${'일월화수목금토'[d.getDay()]}요일`; };
+const COLORS = ['#5b7fd6', '#d6875b', '#4ea786', '#9b6bd1', '#d65b7f', '#5ba8d6'];
+const colorOf = s => COLORS[[...s].reduce((a, c) => a + c.charCodeAt(0), 0) % COLORS.length];
+const initial = s => (s.replace(/^.*\s/, '') || s).slice(0, 1);
+const mine = m => m.n === cfg.me;
+
+function toast(t) {
+  const el = $('#toast'); el.textContent = t; el.classList.add('show');
+  clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ---------- 암호화 ----------
+const te = new TextEncoder(), td = new TextDecoder();
+const b64 = u8 => btoa(String.fromCharCode(...u8));
+const ub64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+
+async function derive(pass) {
+  const base = await crypto.subtle.importKey('raw', te.encode(pass), 'PBKDF2', false, ['deriveBits']);
+  const bits = new Uint8Array(await crypto.subtle.deriveBits(
+    {name: 'PBKDF2', salt: te.encode('worktalk-v1'), iterations: 200000, hash: 'SHA-256'}, base, 512));
+  key = await crypto.subtle.importKey('raw', bits.slice(0, 32), 'AES-GCM', false, ['encrypt', 'decrypt']);
+  topic = 'wt' + [...bits.slice(32, 48)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function seal(obj) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({name: 'AES-GCM', iv}, key, te.encode(JSON.stringify(obj))));
+  return b64(iv) + '.' + b64(ct);
+}
+async function unseal(s) {
+  try {
+    const [a, b] = s.split('.');
+    const pt = await crypto.subtle.decrypt({name: 'AES-GCM', iv: ub64(a)}, key, ub64(b));
+    return JSON.parse(td.decode(pt));
+  } catch { return null; }
+}
+
+// ---------- 송수신 ----------
+function setStatus(s) { status = s; document.querySelectorAll('.dot').forEach(d => d.className = 'dot ' + s); paintStatus(); }
+
+function connect() {
+  if (es) es.close();
+  msgs = load('msgs_' + topic.slice(2, 10), []);
+  seen = new Set(msgs.map(m => m.id));
+  setStatus('');
+  es = new EventSource(`${RELAY}/${topic}/sse?since=12h`);
+  es.onopen = () => setStatus('on');
+  es.onerror = () => setStatus('off');
+  es.onmessage = async e => {
+    let d; try { d = JSON.parse(e.data); } catch { return; }
+    if (d.event !== 'message' || seen.has(d.id)) return;
+    const o = await unseal(d.message || '');
+    if (!o || typeof o.t !== 'string') return;
+    add({id: d.id, n: String(o.n || ''), t: o.t, ts: Number(o.ts) || d.time * 1000});
+  };
+  refreshQuota();
+  render();
+}
+
+function add(m) {
+  if (seen.has(m.id)) return;
+  seen.add(m.id);
+  msgs.push(m);
+  msgs.sort((a, b) => a.ts - b.ts);
+  if (msgs.length > 3000) msgs = msgs.slice(-3000);
+  save('msgs_' + topic.slice(2, 10), msgs);
+  if (!mine(m) && (view !== 'real' || document.hidden)) unread++;
+  renderList(); paintSide(); paintTitle();
+}
+
+async function send(text) {
+  text = text.trim();
+  if (view !== 'real') return true;   // 위장 화면에서 친 내용은 보내지 않고 지우기만
+  if (!text || !key) return false;
+  const payload = {n: cfg.me, t: text, ts: Date.now()};
+  if (te.encode(JSON.stringify(payload)).length > MAX_BYTES) { toast('메시지가 너무 길어요. 나눠서 보내주세요.'); return false; }
+  try {
+    const r = await fetch(`${RELAY}/${topic}`, {method: 'POST', body: await seal(payload)});
+    if (r.status === 429) { toast('오늘 보낼 수 있는 양을 다 썼어요 (하루 250건)'); return false; }
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    add({id: d.id, n: payload.n, t: payload.t, ts: payload.ts});
+    refreshQuota();
+    return true;
+  } catch { toast('전송 실패 — 네트워크를 확인하세요'); return false; }
+}
+
+async function refreshQuota() {
+  try {
+    const d = await (await fetch(`${RELAY}/v1/account`)).json();
+    quota = d.stats.messages_remaining;
+    paintStatus();
+  } catch {}
+}
+
+// ---------- 위장용 고정 내용 ----------
+const FAKE = [
+  {k: 'team', name: '품질관리팀', lines: [
+    ['박과장', '09:12', '이번 주 클레임 집계표 금요일까지 취합 부탁드립니다.'],
+    ['나', '09:15', '네 확인했습니다.'],
+    ['이주임', '10:02', '표시사항 검토 요청 건 회신 드렸습니다. 확인 부탁드려요.'],
+    ['박과장', '10:05', '감사합니다. 수정본은 공유폴더에 올려주세요.']]},
+  {k: 'notice', name: '공지사항', lines: [
+    ['총무팀', '08:30', '[안내] 11월 정기 소방훈련 일정 공유드립니다. 세부 일정은 게시판을 참고해 주세요.'],
+    ['인사팀', '어제', '[안내] 연말정산 사전 준비 서류 제출 기한은 11/14(금)입니다.']]},
+  {k: 'lab', name: '연구소 전체', lines: [
+    ['정책임', '어제', '분기 보고 자료 양식 변경되었습니다. 첨부 양식으로 작성 부탁드립니다.'],
+    ['최선임', '어제', '회의실 B 오후 2시 예약해 두었습니다.']]}
+];
+const fakeOf = k => FAKE.find(f => f.k === k);
+
+function setView(v) {
+  view = v;
+  if (v !== 'real') lastDecoy = v;
+  else unread = 0;
+  mobileSide = false;
+  render();
+}
+function toggleDecoy() { setView(view === 'real' ? (lastDecoy || 'team') : 'real'); }
+
+// ---------- 공통 그리기 ----------
+function render() {
+  if (!cfg) return;
+  const app = $('#app');
+  app.innerHTML = SKINS[cfg.skin].layout();
+  SKINS[cfg.skin].bind?.();
+  app.querySelectorAll('[data-v]').forEach(el => el.addEventListener('click', () => setView(el.dataset.v)));
+  app.querySelectorAll('.gear').forEach(el => el.addEventListener('click', openSetup));
+  app.querySelectorAll('.back').forEach(el => el.addEventListener('click', () => { mobileSide = true; render(); }));
+  const inp = $('#inp');
+  if (inp) {
+    inp.addEventListener('keydown', async e => {
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        const t = inp.value;
+        if (await send(t) && inp.value === t) inp.value = '';
+      }
+    });
+    $('#sendBtn')?.addEventListener('click', async () => { const t = inp.value; if (await send(t) && inp.value === t) inp.value = ''; inp.focus(); });
+  }
+  renderList(); paintSide(); paintTitle(); setStatus(status);
+}
+function renderList() {
+  const list = $('#list'); if (!list) return;
+  list.innerHTML = SKINS[cfg.skin].list();
+  SKINS[cfg.skin].after?.(list);
+  if (cfg.skin !== 'sheet') list.scrollTop = list.scrollHeight;
+}
+function paintSide() { SKINS[cfg.skin].side?.(); }
+function paintTitle() {
+  const base = {msg: '메신저', collab: '업무공간', sheet: '업무관리대장.xlsx'}[cfg.skin];
+  document.title = (unread && cfg.skin !== 'sheet') ? `(${unread}) ${base}` : base;
+}
+function paintStatus() {
+  const el = $('#qt'); if (!el) return;
+  el.textContent = quota == null ? '' : (cfg.skin === 'sheet' ? `잔여 ${quota}` : `· 잔여 ${quota}`);
+}
+function lastReal() { return msgs[msgs.length - 1]; }
+
+// ---------- 스킨 ----------
+const SKINS = {
+  msg: {
+    layout() {
+      const title = view === 'real' ? cfg.peer : fakeOf(view).name;
+      return `<div class="m${mobileSide ? ' side' : ''}">
+        <aside class="m-side">
+          <div class="m-top"><b>대화</b><span class="dot"></span><button class="ic gear" title="설정">⚙</button></div>
+          <div class="m-search"><input placeholder="이름, 대화방 검색" readonly></div>
+          <ul class="m-rooms" id="rooms"></ul>
+        </aside>
+        <section class="m-main">
+          <header class="m-head"><button class="ic back">‹</button>
+            <div class="av" style="background:${colorOf(title)}">${esc(initial(title))}</div>
+            <div><b>${esc(title)}</b><small>${view === 'real' ? '1:1 대화 <span id="qt"></span>' : '그룹 대화'}</small></div></header>
+          <div class="m-list" id="list"></div>
+          <div class="m-comp"><textarea id="inp" placeholder="메시지를 입력하세요"></textarea><button id="sendBtn">전송</button></div>
+        </section></div>`;
+    },
+    side() {
+      const ul = $('#rooms'); if (!ul) return;
+      const lr = lastReal();
+      const peerPv = view === 'real' && lr ? lr.t.split('\n')[0] : '';
+      const items = [
+        {v: 'team', name: fakeOf('team').name, pv: fakeOf('team').lines.at(-1)[2], tm: '10:05'},
+        {v: 'real', name: cfg.peer, pv: peerPv, tm: lr ? hm(lr.ts) : '', badge: unread},
+        {v: 'notice', name: fakeOf('notice').name, pv: fakeOf('notice').lines[0][2], tm: '08:30'},
+        {v: 'lab', name: fakeOf('lab').name, pv: fakeOf('lab').lines.at(-1)[2], tm: '어제'}
+      ];
+      ul.innerHTML = items.map(r => `<li data-r="${r.v}" class="${view === r.v ? 'on' : ''}">
+        <div class="av" style="background:${colorOf(r.name)}">${esc(initial(r.name))}</div>
+        <div class="meta"><div class="nm"><b>${esc(r.name)}</b><small>${r.tm}</small></div>
+        <div class="pv"><span>${esc(r.pv)}</span>${r.badge ? `<i class="badge">${r.badge}</i>` : ''}</div></div></li>`).join('');
+      ul.querySelectorAll('li').forEach(li => li.addEventListener('click', () => setView(li.dataset.r)));
+    },
+    list() {
+      if (view !== 'real') return fakeOf(view).lines.map(([n, t, x]) => bubble(n === '나', n, t, x)).join('');
+      if (!msgs.length) return `<div class="empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
+      let out = '', day = '';
+      for (const m of msgs) {
+        if (ymd(m.ts) !== day) { day = ymd(m.ts); out += `<div class="m-day"><span>${dayLabel(m.ts)}</span></div>`; }
+        out += bubble(mine(m), cfg.peer, hm(m.ts), m.t);
+      }
+      return out;
+      function bubble(me, n, t, x) {
+        return me
+          ? `<div class="m-row me"><time>${t}</time><div class="m-bub txt">${esc(x)}</div></div>`
+          : `<div class="m-row"><div class="av" style="background:${colorOf(n)}">${esc(initial(n))}</div><div><div class="who">${esc(n)}</div><div class="m-bub txt">${esc(x)}</div></div><time>${t}</time></div>`;
+      }
+    }
+  },
+
+  collab: {
+    layout() {
+      const title = view === 'real' ? cfg.peer : '# ' + fakeOf(view).name;
+      return `<div class="c${mobileSide ? ' side' : ''}">
+        <aside class="c-side">
+          <div class="c-ws"><b>업무공간</b><span class="dot"></span><button class="ic gear" title="설정">⚙</button></div>
+          <nav class="c-nav" id="nav"></nav>
+        </aside>
+        <section class="c-main">
+          <header class="c-head"><button class="ic back">‹</button><b>${esc(title)}</b><small>${view === 'real' ? '<span id="qt"></span>' : ''}</small></header>
+          <div class="c-list" id="list"></div>
+          <div class="c-comp"><div class="c-box"><textarea id="inp" placeholder="${esc(title)}에 메시지 보내기"></textarea><button id="sendBtn">➤</button></div></div>
+        </section></div>`;
+    },
+    side() {
+      const nav = $('#nav'); if (!nav) return;
+      const ch = v => `<div class="c-ch${view === v ? ' on' : ''}" data-r="${v}"><span class="h">#</span><span>${esc(fakeOf(v).name)}</span></div>`;
+      nav.innerHTML = `<div class="c-sec">채널</div>${ch('notice')}${ch('team')}${ch('lab')}
+        <div class="c-sec">다이렉트 메시지</div>
+        <div class="c-ch${view === 'real' ? ' on' : ''}${unread ? ' unread' : ''}" data-r="real"><span class="h">●</span><span>${esc(cfg.peer)}</span>${unread ? `<i class="badge">${unread}</i>` : ''}</div>`;
+      nav.querySelectorAll('[data-r]').forEach(el => el.addEventListener('click', () => setView(el.dataset.r)));
+    },
+    list() {
+      const item = (n, t, x, cont) => `<div class="c-msg${cont ? ' cont' : ''}"><div class="av" style="background:${colorOf(n)}">${esc(initial(n))}</div>
+        <div class="bd">${cont ? '' : `<div class="hd"><b>${esc(n)}</b><time>${t}</time></div>`}<div class="txt">${esc(x)}</div></div></div>`;
+      if (view !== 'real') return fakeOf(view).lines.map(([n, t, x]) => item(n === '나' ? cfg.me : n, t, x)).join('');
+      if (!msgs.length) return `<div class="empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
+      let out = '', day = '', prev = null;
+      for (const m of msgs) {
+        if (ymd(m.ts) !== day) { day = ymd(m.ts); out += `<div class="c-day">${dayLabel(m.ts)}</div>`; prev = null; }
+        const cont = prev && prev.n === m.n && m.ts - prev.ts < 5 * 60e3;
+        out += item(mine(m) ? cfg.me : cfg.peer, hm(m.ts), m.t, cont);
+        prev = m;
+      }
+      return out;
+    }
+  },
+
+  sheet: {
+    layout() {
+      const tabs = ['파일', '홈', '삽입', '페이지 레이아웃', '수식', '데이터', '검토', '보기'];
+      return `<div class="s">
+        <div class="s-tabs">${tabs.map(t => `<span class="${t === '홈' ? 'on' : ''}">${t}</span>`).join('')}<i class="sp"></i><button class="ic gear" title="설정">⚙</button></div>
+        <div class="s-tool"><span class="tb">붙여넣기</span><span class="sep"></span><span class="bx">맑은 고딕</span><span class="bx">11</span>
+          <span class="tb"><b>가</b></span><span class="tb"><i>가</i></span><span class="tb"><u>가</u></span><span class="sep"></span>
+          <span class="tb">≡</span><span class="tb">병합하고 가운데 맞춤</span><span class="sep"></span><span class="bx">일반</span><span class="tb">%</span><span class="tb">,</span>
+          <span class="sep"></span><span class="tb">조건부 서식</span><span class="tb">표 서식</span><span class="tb">셀 스타일</span></div>
+        <div class="s-fx"><span class="s-ref" id="ref">E2</span><span class="s-fxl">fx</span><input id="inp" autocomplete="off" ${view === 'real' ? '' : 'readonly'}></div>
+        <div class="s-grid" id="list"></div>
+        <div class="s-sheets"><span class="t${view === 'real' ? ' on' : ''}" data-v="real">업무일지</span><span class="t${view === 'team' ? ' on' : ''}" data-v="team">집계</span><span class="t">Sheet3</span>
+          <i class="sp"></i><span class="st">준비 <span class="dot"></span> <span id="qt"></span></span></div></div>`;
+    },
+    list() {
+      const cols = ['', 'A', 'B', 'C', 'D', 'E', 'F'];
+      const widths = [40, 48, 92, 60, 110, null, 120];
+      let head = `<colgroup>${widths.map(w => `<col${w ? ` style="width:${w}px"` : ''}>`).join('')}</colgroup>
+        <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+      let rows = [], r = 1;
+      if (view === 'real') {
+        rows.push(`<tr class="hd"><th>${r++}</th><td>No</td><td>일자</td><td>시간</td><td>담당</td><td>내용</td><td>비고</td></tr>`);
+        msgs.forEach((m, i) => rows.push(`<tr class="${mine(m) ? 'me' : ''}"><th>${r++}</th><td class="ce">${i + 1}</td><td class="ce">${ymd(m.ts)}</td><td class="ce">${hm(m.ts)}</td>
+          <td class="d">${esc(mine(m) ? cfg.me : cfg.peer)}</td><td class="e">${esc(m.t)}</td><td></td></tr>`));
+        const sel = r;
+        rows.push(`<tr><th>${r++}</th><td class="ce">${msgs.length + 1}</td><td></td><td></td><td></td><td class="sel"></td><td></td></tr>`);
+        this.selRow = sel;
+      } else {
+        const months = ['7월', '8월', '9월', '10월'];
+        const data = [['이물', 14, 11, 16, 12], ['변질', 6, 9, 5, 7], ['포장불량', 8, 7, 10, 6], ['표시사항', 2, 1, 3, 2], ['기타', 4, 5, 3, 4]];
+        rows.push(`<tr class="hd"><th>${r++}</th><td>No</td><td>구분</td>${months.slice(0, 3).map(m => `<td>${m}</td>`).join('')}<td>${months[3]}</td></tr>`);
+        data.forEach((d, i) => rows.push(`<tr><th>${r++}</th><td class="ce">${i + 1}</td><td>${d[0]}</td>${d.slice(1).map(v => `<td class="ri">${v}</td>`).join('')}</tr>`));
+        const sum = j => data.reduce((a, d) => a + d[j], 0);
+        rows.push(`<tr><th>${r++}</th><td></td><td><b>합계</b></td>${[1, 2, 3, 4].map(j => `<td class="ri"><b>${sum(j)}</b></td>`).join('')}</tr>`);
+        this.selRow = null;
+      }
+      while (r <= 40) rows.push(`<tr><th>${r++}</th>${'<td></td>'.repeat(6)}</tr>`);
+      return `<table>${head}${rows.join('')}</tbody></table>`;
+    },
+    after(list) {
+      const ref = $('#ref'); if (ref) ref.textContent = this.selRow ? 'E' + this.selRow : 'A1';
+      const sel = list.querySelector('td.sel');
+      if (sel) list.scrollTop = Math.max(0, sel.offsetTop - list.clientHeight + 60);
+    },
+    side() { paintStatus(); }
+  }
+};
+
+// ---------- 설정 ----------
+function openSetup() {
+  $('#fPass').value = cfg?.pass || '';
+  $('#fMe').value = cfg?.me || '';
+  $('#fPeer').value = cfg?.peer || '';
+  $('#fSkin').value = cfg?.skin || 'msg';
+  $('#fAuto').checked = !!cfg?.autoHide;
+  $('#fCancel').classList.toggle('hidden', !cfg);
+  $('#fClear').classList.toggle('hidden', !cfg);
+  $('#fWarn').textContent = '';
+  $('#setup').classList.remove('hidden');
+  ($('#fPass').value ? $('#fMe') : $('#fPass')).focus();
+}
+$('#fCancel').addEventListener('click', () => $('#setup').classList.add('hidden'));
+$('#fClear').addEventListener('click', () => {
+  if (!confirm('이 기기에 저장된 대화 기록을 지울까요? (상대 기기에는 남아요)')) return;
+  msgs = []; seen = new Set(); save('msgs_' + topic.slice(2, 10), []);
+  $('#setup').classList.add('hidden'); render();
+});
+$('#fSave').addEventListener('click', async () => {
+  const pass = $('#fPass').value, me = $('#fMe').value.trim(), peer = $('#fPeer').value.trim() || '상대';
+  if (pass.length < 4) { $('#fWarn').textContent = '방 암호를 4자 이상 넣어주세요.'; return; }
+  if (!me) { $('#fWarn').textContent = '내 이름을 넣어주세요.'; return; }
+  const passChanged = !cfg || cfg.pass !== pass;
+  cfg = {pass, me, peer, skin: $('#fSkin').value, autoHide: $('#fAuto').checked};
+  save('cfg', cfg);
+  $('#setup').classList.add('hidden');
+  if (passChanged) { $('#fWarn').textContent = ''; await derive(pass); connect(); }
+  else render();
+});
+
+// ---------- 키·창 이벤트 ----------
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && cfg && $('#setup').classList.contains('hidden')) { e.preventDefault(); toggleDecoy(); }
+});
+window.addEventListener('blur', () => { if (cfg?.autoHide && view === 'real') setView(lastDecoy || 'team'); });
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && view === 'real') { unread = 0; paintSide(); paintTitle(); }
+});
+
+(async () => {
+  if (!window.isSecureContext || !crypto.subtle) { document.body.innerHTML = '<p class="empty">이 브라우저에서는 실행할 수 없어요 (보안 연결 필요).</p>'; return; }
+  if (!cfg) { openSetup(); return; }
+  await derive(cfg.pass);
+  connect();
+})();
+</script>
+</body>
+</html>
