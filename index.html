@@ -316,14 +316,14 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
       <option value="sheet">엑셀 시트형</option>
     </select>
     <label class="chk"><input id="fAuto" type="checkbox"> 창을 벗어나면 자동으로 업무 화면으로 전환</label>
-    <label class="chk"><input id="fRead" type="checkbox"> 읽음 표시 보내기 (상대 화면의 노란 숫자 1이 사라짐, 전송 건수 조금 더 씀)</label>
+    <label class="chk"><input id="fRead" type="checkbox"> 읽음 표시 보내기 (상대 화면의 노란 숫자 1이 사라짐)</label>
     <div id="fNtfBox"><label>이 기기로 알림 받기</label>
       <div class="ntf"><span id="fNtfTxt">꺼짐</span><button type="button" id="fNtf">알림 켜기</button></div></div>
     <div class="warn" id="fWarn"></div>
     <div class="btns"><button id="fCancel" type="button">취소</button><button id="fSave" class="pri" type="button">저장</button></div>
     <button class="lnk" id="fClear" type="button">이 기기의 대화 기록 지우기</button>
-    <p class="tip">오늘 남은 전송: <span id="qtm">-</span>건</p>
-    <p class="tip">1:1 방 이름은 내 화면에서만 보이는 상대 표시 이름이에요. 단톡방에서는 각자의 '내 이름'으로 보여요.<br>Esc 키: 업무 화면 ↔ 대화 전환 · Enter 전송, Ctrl+Enter 줄바꿈<br>서버에는 글 12시간·사진 3시간만 남고, 기록은 각자 기기에 저장돼요.</p>
+    <p class="tip" style="display:none"><span id="qtm"></span></p>
+    <p class="tip">1:1 방 이름은 내 화면에서만 보이는 상대 표시 이름이에요. 단톡방에서는 각자의 '내 이름'으로 보여요.<br>Esc 키: 업무 화면 ↔ 대화 전환 · Enter 전송, Ctrl+Enter 줄바꿈<br>대화·사진은 암호화된 채로 서버에 보관돼서 새 기기에서도 최근 1000건까지 다시 받아와요.</p>
   </div>
 </div>
 <div id="toast"></div>
@@ -344,7 +344,8 @@ window.addEventListener('unhandledrejection', function (e) { showErr(String((e.r
 </script>
 <script>
 'use strict';
-const RELAY = 'https://ntfy.sh';
+const RELAY = 'https://ntfy.sh';   // 폰 알림(웹 푸시) 신호용
+const DB = 'https://worklog-chat-c0a54-default-rtdb.asia-southeast1.firebasedatabase.app';   // 대화·첨부 저장(Firebase 실시간 DB)
 const VAPID = 'BEMjM0sNxh41x0a6Lz3YaqkJ7AUhZefxsOQgw-at69i0fM1CybVBcj7-QQXf4N_tPCgFnOXdRbQ5jrSrr9Yg9Lc';   // ntfy.sh 웹 푸시 공개키
 const MAX_BYTES = 2800;   // 암호화 후 ntfy 본문 한도(4096바이트) 안에 들도록
 
@@ -361,7 +362,7 @@ if (cfg && !cfg.rooms) {   // 방 하나짜리 옛 설정 이어받기
   save('cfg', cfg);
 }
 const R = {};   // 방 id → {pass, key, raw, topic, sk, msgs, seen, unread, nn(알림 받는 이름들)}
-let es = null, status = '', quota = null;
+let streams = [], status = '', quota = null;
 let view = null, lastRoom = null, lastDecoy = null, mobileSide = false;
 let chTab = 'chat', selNote = 0;   // 메신저형 왼쪽 목록: 대화 / 쪽지
 
@@ -441,7 +442,7 @@ function connectAll() {
   return connecting;
 }
 async function doConnect() {
-  if (es) { es.close(); es = null; }
+  streams.forEach(s => s.close()); streams = [];
   for (const id of Object.keys(R)) if (!room(id) || R[id].pass !== room(id).pass) delete R[id];
   for (const rm of cfg.rooms) {
     if (R[rm.id]) continue;
@@ -453,34 +454,67 @@ async function doConnect() {
   }
   if (!view || (isRoom(view) && !room(view))) view = cfg.rooms[0].id;
   if (isRoom(view)) lastRoom = view;
-  const byTopic = {};
-  cfg.rooms.forEach(rm => { byTopic[R[rm.id].topic] = rm.id; });
   setStatus('');
-  es = new EventSource(`${RELAY}/${Object.keys(byTopic).join(',')}/sse?since=12h`);
-  es.onopen = () => setStatus('on');
-  es.onerror = () => setStatus('off');
-  es.onmessage = e => onEvent(byTopic, e);
-  refreshQuota();
+  const open = new Set();
+  for (const rm of cfg.rooms) {
+    const r = R[rm.id];
+    // 처음엔 최근 1000건, 그다음부터는 마지막으로 받은 것 이후만
+    const lk = load('lk_' + r.sk, '');
+    const q = 'orderBy=%22%24key%22&' + (lk ? 'startAt=%22' + encodeURIComponent(lk) + '%22' : 'limitToLast=1000');
+    const st = new EventSource(`${DB}/m/${r.topic}.json?${q}`);
+    st.onopen = () => { open.add(rm.id); setStatus('on'); };
+    st.onerror = () => { open.delete(rm.id); if (!open.size) setStatus('off'); };
+    const onData = e => onPut(rm.id, e);
+    st.addEventListener('put', onData);
+    st.addEventListener('patch', onData);
+    streams.push(st);
+  }
   render();
+  heartbeat();
   if (cfg.notify) refreshPush(false).catch(() => {});
 }
 
-async function onEvent(byTopic, e) {
+// Firebase 스트림 이벤트: 처음엔 path "/"로 여러 건, 이후엔 "/키"로 한 건씩
+let putChain = Promise.resolve();
+function onPut(id, e) {
   let d; try { d = JSON.parse(e.data); } catch (_) { return; }
-  const id = byTopic[d.topic];
-  if (d.event !== 'message' || !id || !R[id]) return;
+  if (!d || !d.data || !R[id]) return;
+  const items = d.path === '/' ? Object.keys(d.data).sort().map(k => [k, d.data[k]]) : [[d.path.replace(/^\//, '').split('/')[0], d.data]];
+  putChain = putChain.then(async () => { for (const it of items) await onItem(id, it[0], it[1]); });
+}
+async function onItem(id, k, v) {
   const r = R[id];
-  if (r.seen.has(d.id)) return;
-  const o = await unseal(r.key, d.message || '');
-  if (!o || r.seen.has(d.id)) return;
-  if (o.sys) { r.seen.add(d.id); applySys(id, o); return; }
+  if (!r || !v || typeof v.d !== 'string' || r.seen.has(k)) return;
+  if (k > load('lk_' + r.sk, '')) save('lk_' + r.sk, k);
+  const o = await unseal(r.key, v.d);
+  if (!o || r.seen.has(k)) return;
+  if (o.sys) { r.seen.add(k); applySys(id, o); return; }
   if (typeof o.t !== 'string') return;
-  const m = {id: d.id, n: String(o.n || ''), t: o.t, ts: Number(o.ts) || d.time * 1000};
+  const m = {id: k, n: String(o.n || ''), t: o.t, ts: Number(o.ts) || Number(v.t) || Date.now()};
   if (o.re && typeof o.re.id === 'string') m.re = {id: o.re.id, n: String(o.re.n || ''), t: String(o.re.t || '').slice(0, 80)};
-  if (o.img && d.attachment) Object.assign(m, {t: '사진', img: 1, u: d.attachment.url, x: d.attachment.expires * 1000, mime: o.mime});
-  if (o.file && d.attachment) Object.assign(m, {t: '파일: ' + String(o.fname || ''), file: 1, fname: String(o.fname || '파일'), fsize: Number(o.fsize) || 0, u: d.attachment.url, x: d.attachment.expires * 1000, mime: o.mime});
+  const fu = o.fid ? `${DB}/f/${r.topic}/${encodeURIComponent(o.fid)}.json` : null;
+  if (o.img && fu) Object.assign(m, {t: '사진', img: 1, u: fu, x: 9e15, mime: o.mime});
+  if (o.file && fu) Object.assign(m, {t: '파일: ' + String(o.fname || ''), file: 1, fname: String(o.fname || '파일'), fsize: Number(o.fsize) || 0, u: fu, x: 9e15, mime: o.mime});
   add(id, m);
   if (m.img || m.file) fetchPic(id, m);
+}
+// 방에 한 건 올리기(메시지·신호 공통) → 저장 키
+async function post(id, obj) {
+  const r = R[id];
+  const res = await fetch(`${DB}/m/${r.topic}.json`, {method: 'POST', body: JSON.stringify({d: await seal(r.key, obj), t: {'.sv': 'timestamp'}})});
+  if (!res.ok) throw new Error(res.status);
+  return (await res.json()).name;
+}
+// 접속 중 표시(30초마다): 상대가 지금 보고 있으면 폰 알림 신호를 아낀다
+const presKey = async id => (await inboxOf(id, cfg.me)).slice(2, 18);
+async function heartbeat() {
+  clearTimeout(heartbeat.t);
+  heartbeat.t = setTimeout(heartbeat, 30000);
+  if (document.hidden || !cfg) return;
+  for (const rm of cfg.rooms) {
+    if (!R[rm.id]) continue;
+    try { await fetch(`${DB}/p/${R[rm.id].topic}/${await presKey(rm.id)}.json`, {method: 'PUT', body: JSON.stringify({'.sv': 'timestamp'})}); } catch (_) {}
+  }
 }
 
 // 방 안의 부가 신호: 공감·삭제·공지·읽음·알림 수신
@@ -508,11 +542,7 @@ async function sendSys(id, obj) {
   const r = R[id];
   const o = Object.assign({n: cfg.me, ts: Date.now()}, obj);
   applySys(id, o);
-  try {
-    const res = await fetch(`${RELAY}/${r.topic}`, {method: 'POST', body: await seal(r.key, o)});
-    if (res.status === 429) toast('오늘 보낼 수 있는 양을 다 썼어요');
-    refreshQuota();
-  } catch (_) { toast('전송 실패 — 네트워크를 확인하세요'); }
+  try { r.seen.add(await post(id, o)); } catch (_) { toast('전송 실패 — 네트워크를 확인하세요'); }
 }
 
 // 읽음 표시: 방을 보고 있을 때 상대 메시지를 어디까지 읽었는지 몇 초 모아서 한 번 보낸다
@@ -555,10 +585,18 @@ function add(id, m) {
 }
 
 // 알림을 켠 상대에게 짧은 알림 신호를 보낸다(상대 알림함 토픽으로)
+const lastPing = {};
 async function ping(id, text) {
   const r = R[id];
+  if (!r.nn.some(n => n !== cfg.me)) return;
+  let pres = {};
+  try { pres = (await (await fetch(`${DB}/p/${r.topic}.json`)).json()) || {}; } catch (_) {}
   for (const n of r.nn) {
     if (n === cfg.me) continue;
+    const ib = await inboxOf(id, n);
+    if (Date.now() - (pres[ib.slice(2, 18)] || 0) < 75000) continue;   // 지금 보고 있음
+    if (Date.now() - (lastPing[ib] || 0) < 60000) continue;           // 방금 보냄
+    lastPing[ib] = Date.now();
     try {
       await fetch(`${RELAY}/${await inboxOf(id, n)}`, {method: 'POST', body: await seal(r.key, {n: cfg.me, t: text.slice(0, 100), ts: Date.now()})});
     } catch (_) {}
@@ -575,24 +613,25 @@ async function send(text) {
   if (replyTo) payload.re = replyTo;
   if (te.encode(JSON.stringify(payload)).length > MAX_BYTES) { toast('메시지가 너무 길어요. 나눠서 보내주세요.'); return false; }
   try {
-    const res = await fetch(`${RELAY}/${r.topic}`, {method: 'POST', body: await seal(r.key, payload)});
-    if (res.status === 429) { toast('오늘 보낼 수 있는 양을 다 썼어요 (하루 250건)'); return false; }
-    if (!res.ok) throw new Error(res.status);
-    const d = await res.json();
-    const m = {id: d.id, n: payload.n, t: payload.t, ts: payload.ts};
+    const m = {id: await post(rm.id, payload), n: payload.n, t: payload.t, ts: payload.ts};
     if (payload.re) m.re = payload.re;
     setReply(null);
     add(rm.id, m);
     ping(rm.id, text);
     recentEmoji(text);
-    refreshQuota();
     return true;
   } catch (_) { toast('전송 실패 — 네트워크를 확인하세요'); return false; }
 }
 
 // ---------- 사진 ----------
 // 사진은 방 키로 암호화한 바이트를 ntfy 첨부로 올린다(서버 보관 3시간). 받은 사진은 기기의 IndexedDB에 보관.
-const PIC_MAX = 1.9 * 1024 * 1024;   // ntfy 익명 첨부 한도 2MB
+const PIC_MAX = 5 * 1024 * 1024;   // 첨부 한도 5MB
+// 큰 바이트 배열 → base64 (한 번에 넘기면 스택이 넘쳐서 나눠서)
+function b64big(u8) {
+  let s = '';
+  for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  return btoa(s);
+}
 const picUrls = new Map(), picBusy = new Set();
 const dbs = {};
 function openDb(name) {
@@ -623,7 +662,9 @@ async function fetchPic(id, m) {
   if (picBusy.has(m.id) || !m.u || !R[id]) return;
   picBusy.add(m.id);
   try {
-    const buf = new Uint8Array(await (await fetch(m.u)).arrayBuffer());
+    const res = await fetch(m.u);
+    // Firebase 첨부는 base64 문자열(JSON), 옛 ntfy 첨부는 바이너리
+    const buf = /\.json$/.test(m.u) ? ub64(await res.json()) : new Uint8Array(await res.arrayBuffer());
     const pt = await crypto.subtle.decrypt({name: 'AES-GCM', iv: buf.slice(0, 12)}, R[id].key, buf.slice(12));
     const blob = new Blob([pt], {type: m.mime || 'image/jpeg'});
     await idbPut(PICDB, 'p', m.id, blob);
@@ -675,7 +716,7 @@ async function sendPic(file) {
   if (!rm || !file) return;
   const r = R[rm.id];
   const isImg = /^image\/(jpeg|png|gif|webp|heic|heif|bmp)/.test(file.type);
-  if (!isImg && file.size > PIC_MAX) { toast('파일은 2MB까지 보낼 수 있어요'); return; }
+  if (!isImg && file.size > PIC_MAX) { toast('파일은 5MB까지 보낼 수 있어요'); return; }
   toast(isImg ? '사진 보내는 중…' : '파일 보내는 중…');
   try {
     const blob = isImg ? await shrink(file) : file;
@@ -683,20 +724,18 @@ async function sendPic(file) {
     const ct = new Uint8Array(await crypto.subtle.encrypt({name: 'AES-GCM', iv}, r.key, await blob.arrayBuffer()));
     const body = new Uint8Array(12 + ct.length); body.set(iv); body.set(ct, 12);
     const mime = blob.type || 'application/octet-stream';
-    const payload = isImg ? {n: cfg.me, t: '', img: 1, mime, ts: Date.now()}
-                          : {n: cfg.me, t: '', file: 1, fname: file.name.slice(0, 80), fsize: file.size, mime, ts: Date.now()};
-    const res = await fetch(`${RELAY}/${r.topic}`, {method: 'PUT', body, headers: {'Filename': 'p.bin', 'X-Message': await seal(r.key, payload)}});
-    if (res.status === 429) { toast('오늘 보낼 수 있는 양을 다 썼어요'); return; }
-    if (!res.ok) throw new Error(res.status);
-    const d = await res.json();
-    await idbPut(PICDB, 'p', d.id, blob);
-    if (isImg) picUrls.set(d.id, URL.createObjectURL(blob));
-    const at = d.attachment || {};
-    const m = {id: d.id, n: cfg.me, u: at.url, x: (at.expires || 0) * 1000, mime, ts: payload.ts};
+    const fr = await fetch(`${DB}/f/${r.topic}.json`, {method: 'POST', body: JSON.stringify(b64big(body))});
+    if (!fr.ok) throw new Error(fr.status);
+    const fid = (await fr.json()).name;
+    const payload = isImg ? {n: cfg.me, t: '', img: 1, fid, mime, ts: Date.now()}
+                          : {n: cfg.me, t: '', file: 1, fid, fname: file.name.slice(0, 80), fsize: file.size, mime, ts: Date.now()};
+    const mid = await post(rm.id, payload);
+    await idbPut(PICDB, 'p', mid, blob);
+    if (isImg) picUrls.set(mid, URL.createObjectURL(blob));
+    const m = {id: mid, n: cfg.me, u: `${DB}/f/${r.topic}/${fid}.json`, x: 9e15, mime, ts: payload.ts};
     Object.assign(m, isImg ? {t: '사진', img: 1} : {t: '파일: ' + payload.fname, file: 1, fname: payload.fname, fsize: payload.fsize});
     add(rm.id, m);
     ping(rm.id, isImg ? '' : m.t);
-    refreshQuota();
     toast(isImg ? '사진을 보냈어요' : '파일을 보냈어요');
   } catch (e) { toast(e.message === 'too big' ? '사진이 너무 커요' : '전송 실패 — 네트워크를 확인하세요'); }
 }
@@ -706,12 +745,13 @@ async function saveFile(rid, mid) {
   if (!m) return;
   let blob = await idbGet(PICDB, 'p', mid);
   if (!blob && m.u && Date.now() < m.x) { await fetchPic(rid, m); blob = await idbGet(PICDB, 'p', mid); }
-  if (!blob) { toast('파일 보관 기간(3시간)이 지났어요'); return; }
+  if (!blob) { toast('파일을 받지 못했어요'); return; }
   const a = Object.assign(document.createElement('a'), {href: URL.createObjectURL(blob), download: m.fname || 'file'});
   document.body.appendChild(a); a.click(); a.remove();
 }
 
 async function refreshQuota() {
+  return;   // ntfy 일일 한도 표시는 더 이상 쓰지 않음
   try {
     const d = await (await fetch(`${RELAY}/v1/account`)).json();
     quota = d.stats.messages_remaining;
@@ -960,13 +1000,10 @@ async function refreshPush(announce) {
   await idbPut('wt_push', 'k', 'push', {rooms});
   const res = await fetch(`${RELAY}/v1/webpush`, {method: 'POST', body: JSON.stringify({endpoint: j.endpoint, auth: j.keys.auth, p256dh: j.keys.p256dh, topics: rooms.map(x => x.inbox)})});
   if (!res.ok) throw new Error('webpush ' + res.status);
-  for (const rm of cfg.rooms) {   // 8시간마다 "나 알림 받아요" 신호(서버 기록은 12시간만 남으므로)
+  for (const rm of cfg.rooms) {   // 8시간마다 "나 알림 받아요" 신호(새 기기·기록 정리 대비)
     const r = R[rm.id], k = 'ann_' + r.sk;
     if (!announce && Date.now() - load(k, 0) < 8 * 3600e3) continue;
-    try {
-      await fetch(`${RELAY}/${r.topic}`, {method: 'POST', body: await seal(r.key, {n: cfg.me, sys: 'notify', on: true, ts: Date.now()})});
-      save(k, Date.now());
-    } catch (_) {}
+    try { await post(rm.id, {n: cfg.me, sys: 'notify', on: true, ts: Date.now()}); save(k, Date.now()); } catch (_) {}
   }
 }
 
@@ -981,7 +1018,7 @@ async function disablePush() {
   } catch (_) {}
   for (const rm of cfg.rooms) {
     const r = R[rm.id];
-    try { await fetch(`${RELAY}/${r.topic}`, {method: 'POST', body: await seal(r.key, {n: cfg.me, sys: 'notify', on: false, ts: Date.now()})}); } catch (_) {}
+    try { await post(rm.id, {n: cfg.me, sys: 'notify', on: false, ts: Date.now()}); } catch (_) {}
     save('ann_' + r.sk, 0);
   }
   cfg.notify = false; save('cfg', cfg);
@@ -1565,6 +1602,7 @@ document.addEventListener('drop', e => {
 window.addEventListener('blur', () => { if (cfg && cfg.autoHide && cur()) decoy(); });
 window.addEventListener('focus', () => { if (cur()) markRead(view); });
 document.addEventListener('visibilitychange', () => {
+  if (cfg && !document.hidden) heartbeat();
   if (cfg && !document.hidden && cur() && !mobileSide) { R[view].unread = 0; paintSide(); paintTitle(); markRead(view); }
 });
 
