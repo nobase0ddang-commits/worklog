@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>메신저</title>
+<meta name="theme-color" content="#bd1d63">
+<title>CH Messenger</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -21,43 +22,79 @@ input,textarea,select{font:inherit;color:inherit}
 .txt{white-space:pre-wrap;word-break:break-word}
 .empty{color:#999;text-align:center;padding:40px 16px;line-height:1.7}
 
-/* ---------- 메신저형 ---------- */
-.m{display:flex;height:100%;background:#f4f5f7}
-.m-side{width:270px;flex:none;background:#fff;border-right:1px solid #dde0e5;display:flex;flex-direction:column}
-.m-top{height:52px;display:flex;align-items:center;gap:8px;padding:0 12px 0 16px;border-bottom:1px solid #eceef1}
-.m-top b{font-size:15px;flex:1}
-.m-search{padding:10px 12px}
-.m-search input{width:100%;height:30px;border:1px solid #dde0e5;border-radius:4px;padding:0 10px;background:#f7f8fa}
-.m-rooms{list-style:none;overflow:auto;flex:1}
-.m-rooms li{display:flex;gap:10px;align-items:center;padding:10px 14px;cursor:pointer}
-.m-rooms li:hover{background:#f3f5f8}
-.m-rooms li.on{background:#e8eef8}
-.av{width:36px;height:36px;border-radius:12px;flex:none;display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px}
-.m-rooms .meta{flex:1;min-width:0}
-.m-rooms .nm{display:flex;justify-content:space-between;gap:6px}
-.m-rooms .nm b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.m-rooms .nm small{color:#999;font-size:11px;flex:none}
-.m-rooms .pv{display:flex;justify-content:space-between;gap:6px;margin-top:3px;color:#888;font-size:12px}
-.m-rooms .pv span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.m-main{flex:1;display:flex;flex-direction:column;min-width:0}
-.m-head{height:52px;display:flex;align-items:center;gap:10px;padding:0 16px;background:#fff;border-bottom:1px solid #dde0e5}
-.m-head .av{width:32px;height:32px;font-size:13px}
-.m-head b{font-size:14px;display:block}
-.m-head small{color:#888;font-size:11px}
-.m-list{flex:1;overflow:auto;padding:14px 18px}
-.m-day{text-align:center;margin:12px 0;color:#888;font-size:11px}
-.m-day span{background:#e6e8ec;border-radius:10px;padding:3px 10px}
-.m-row{display:flex;gap:8px;margin:6px 0;align-items:flex-end}
-.m-row .av{width:30px;height:30px;font-size:12px;align-self:flex-start}
-.m-row .who{font-size:11px;color:#666;margin-bottom:3px}
-.m-bub{max-width:min(520px,70vw);padding:8px 11px;border-radius:4px 12px 12px 12px;background:#fff;border:1px solid #e1e4e8;line-height:1.5}
-.m-row.me{justify-content:flex-end}
-.m-row.me .m-bub{background:#dce8fb;border-color:#c9daf5;border-radius:12px 4px 12px 12px}
-.m-row time{font-size:10px;color:#999;flex:none}
-.m-comp{display:flex;gap:8px;padding:10px 12px;background:#fff;border-top:1px solid #dde0e5}
-.m-comp textarea{flex:1;resize:none;border:1px solid #dde0e5;border-radius:4px;padding:8px 10px;height:60px;outline:none}
-.m-comp textarea:focus{border-color:#7da2e0}
-.m-comp button{width:64px;border-radius:4px;background:#3b6fd4;color:#fff;font-weight:600}
+/* ---------- 메신저형 (CH) ---------- */
+.ch{--pk:#bd1d63;--sel:#dde3f7;--line:#e4e4e8;--av:#86c6d8;display:flex;height:100%;background:#fff;color:#222}
+.ch svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ch .av{width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--av);color:#fff;font-size:15px;font-weight:600}
+.ch .av.grp{background:none;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;place-items:stretch;gap:2px;padding:1px}
+.ch .av.grp i{border-radius:50%;background:var(--av);display:grid;place-items:center;font-style:normal;font-size:9px;color:#fff}
+.ch-main{width:430px;flex:none;display:flex;flex-direction:column;border-right:1px solid #d9d9de;min-width:0}
+.ch-tool{height:58px;flex:none;display:flex;align-items:center;gap:18px;padding:0 14px 0 16px;border-bottom:1px solid #e1e1e6;color:var(--pk)}
+.ch-tool .t{width:32px;height:32px;position:relative;cursor:pointer}
+.ch-tool .t .badge{position:absolute;top:-6px;right:-10px;transform:scale(.85)}
+.ch-tool .sp{flex:1}
+.ch-tool .bell{width:34px;height:34px;border-radius:50%;background:#ececf0;color:#9a9aa3;padding:7px}
+.ch-body{flex:1;display:flex;min-height:0}
+.ch-rail{width:50px;flex:none;border-right:1px solid #e1e1e6;display:flex;flex-direction:column;align-items:center;gap:22px;padding-top:16px;color:var(--pk)}
+.ch-rail .r{width:26px;height:26px;cursor:pointer}
+.ch-pane{flex:1;display:flex;flex-direction:column;min-width:0;background:#fff}
+.ch-search{height:40px;flex:none;display:flex;align-items:center;gap:8px;padding:0 10px 0 12px;border-bottom:1px solid #e1e1e6;color:#999}
+.ch-search .mg{width:16px;height:16px;flex:none}
+.ch-search span.ph{flex:1;font-size:13px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ch-search .s{width:18px;height:18px;color:#777;flex:none}
+.ch-tabs{height:40px;flex:none;display:flex;align-items:flex-end;gap:2px;padding:0 10px}
+.ch-tabs span{padding:0 7px 9px;font-size:13px;color:#333;border-bottom:2px solid transparent;cursor:pointer}
+.ch-tabs span.on{color:#4b4f9c;border-color:#5e63b6;font-weight:600}
+.ch-tabs .chev{width:16px;height:16px;margin:0 0 9px 8px;color:#555}
+.ch-list{flex:1;overflow:auto;list-style:none}
+.ch-list li{display:flex;gap:12px;padding:9px 14px 8px 18px;cursor:pointer;position:relative}
+.ch-list li::after{content:"";position:absolute;left:18px;right:16px;bottom:0;height:1px;background:var(--line)}
+.ch-list li:hover{background:#f3f4fa}
+.ch-list li.on{background:var(--sel)}
+.ch-list .av{margin-top:2px}
+.ch-list .meta{flex:1;min-width:0;line-height:1.55}
+.ch-list .l1{display:flex;align-items:baseline;gap:10px}
+.ch-list .l1 b{font-size:13.5px;font-weight:700;white-space:nowrap}
+.ch-list .l1 small{color:#888;font-size:11.5px;font-weight:600;white-space:nowrap}
+.ch-list .l1 .badge{margin-left:auto}
+.ch-list .l2,.ch-list .l3{font-size:12.5px;color:#222;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ch-list .l2 .cl,.ch-list .l2 .ps{display:inline-block;width:15px;height:15px;vertical-align:-3px;margin-right:4px;color:#555}
+.ch-list .l2 .ps{color:#4b6fd0}
+.ch-chat{flex:1;display:flex;flex-direction:column;min-width:0;background:#f3f3f3}
+.ch-head{flex:none;background:#f6f6f6;border-bottom:1px solid #dcdcdc;padding:8px 12px 6px 14px}
+.ch-head .r1{display:flex;align-items:center;gap:12px}
+.ch-head .r1 .av{width:44px;height:44px;font-size:17px}
+.ch-head .hi{width:20px;height:20px;color:#555}
+.ch-head .r2{display:flex;align-items:center;gap:6px;margin:2px 0 0 4px;font-size:13px}
+.ch-head .r2 .av{width:18px;height:18px;font-size:9px}
+.ch-head .r2 .sp{flex:1}
+.ch-head .r2 .cb{width:24px;height:24px;border-radius:50%;background:#e2e2e6;color:#666;padding:5px}
+.ch-head .back{width:22px;height:22px;color:#555;cursor:pointer}
+.ch-msgs{flex:1;overflow:auto;padding:6px 12px 10px}
+.ch-day{display:flex;align-items:center;margin:12px -4px;font-size:12px;color:#333}
+.ch-day::before,.ch-day::after{content:"";flex:1;height:1px;background:#c9c9c9}
+.ch-day span{background:#d9d9d9;border:1px solid #c4c4c4;padding:1px 6px}
+.ch-o{display:flex;gap:9px;margin-top:10px}
+.ch-o .av{width:36px;height:36px;font-size:14px}
+.ch-o .nm{font-size:13px;color:#333;margin:1px 0 5px}
+.ch-o .row{display:flex;align-items:flex-end;gap:6px;margin-bottom:6px}
+.ch-bub{max-width:min(420px,64vw);padding:7px 11px;font-size:13px;line-height:1.5;border:1px solid #cfcfcf;background:#ececec;border-radius:2px;position:relative}
+.ch-o .nm + .row .ch-bub::before{content:"";position:absolute;left:-6px;top:6px;border:5px solid transparent;border-right-color:#cfcfcf;border-left:0}
+.ch-m{display:flex;justify-content:flex-end;align-items:flex-end;gap:6px;margin:6px 0}
+.ch-m .ch-bub{background:#f6d61c;border-color:#d9b70b}
+.ch-m.first .ch-bub::after{content:"";position:absolute;right:-6px;top:6px;border:5px solid transparent;border-left-color:#d9b70b;border-right:0}
+.ch-o time,.ch-m time{font-size:11px;color:#555;white-space:nowrap}
+.ch-comp{flex:none;background:#fff;border-top:1px solid #d6d6d6}
+.ch-grip{height:6px;display:grid;place-items:center}
+.ch-grip::before{content:"";width:14px;height:3px;border-top:1px solid #aaa;border-bottom:1px solid #aaa}
+.ch-comp textarea{display:block;width:100%;height:86px;border:0;outline:none;resize:none;padding:4px 14px;font-size:13px;background:#fff}
+.ch-comp textarea::placeholder{color:#444}
+.ch-bar{display:flex;align-items:center;gap:14px;padding:6px 12px 10px 14px;color:#555}
+.ch-bar .b{width:20px;height:20px}
+.ch-bar .sp{flex:1}
+.ch-bar button{width:88px;height:32px;border:1px solid #9b9b9b;border-radius:3px;background:#fff;color:#222;font-size:13px}
+.ch-empty{color:#888;text-align:center;padding:40px 16px;line-height:1.7;font-size:12.5px}
+.ch-st{font-size:11px;color:#999;margin-left:6px}
 
 /* ---------- 협업툴형 ---------- */
 .c{display:flex;height:100%}
@@ -147,16 +184,24 @@ input,textarea,select{font:inherit;color:inherit}
 #toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#333;color:#fff;padding:8px 14px;border-radius:6px;font-size:12px;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none}
 #toast.show{opacity:.95}
 
+@media (max-width:860px){
+  .ch-main{width:100%;border-right:0}
+  .ch:not(.side) .ch-main{display:none}
+  .ch.side .ch-chat{display:none}
+  .ch .back{display:inline-block}
+}
+@media (max-width:860px) and (hover:hover) and (pointer:fine){
+  .ch .back{display:none}
+}
 @media (max-width:700px){
-  .m-side,.c-side{width:100%}
-  .m:not(.side) .m-side,.c:not(.side) .c-side{display:none}
-  .m.side .m-main,.c.side .c-main{display:none}
+  .c-side{width:100%}
+  .c:not(.side) .c-side{display:none}
+  .c.side .c-main{display:none}
   .back{display:inline-grid}
-  .m-head,.c-head{padding:0 8px}
-  .m-comp textarea,.c-box textarea,.s-fx input{font-size:16px}
-  .m-list{padding:12px 10px}
-  .m-bub{max-width:76vw}
-  .m-comp{padding-bottom:max(10px,env(safe-area-inset-bottom))}
+  .c-head{padding:0 8px}
+  .ch-comp textarea,.c-box textarea,.s-fx input{font-size:16px}
+  .ch-bub{max-width:70vw}
+  .ch-bar{padding-bottom:max(10px,env(safe-area-inset-bottom))}
   .c-comp{padding:0 10px max(10px,env(safe-area-inset-bottom))}
   .s-tool{display:none}
 }
@@ -185,6 +230,7 @@ input,textarea,select{font:inherit;color:inherit}
     <div class="warn" id="fWarn"></div>
     <div class="btns"><button id="fCancel">취소</button><button id="fSave" class="pri">저장</button></div>
     <button class="lnk" id="fClear">이 기기의 대화 기록 지우기</button>
+    <p class="tip">오늘 남은 전송: <span id="qtm">-</span>건</p>
     <p class="tip">Esc 키: 업무 화면 ↔ 대화 전환 · Enter 전송, Shift+Enter 줄바꿈<br>서버에는 최근 12시간치만 남고, 기록은 각자 기기에 저장돼요.</p>
   </div>
 </div>
@@ -204,6 +250,7 @@ const save = (k, v) => { try { localStorage.setItem(K(k), JSON.stringify(v)); } 
 let cfg = load('cfg', null);
 let msgs = [], seen = new Set();
 let view = 'real', lastDecoy = null, unread = 0, mobileSide = false;
+let chTab = 'chat', selNote = 0;   // 메신저형 왼쪽 목록: 대화 / 쪽지
 let key = null, topic = null, es = null, status = '', quota = null;
 
 const $ = s => document.querySelector(s);
@@ -276,7 +323,7 @@ function add(m) {
   msgs.sort((a, b) => a.ts - b.ts);
   if (msgs.length > 3000) msgs = msgs.slice(-3000);
   save('msgs_' + topic.slice(2, 10), msgs);
-  if (!mine(m) && (view !== 'real' || document.hidden)) unread++;
+  if (!mine(m) && (view !== 'real' || mobileSide || document.hidden)) unread++;
   renderList(); paintSide(); paintTitle();
 }
 
@@ -328,7 +375,13 @@ function setView(v) {
   mobileSide = false;
   render();
 }
-function toggleDecoy() { setView(view === 'real' ? (lastDecoy || 'team') : 'real'); }
+function decoy() {
+  view = lastDecoy || 'team';
+  chTab = 'note';      // 메신저형은 쪽지 수신함이 보이게
+  mobileSide = true;
+  render();
+}
+function toggleDecoy() { if (view === 'real' && !mobileSide) decoy(); else setView('real'); }
 
 // ---------- 공통 그리기 ----------
 function render() {
@@ -342,6 +395,11 @@ function render() {
   const inp = $('#inp');
   if (inp) {
     inp.addEventListener('keydown', async e => {
+      if (e.key === 'Enter' && e.ctrlKey) {   // Ctrl+Enter 줄바꿈
+        e.preventDefault();
+        inp.setRangeText?.('\n', inp.selectionStart, inp.selectionEnd, 'end');
+        return;
+      }
       if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
         e.preventDefault();
         const t = inp.value;
@@ -360,64 +418,175 @@ function renderList() {
 }
 function paintSide() { SKINS[cfg.skin].side?.(); }
 function paintTitle() {
-  const base = {msg: '메신저', collab: '업무공간', sheet: '업무관리대장.xlsx'}[cfg.skin];
-  document.title = (unread && cfg.skin !== 'sheet') ? `(${unread}) ${base}` : base;
+  const base = {msg: 'CH Messenger', collab: '업무공간', sheet: '업무관리대장.xlsx'}[cfg.skin];
+  document.title = (unread && cfg.skin === 'collab') ? `(${unread}) ${base}` : base;
+  document.querySelector('meta[name=theme-color]').content = {msg: '#bd1d63', collab: '#2b2f3a', sheet: '#1f6e43'}[cfg.skin];
 }
 function paintStatus() {
+  if (quota != null) $('#qtm').textContent = quota;
   const el = $('#qt'); if (!el) return;
   el.textContent = quota == null ? '' : (cfg.skin === 'sheet' ? `잔여 ${quota}` : `· 잔여 ${quota}`);
 }
 function lastReal() { return msgs[msgs.length - 1]; }
 
+
+// ---------- 메신저형(CH) 전용 ----------
+const svg = d => `<svg viewBox="0 0 24 24">${d}</svg>`;
+const IC = {
+  star: svg('<path d="M12 2.8l2.8 5.8 6.3.8-4.6 4.4 1.2 6.3L12 17l-5.7 3.1 1.2-6.3L2.9 9.4l6.3-.8z"/>'),
+  org: svg('<rect x="9" y="2.5" width="6" height="5"/><rect x="2.5" y="16.5" width="6" height="5"/><rect x="15.5" y="16.5" width="6" height="5"/><rect x="9" y="16.5" width="6" height="5"/><path d="M12 7.5v9M5.5 16.5V12h13v4.5"/>'),
+  search: svg('<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5l5.5 5.5"/>'),
+  note: svg('<path d="M3 6.5h12M3 6.5v12h16v-5"/><path d="M3 6.5l8 6 4-3"/><path d="M13 15l1-3.5 6.5-6.5 2.5 2.5-6.5 6.5z"/><path d="M5 21L21 4"/>'),
+  chat: svg('<path d="M12 3.5c5 0 9 3.4 9 7.6s-4 7.6-9 7.6c-1 0-2-.1-2.9-.4L4.5 20.5l1.4-3.6C4.1 15.5 3 13.4 3 11.1 3 6.9 7 3.5 12 3.5z"/><path d="M8.3 11.2h.01M12 11.2h.01M15.7 11.2h.01" stroke-width="2.4"/>'),
+  more: svg('<path d="M4.5 12h.01M12 12h.01M19.5 12h.01" stroke-width="3.4"/>'),
+  bell: svg('<path d="M6 16.5V11a6 6 0 0112 0v5.5l1.5 2h-15z" fill="currentColor"/><path d="M10 20.5a2 2 0 004 0"/>'),
+  inbox: svg('<path d="M3 13.5L6 5h12l3 8.5V20H3z"/><path d="M3 13.5h5.5l1 2.5h5l1-2.5H21"/>'),
+  board: svg('<rect x="3" y="3.5" width="18" height="13" rx="1.5"/><path d="M8 21h8M12 16.5V21M8 13v-2.5M12 13V8M16 13v-4"/>'),
+  mega: svg('<path d="M3.5 9.5v5h3l9 4.5v-14l-9 4.5z"/><path d="M6.5 14.5l1.5 6h2.5l-1.3-5.5M19 9a4 4 0 010 6"/>'),
+  clip2: svg('<rect x="4" y="4.5" width="13" height="17" rx="1"/><path d="M8 2.5h5v4H8zM17 8h3v13.5H8"/>'),
+  gear: svg('<circle cx="12" cy="12" r="3"/><path d="M12 2.5l1.6 2.4 2.8-.8.8 2.8 2.4 1.6-1.1 2.5 1.1 2.5-2.4 1.6-.8 2.8-2.8-.8L12 21.5l-1.6-2.4-2.8.8-.8-2.8-2.4-1.6L5.5 12 4.4 9.5l2.4-1.6.8-2.8 2.8.8z"/>'),
+  refresh: svg('<path d="M19 12a7 7 0 11-2-4.9M19 4v4h-4"/>'),
+  fold: svg('<path d="M4 4h16M4 20h16M12 7v4M9 9l3 3 3-3M12 17v-4M9 15l3-3 3 3"/>'),
+  lines: svg('<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" stroke-width="2"/>'),
+  chev: svg('<path d="M9 5l7 7-7 7" stroke-width="2"/>'),
+  left: svg('<path d="M15 5l-7 7 7 7" stroke-width="2"/>'),
+  clip: svg('<path d="M20 11.5l-8.2 8.2a5 5 0 01-7.1-7.1L13 4.3a3.4 3.4 0 014.8 4.8l-8.3 8.3a1.8 1.8 0 01-2.5-2.5l7.6-7.6"/>'),
+  person: svg('<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.2 4-6.3 8-6.3s7 2.1 8 6.3"/>'),
+  grid: svg('<rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/>'),
+  kebab: svg('<path d="M12 5h.01M12 12h.01M12 19h.01" stroke-width="3"/>'),
+  emo: svg('<path d="M7 18.5a4.5 4.5 0 01-.5-9 6 6 0 0111.5 1.5 3.8 3.8 0 01-.5 7.5z"/><path d="M9.5 14.5c1.4 1.2 3.6 1.2 5 0"/>'),
+  smile: svg('<circle cx="12" cy="12" r="8.5"/><path d="M8.5 14c1.9 2 5.1 2 7 0M9 9.5h.01M15 9.5h.01" stroke-width="1.8"/>'),
+  tt: svg('<path d="M5 5h14M12 5v15"/>'),
+  folder: svg('<path d="M3 6.5h6l2 2h10v10H3z"/><path d="M3 11h18"/>'),
+  crop: svg('<path d="M6 2.5V18h15.5M2.5 6H18v15.5"/>'),
+  down: svg('<path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5M4 20h16"/>')
+};
+const WD = '일월화수목금토';
+const chatTime = ts => { const d = new Date(ts), h = d.getHours(); return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}:${pad(d.getMinutes())}`; };
+const dayStr = ago => { const d = new Date(Date.now() - ago * 864e5); return `${d.getDate()}(${WD[d.getDay()]})`; };
+const listTime = ts => { const d = new Date(ts); return `${d.getDate()}(${WD[d.getDay()]}) ${chatTime(ts)}`; };
+const chatDay = ts => ymd(ts) === ymd(Date.now()) ? '오늘' : `${new Date(ts).getMonth() + 1}월 ${new Date(ts).getDate()}일 ${WD[new Date(ts).getDay()]}요일`;
+const nameOnly = s => s.split('(')[0].trim() || s;
+const grpAv = g => `<div class="av grp">${g.slice(0, 4).map(n => `<i>${esc(n[0])}</i>`).join('')}</div>`;
+// 위장용 대화방(가상 인물)
+const CHC = {
+  team: {grp: ['민지호', '송하린', '이도윤', '박서준', '정다은'], ago: 0, lines: [
+    ['민지호', '오전 10:40', '11월 회의 자료 공유폴더에 올려두었습니다.'],
+    ['나', '오전 10:52', '넵 확인했습니다!'],
+    ['송하린', '오전 11:19', '감사합니당']]},
+  notice: {name: '박서준(마케팅1팀)', ago: 1, lines: [
+    ['박서준', '오전 11:10', '연구원님 BW 수정본 다시 보내드렸습니다'],
+    ['나', '오전 11:21', 'ㅇㅋㅇㅋ']]},
+  lab: {name: '이도윤(안전평가팀)', ago: 2, lines: [
+    ['나', '오후 1:58', '도윤님 내일 회의 2시로 변경됐어요'],
+    ['이도윤', '오후 2:07', '넵!!']]}
+};
+const chatOf = v => v === 'real' ? {name: cfg.peer} : CHC[v];
+function NOTES() {
+  const d = ago => new Date(Date.now() - ago * 864e5);
+  const kr = x => `${x.getFullYear()}년 ${x.getMonth() + 1}월 ${x.getDate()}일 식품안전정보`;
+  const iso = x => `[${ymd(x)} 국내·외 식품안전정보]`;
+  return [
+    {f: '정다은', w: dayStr(0) + ' 오전 11:02', c: 1, s: kr(d(0)), p: kr(d(0))},
+    {f: '윤서아', w: dayStr(0) + ' 오전 11:01', c: 1, s: iso(d(0)), p: iso(d(0))},
+    {f: '오준혁', w: dayStr(0) + ' 오전 9:32', s: '[신제품 출시 일정 공유 및 협조 요청의 건]', p: '안녕하세요'},
+    {f: '한도윤', w: dayStr(0) + ' 오전 9:26', s: '★ 법인카드 사용 안내의 건 ★', p: '안녕하십니까. 재무팀 한도윤 입니다.'},
+    {f: '장서윤', w: dayStr(1) + ' 오후 5:56', c: 1, s: '[2027 달력 배포 수량 안내의 건]', p: '안녕하십니까, 마케팅팀 장서윤 대리입니다.'},
+    {f: '임재현', w: dayStr(1) + ' 오후 4:29', c: 1, s: 'Fwd: 11월 1주차 생산일정 공유합니다.', p: '----------> Original Message <----------'},
+    {f: '윤서아', w: dayStr(1) + ' 오전 11:23', c: 1, s: iso(d(1)), p: iso(d(1))},
+    {f: '정다은', w: dayStr(1) + ' 오전 11:00', c: 1, s: kr(d(1)), p: kr(d(1))},
+    {f: '송하린', w: dayStr(1) + ' 오전 9:53', c: 1, s: 'Re(4): 신제품 BW 수정 요청의 건', p: '안녕하세요'},
+    {f: '송하린', w: dayStr(2) + ' 오후 5:43', c: 1, s: 'Re(2): 신제품 BW 수정 요청의 건', p: '안녕하세요 연구원님'}
+  ];
+}
+
 // ---------- 스킨 ----------
 const SKINS = {
   msg: {
     layout() {
-      const title = view === 'real' ? cfg.peer : fakeOf(view).name;
-      return `<div class="m${mobileSide ? ' side' : ''}">
-        <aside class="m-side">
-          <div class="m-top"><b>대화</b><span class="dot"></span><button class="ic gear" title="설정">⚙</button></div>
-          <div class="m-search"><input placeholder="이름, 대화방 검색" readonly></div>
-          <ul class="m-rooms" id="rooms"></ul>
-        </aside>
-        <section class="m-main">
-          <header class="m-head"><button class="ic back">‹</button>
-            <div class="av" style="background:${colorOf(title)}">${esc(initial(title))}</div>
-            <div><b>${esc(title)}</b><small>${view === 'real' ? '1:1 대화 <span id="qt"></span>' : '그룹 대화'}</small></div></header>
-          <div class="m-list" id="list"></div>
-          <div class="m-comp"><textarea id="inp" placeholder="메시지를 입력하세요"></textarea><button id="sendBtn">전송</button></div>
+      const c = chatOf(view);
+      const hd = c.grp ? grpAv(c.grp) : `<div class="av">${esc(initial(c.name))}</div>`;
+      return `<div class="ch${mobileSide ? ' side' : ''}">
+        <section class="ch-main">
+          <div class="ch-tool">
+            <span class="t" title="즐겨찾기">${IC.star}</span><span class="t" title="조직도">${IC.org}</span><span class="t" title="검색">${IC.search}</span>
+            <span class="t" data-tab="note" title="쪽지">${IC.note}</span><span class="t" data-tab="chat" title="대화">${IC.chat}${unread ? `<i class="badge">${unread}</i>` : ''}</span>
+            <span class="t gear" title="설정">${IC.more}</span><i class="sp"></i><span class="bell">${IC.bell}</span>
+          </div>
+          <div class="ch-body">
+            <nav class="ch-rail"><span class="r" data-tab="note">${IC.inbox}</span><span class="r">${IC.board}</span><span class="r">${IC.mega}</span><span class="r">${IC.clip2}</span><span class="r gear">${IC.gear}</span></nav>
+            <div class="ch-pane">
+              <div class="ch-search"><span class="mg">${IC.search}</span><span class="ph">${chTab === 'note' ? '검색어(제목,내용,수신인,발신인,파일명)를 입력하세요.' : '참여자로 검색'}</span>
+                <span class="s">${IC.refresh}</span><span class="s">${IC.fold}</span><span class="s">${IC.lines}</span><span class="s">${IC.chev}</span></div>
+              ${chTab === 'note' ? `<div class="ch-tabs"><span>미확인</span><span class="on">수신</span><span>발신</span><span>예약</span><span style="margin-left:14px">전체</span><span class="chev">${IC.chev}</span></div>` : ''}
+              <ul class="ch-list" id="rooms"></ul>
+            </div>
+          </div>
+        </section>
+        <section class="ch-chat">
+          <header class="ch-head">
+            <div class="r1"><span class="back">${IC.left}</span>${hd}<span class="hi">${IC.grid}</span><span class="hi">${IC.search}</span></div>
+            <div class="r2">${c.grp ? `<span style="color:#4b6fd0;width:14px;height:14px;display:inline-block">${IC.person}</span>${c.grp.length + 1}` : `<div class="av">${esc(initial(c.name))}</div>`}
+              <span>${esc(c.grp ? c.grp.join(',') : nameOnly(c.name))}</span>${view === 'real' ? '<span class="dot"></span>' : ''}<i class="sp"></i>
+              <span class="cb">${IC.bell}</span><span class="cb">${IC.kebab}</span></div>
+          </header>
+          <div class="ch-msgs" id="list"></div>
+          <div class="ch-comp"><div class="ch-grip"></div>
+            <textarea id="inp" placeholder="채팅 입력 [줄 바꿈 : Ctrl + Enter]"></textarea>
+            <div class="ch-bar"><span class="b">${IC.emo}</span><span class="b">${IC.smile}</span><span class="b">${IC.tt}</span><span class="b">${IC.clip}</span>
+              <span class="b">${IC.folder}</span><span class="b">${IC.crop}</span><span class="b">${IC.down}</span><i class="sp"></i><button id="sendBtn">전송</button></div>
+          </div>
         </section></div>`;
+    },
+    bind() {
+      document.querySelectorAll('[data-tab]').forEach(el => el.addEventListener('click', () => { chTab = el.dataset.tab; mobileSide = true; render(); }));
+      document.querySelector('.ch-head .back')?.addEventListener('click', () => { mobileSide = true; render(); });
     },
     side() {
       const ul = $('#rooms'); if (!ul) return;
+      if (chTab === 'note') {
+        ul.innerHTML = NOTES().map((n, i) => `<li data-n="${i}" class="${selNote === i ? 'on' : ''}"><div class="av">${esc(n.f[0])}</div>
+          <div class="meta"><div class="l1"><b>From ${esc(n.f)}</b><small>${n.w}</small></div>
+          <div class="l2">${n.c ? `<span class="cl">${IC.clip}</span>` : ''}${esc(n.s)}</div><div class="l3">${esc(n.p)}</div></div></li>`).join('');
+        ul.querySelectorAll('li').forEach(li => li.addEventListener('click', () => { selNote = +li.dataset.n; paintSide(); }));
+        return;
+      }
       const lr = lastReal();
-      const peerPv = view === 'real' && lr ? lr.t.split('\n')[0] : '';
       const items = [
-        {v: 'team', name: fakeOf('team').name, pv: fakeOf('team').lines.at(-1)[2], tm: '10:05'},
-        {v: 'real', name: cfg.peer, pv: peerPv, tm: lr ? hm(lr.ts) : '', badge: unread},
-        {v: 'notice', name: fakeOf('notice').name, pv: fakeOf('notice').lines[0][2], tm: '08:30'},
-        {v: 'lab', name: fakeOf('lab').name, pv: fakeOf('lab').lines.at(-1)[2], tm: '어제'}
-      ];
-      ul.innerHTML = items.map(r => `<li data-r="${r.v}" class="${view === r.v ? 'on' : ''}">
-        <div class="av" style="background:${colorOf(r.name)}">${esc(initial(r.name))}</div>
-        <div class="meta"><div class="nm"><b>${esc(r.name)}</b><small>${r.tm}</small></div>
-        <div class="pv"><span>${esc(r.pv)}</span>${r.badge ? `<i class="badge">${r.badge}</i>` : ''}</div></div></li>`).join('');
+        {v: 'real', f: lr ? (mine(lr) ? '나' : nameOnly(cfg.peer)) : nameOnly(cfg.peer), w: lr ? listTime(lr.ts) : '', l2: esc(cfg.peer), l3: lr ? lr.t.split('\n')[0] : '', badge: unread, av: `<div class="av">${esc(initial(cfg.peer))}</div>`}
+      ].concat(['team', 'notice', 'lab'].map(k => {
+        const c = CHC[k], last = c.lines.at(-1);
+        return {v: k, f: last[0], w: dayStr(c.ago) + ' ' + last[1], l3: last[2],
+          l2: c.grp ? `<span class="ps">${IC.person}</span>${c.grp.length + 1}&nbsp; ${esc(c.grp.join(','))}` : esc(c.name),
+          av: c.grp ? grpAv(c.grp) : `<div class="av">${esc(initial(c.name))}</div>`};
+      }));
+      ul.innerHTML = items.map(r => `<li data-r="${r.v}" class="${view === r.v ? 'on' : ''}">${r.av}
+        <div class="meta"><div class="l1"><b>From ${esc(r.f)}</b><small>${r.w}</small>${r.badge ? `<i class="badge">${r.badge}</i>` : ''}</div>
+        <div class="l2">${r.l2}</div><div class="l3">${esc(r.l3)}</div></div></li>`).join('');
       ul.querySelectorAll('li').forEach(li => li.addEventListener('click', () => setView(li.dataset.r)));
     },
     list() {
-      if (view !== 'real') return fakeOf(view).lines.map(([n, t, x]) => bubble(n === '나', n, t, x)).join('');
-      if (!msgs.length) return `<div class="empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
-      let out = '', day = '';
-      for (const m of msgs) {
-        if (ymd(m.ts) !== day) { day = ymd(m.ts); out += `<div class="m-day"><span>${dayLabel(m.ts)}</span></div>`; }
-        out += bubble(mine(m), cfg.peer, hm(m.ts), m.t);
+      const peer = nameOnly(cfg.peer);
+      let src;
+      if (view !== 'real') {
+        src = CHC[view].lines.map(([n, t, x]) => ({me: n === '나', n, t, x, day: '오늘'}));
+      } else {
+        if (!msgs.length) return `<div class="ch-empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
+        src = msgs.map(m => ({me: mine(m), n: peer, t: chatTime(m.ts), x: m.t, day: chatDay(m.ts)}));
+      }
+      let out = '', day = '', i = 0;
+      while (i < src.length) {
+        const m = src[i];
+        if (m.day !== day) { day = m.day; out += `<div class="ch-day"><span>${esc(day)}</span></div>`; }
+        let j = i;
+        while (j < src.length && src[j].me === m.me && src[j].n === m.n && src[j].day === day) j++;
+        const run = src.slice(i, j);
+        if (m.me) out += run.map((r, k) => `<div class="ch-m${k ? '' : ' first'}"><time>${r.t}</time><div class="ch-bub txt">${esc(r.x)}</div></div>`).join('');
+        else out += `<div class="ch-o"><div class="av">${esc(initial(m.n))}</div><div><div class="nm">${esc(m.n)}</div>
+          ${run.map(r => `<div class="row"><div class="ch-bub txt">${esc(r.x)}</div><time>${r.t}</time></div>`).join('')}</div></div>`;
+        i = j;
       }
       return out;
-      function bubble(me, n, t, x) {
-        return me
-          ? `<div class="m-row me"><time>${t}</time><div class="m-bub txt">${esc(x)}</div></div>`
-          : `<div class="m-row"><div class="av" style="background:${colorOf(n)}">${esc(initial(n))}</div><div><div class="who">${esc(n)}</div><div class="m-bub txt">${esc(x)}</div></div><time>${t}</time></div>`;
-      }
     }
   },
 
@@ -542,9 +711,9 @@ $('#fSave').addEventListener('click', async () => {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && cfg && $('#setup').classList.contains('hidden')) { e.preventDefault(); toggleDecoy(); }
 });
-window.addEventListener('blur', () => { if (cfg?.autoHide && view === 'real') setView(lastDecoy || 'team'); });
+window.addEventListener('blur', () => { if (cfg?.autoHide && view === 'real') decoy(); });
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && view === 'real') { unread = 0; paintSide(); paintTitle(); }
+  if (cfg && !document.hidden && view === 'real' && !mobileSide) { unread = 0; paintSide(); paintTitle(); }
 });
 
 (async () => {
