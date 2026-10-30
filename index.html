@@ -183,6 +183,15 @@ input,textarea,select{font:inherit;color:inherit}
 .card .lnk{color:#c0392b;font-size:12px;text-decoration:underline;margin-top:10px}
 #toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#333;color:#fff;padding:8px 14px;border-radius:6px;font-size:12px;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none}
 #toast.show{opacity:.95}
+img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;min-height:40px;cursor:zoom-in;background:#ddd}
+.pic-gone{color:#888;font-size:12px}
+.ch-bub.im{padding:3px;background:#fff}
+.s-grid img.pic{max-height:90px;max-width:160px;min-height:0}
+.c-box .pb{width:30px;height:30px;border-radius:6px;background:#eceef1;color:#555;font-size:16px}
+.s-tabs .picBtn{cursor:pointer}
+.picBtn{cursor:pointer}
+#viewer{position:fixed;inset:0;background:rgba(0,0,0,.85);display:grid;place-items:center;z-index:30;cursor:zoom-out;padding:12px}
+#viewer img{max-width:100%;max-height:100%;object-fit:contain}
 
 @media (max-width:860px){
   .ch-main{width:100%;border-right:0}
@@ -235,6 +244,8 @@ input,textarea,select{font:inherit;color:inherit}
   </div>
 </div>
 <div id="toast"></div>
+<input type="file" id="picFile" accept="image/*" hidden>
+<div id="viewer" class="hidden"><img alt=""></div>
 
 <script>
 'use strict';
@@ -310,7 +321,10 @@ function connect() {
     if (d.event !== 'message' || seen.has(d.id)) return;
     const o = await unseal(d.message || '');
     if (!o || typeof o.t !== 'string') return;
-    add({id: d.id, n: String(o.n || ''), t: o.t, ts: Number(o.ts) || d.time * 1000});
+    const m = {id: d.id, n: String(o.n || ''), t: o.t, ts: Number(o.ts) || d.time * 1000};
+    if (o.img && d.attachment) Object.assign(m, {t: '사진', img: 1, u: d.attachment.url, x: d.attachment.expires * 1000, mime: o.mime});
+    add(m);
+    if (m.img) fetchPic(m);
   };
   refreshQuota();
   render();
@@ -342,6 +356,94 @@ async function send(text) {
     refreshQuota();
     return true;
   } catch { toast('전송 실패 — 네트워크를 확인하세요'); return false; }
+}
+
+// ---------- 사진 ----------
+// 사진은 이 방 키로 암호화한 바이트를 ntfy 첨부로 올린다(서버 보관 3시간). 받은 사진은 기기의 IndexedDB에 보관.
+const PIC_MAX = 1.9 * 1024 * 1024;   // ntfy 익명 첨부 한도 2MB
+const picUrls = new Map(), picBusy = new Set();
+let dbp = null;
+function picDb() {
+  return dbp ||= new Promise((res, rej) => {
+    const r = indexedDB.open('wt' + P + '_pics', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('p');
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function picGet(id) {
+  try {
+    const db = await picDb();
+    return await new Promise(res => { const q = db.transaction('p').objectStore('p').get(id); q.onsuccess = () => res(q.result); q.onerror = () => res(null); });
+  } catch { return null; }
+}
+async function picPut(id, blob) {
+  try {
+    const db = await picDb();
+    await new Promise(res => { const t = db.transaction('p', 'readwrite'); t.objectStore('p').put(blob, id); t.oncomplete = t.onerror = () => res(); });
+  } catch {}
+}
+const picTag = id => `<img class="pic" data-pic="${esc(id)}" alt="사진">`;
+
+async function fetchPic(m) {
+  if (picBusy.has(m.id) || !m.u) return;
+  picBusy.add(m.id);
+  try {
+    const buf = new Uint8Array(await (await fetch(m.u)).arrayBuffer());
+    const pt = await crypto.subtle.decrypt({name: 'AES-GCM', iv: buf.slice(0, 12)}, key, buf.slice(12));
+    const blob = new Blob([pt], {type: m.mime || 'image/jpeg'});
+    await picPut(m.id, blob);
+    picUrls.set(m.id, URL.createObjectURL(blob));
+  } catch {}
+  picBusy.delete(m.id);
+  fillPics();
+}
+async function fillPics() {
+  for (const el of document.querySelectorAll('img.pic[data-pic]:not([src])')) {
+    const id = el.dataset.pic;
+    if (!picUrls.has(id)) {
+      const blob = await picGet(id);
+      if (blob) picUrls.set(id, URL.createObjectURL(blob));
+    }
+    if (picUrls.has(id)) { el.src = picUrls.get(id); continue; }
+    const m = msgs.find(x => x.id === id);
+    if (m && m.u && Date.now() < m.x) { el.alt = '사진 받는 중…'; fetchPic(m); }
+    else el.replaceWith(Object.assign(document.createElement('span'), {className: 'pic-gone', textContent: '사진 (보관 기간이 지났어요)'}));
+  }
+}
+
+async function shrink(file) {
+  if (file.type === 'image/gif' && file.size <= PIC_MAX) return file;
+  const bmp = await createImageBitmap(file);
+  const s = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+  const cv = Object.assign(document.createElement('canvas'), {width: Math.round(bmp.width * s), height: Math.round(bmp.height * s)});
+  cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
+  for (const q of [0.82, 0.7, 0.55, 0.4]) {
+    const b = await new Promise(r => cv.toBlob(r, 'image/jpeg', q));
+    if (b && b.size <= PIC_MAX) return b;
+  }
+  throw new Error('too big');
+}
+
+async function sendPic(file) {
+  if (view !== 'real' || !key || !file || !file.type.startsWith('image/')) return;
+  toast('사진 보내는 중…');
+  try {
+    const blob = await shrink(file);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({name: 'AES-GCM', iv}, key, await blob.arrayBuffer()));
+    const body = new Uint8Array(12 + ct.length); body.set(iv); body.set(ct, 12);
+    const payload = {n: cfg.me, t: '', img: 1, mime: blob.type, ts: Date.now()};
+    const r = await fetch(`${RELAY}/${topic}`, {method: 'PUT', body, headers: {'Filename': 'p.bin', 'X-Message': await seal(payload)}});
+    if (r.status === 429) { toast('오늘 보낼 수 있는 양을 다 썼어요'); return; }
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    await picPut(d.id, blob);
+    picUrls.set(d.id, URL.createObjectURL(blob));
+    add({id: d.id, n: cfg.me, t: '사진', img: 1, u: d.attachment?.url, x: (d.attachment?.expires || 0) * 1000, mime: blob.type, ts: payload.ts});
+    refreshQuota();
+    toast('사진을 보냈어요');
+  } catch (e) { toast(e.message === 'too big' ? '사진이 너무 커요' : '사진 전송 실패 — 네트워크를 확인하세요'); }
 }
 
 async function refreshQuota() {
@@ -407,14 +509,24 @@ function render() {
       }
     });
     $('#sendBtn')?.addEventListener('click', async () => { const t = inp.value; if (await send(t) && inp.value === t) inp.value = ''; inp.focus(); });
+    inp.addEventListener('paste', e => {
+      const f = [...(e.clipboardData?.files || [])].find(f => f.type.startsWith('image/'));
+      if (f) { e.preventDefault(); sendPic(f); }
+    });
   }
+  app.querySelectorAll('.picBtn').forEach(el => el.addEventListener('click', () => { if (view === 'real') $('#picFile').click(); }));
   renderList(); paintSide(); paintTitle(); setStatus(status);
 }
 function renderList() {
   const list = $('#list'); if (!list) return;
   list.innerHTML = SKINS[cfg.skin].list();
   SKINS[cfg.skin].after?.(list);
-  if (cfg.skin !== 'sheet') list.scrollTop = list.scrollHeight;
+  if (cfg.skin !== 'sheet') {
+    list.scrollTop = list.scrollHeight;
+    // 사진이 늦게 뜨며 높이가 바뀌어도 맨 아래 유지
+    list.querySelectorAll('img.pic').forEach(im => im.addEventListener('load', () => { list.scrollTop = list.scrollHeight; }, {once: true}));
+  }
+  fillPics();
 }
 function paintSide() { SKINS[cfg.skin].side?.(); }
 function paintTitle() {
@@ -533,8 +645,8 @@ const SKINS = {
           <div class="ch-msgs" id="list"></div>
           <div class="ch-comp"><div class="ch-grip"></div>
             <textarea id="inp" placeholder="채팅 입력 [줄 바꿈 : Ctrl + Enter]"></textarea>
-            <div class="ch-bar"><span class="b">${IC.emo}</span><span class="b">${IC.smile}</span><span class="b">${IC.tt}</span><span class="b">${IC.clip}</span>
-              <span class="b">${IC.folder}</span><span class="b">${IC.crop}</span><span class="b">${IC.down}</span><i class="sp"></i><button id="sendBtn">전송</button></div>
+            <div class="ch-bar"><span class="b">${IC.emo}</span><span class="b">${IC.smile}</span><span class="b">${IC.tt}</span><span class="b picBtn" title="사진">${IC.clip}</span>
+              <span class="b picBtn" title="사진">${IC.folder}</span><span class="b">${IC.crop}</span><span class="b">${IC.down}</span><i class="sp"></i><button id="sendBtn">전송</button></div>
           </div>
         </section></div>`;
     },
@@ -572,8 +684,9 @@ const SKINS = {
         src = CHC[view].lines.map(([n, t, x]) => ({me: n === '나', n, t, x, day: '오늘'}));
       } else {
         if (!msgs.length) return `<div class="ch-empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
-        src = msgs.map(m => ({me: mine(m), n: peer, t: chatTime(m.ts), x: m.t, day: chatDay(m.ts)}));
+        src = msgs.map(m => ({me: mine(m), n: peer, t: chatTime(m.ts), x: m.t, day: chatDay(m.ts), pic: m.img ? m.id : null}));
       }
+      const bub = r => r.pic ? `<div class="ch-bub im">${picTag(r.pic)}</div>` : `<div class="ch-bub txt">${esc(r.x)}</div>`;
       let out = '', day = '', i = 0;
       while (i < src.length) {
         const m = src[i];
@@ -581,9 +694,9 @@ const SKINS = {
         let j = i;
         while (j < src.length && src[j].me === m.me && src[j].n === m.n && src[j].day === day) j++;
         const run = src.slice(i, j);
-        if (m.me) out += run.map((r, k) => `<div class="ch-m${k ? '' : ' first'}"><time>${r.t}</time><div class="ch-bub txt">${esc(r.x)}</div></div>`).join('');
+        if (m.me) out += run.map((r, k) => `<div class="ch-m${k ? '' : ' first'}"><time>${r.t}</time>${bub(r)}</div>`).join('');
         else out += `<div class="ch-o"><div class="av">${esc(initial(m.n))}</div><div><div class="nm">${esc(m.n)}</div>
-          ${run.map(r => `<div class="row"><div class="ch-bub txt">${esc(r.x)}</div><time>${r.t}</time></div>`).join('')}</div></div>`;
+          ${run.map(r => `<div class="row">${bub(r)}<time>${r.t}</time></div>`).join('')}</div></div>`;
         i = j;
       }
       return out;
@@ -601,7 +714,7 @@ const SKINS = {
         <section class="c-main">
           <header class="c-head"><button class="ic back">‹</button><b>${esc(title)}</b><small>${view === 'real' ? '<span id="qt"></span>' : ''}</small></header>
           <div class="c-list" id="list"></div>
-          <div class="c-comp"><div class="c-box"><textarea id="inp" placeholder="${esc(title)}에 메시지 보내기"></textarea><button id="sendBtn">➤</button></div></div>
+          <div class="c-comp"><div class="c-box"><button class="picBtn pb" title="사진">＋</button><textarea id="inp" placeholder="${esc(title)}에 메시지 보내기"></textarea><button id="sendBtn">➤</button></div></div>
         </section></div>`;
     },
     side() {
@@ -614,14 +727,14 @@ const SKINS = {
     },
     list() {
       const item = (n, t, x, cont) => `<div class="c-msg${cont ? ' cont' : ''}"><div class="av" style="background:${colorOf(n)}">${esc(initial(n))}</div>
-        <div class="bd">${cont ? '' : `<div class="hd"><b>${esc(n)}</b><time>${t}</time></div>`}<div class="txt">${esc(x)}</div></div></div>`;
-      if (view !== 'real') return fakeOf(view).lines.map(([n, t, x]) => item(n === '나' ? cfg.me : n, t, x)).join('');
+        <div class="bd">${cont ? '' : `<div class="hd"><b>${esc(n)}</b><time>${t}</time></div>`}<div class="txt">${x}</div></div></div>`;
+      if (view !== 'real') return fakeOf(view).lines.map(([n, t, x]) => item(n === '나' ? cfg.me : n, t, esc(x))).join('');
       if (!msgs.length) return `<div class="empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
       let out = '', day = '', prev = null;
       for (const m of msgs) {
         if (ymd(m.ts) !== day) { day = ymd(m.ts); out += `<div class="c-day">${dayLabel(m.ts)}</div>`; prev = null; }
         const cont = prev && prev.n === m.n && m.ts - prev.ts < 5 * 60e3;
-        out += item(mine(m) ? cfg.me : cfg.peer, hm(m.ts), m.t, cont);
+        out += item(mine(m) ? cfg.me : cfg.peer, hm(m.ts), m.img ? picTag(m.id) : esc(m.t), cont);
         prev = m;
       }
       return out;
@@ -632,7 +745,7 @@ const SKINS = {
     layout() {
       const tabs = ['파일', '홈', '삽입', '페이지 레이아웃', '수식', '데이터', '검토', '보기'];
       return `<div class="s">
-        <div class="s-tabs">${tabs.map(t => `<span class="${t === '홈' ? 'on' : ''}">${t}</span>`).join('')}<i class="sp"></i><button class="ic gear" title="설정">⚙</button></div>
+        <div class="s-tabs">${tabs.map(t => `<span class="${t === '홈' ? 'on' : t === '삽입' ? 'picBtn' : ''}">${t}</span>`).join('')}<i class="sp"></i><button class="ic gear" title="설정">⚙</button></div>
         <div class="s-tool"><span class="tb">붙여넣기</span><span class="sep"></span><span class="bx">맑은 고딕</span><span class="bx">11</span>
           <span class="tb"><b>가</b></span><span class="tb"><i>가</i></span><span class="tb"><u>가</u></span><span class="sep"></span>
           <span class="tb">≡</span><span class="tb">병합하고 가운데 맞춤</span><span class="sep"></span><span class="bx">일반</span><span class="tb">%</span><span class="tb">,</span>
@@ -651,7 +764,7 @@ const SKINS = {
       if (view === 'real') {
         rows.push(`<tr class="hd"><th>${r++}</th><td>No</td><td>일자</td><td>시간</td><td>담당</td><td>내용</td><td>비고</td></tr>`);
         msgs.forEach((m, i) => rows.push(`<tr class="${mine(m) ? 'me' : ''}"><th>${r++}</th><td class="ce">${i + 1}</td><td class="ce">${ymd(m.ts)}</td><td class="ce">${hm(m.ts)}</td>
-          <td class="d">${esc(mine(m) ? cfg.me : cfg.peer)}</td><td class="e">${esc(m.t)}</td><td></td></tr>`));
+          <td class="d">${esc(mine(m) ? cfg.me : cfg.peer)}</td><td class="e">${m.img ? picTag(m.id) : esc(m.t)}</td><td></td></tr>`));
         const sel = r;
         rows.push(`<tr><th>${r++}</th><td class="ce">${msgs.length + 1}</td><td></td><td></td><td></td><td class="sel"></td><td></td></tr>`);
         this.selRow = sel;
@@ -709,7 +822,24 @@ $('#fSave').addEventListener('click', async () => {
 
 // ---------- 키·창 이벤트 ----------
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && cfg && $('#setup').classList.contains('hidden')) { e.preventDefault(); toggleDecoy(); }
+  if (e.key === 'Escape' && cfg && $('#setup').classList.contains('hidden')) {
+    e.preventDefault();
+    if (!$('#viewer').classList.contains('hidden')) { $('#viewer').classList.add('hidden'); decoy(); return; }
+    toggleDecoy();
+  }
+});
+$('#picFile').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) sendPic(f); });
+$('#viewer').addEventListener('click', () => $('#viewer').classList.add('hidden'));
+document.addEventListener('click', e => {
+  const im = e.target.closest?.('img.pic[src]');
+  if (im) { $('#viewer img').src = im.src; $('#viewer').classList.remove('hidden'); }
+});
+document.addEventListener('dragover', e => { if (cfg && view === 'real') e.preventDefault(); });
+document.addEventListener('drop', e => {
+  if (!cfg || view !== 'real') return;
+  e.preventDefault();
+  const f = [...(e.dataTransfer?.files || [])].find(f => f.type.startsWith('image/'));
+  if (f) sendPic(f);
 });
 window.addEventListener('blur', () => { if (cfg?.autoHide && view === 'real') decoy(); });
 document.addEventListener('visibilitychange', () => {
