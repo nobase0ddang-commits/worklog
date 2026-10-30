@@ -506,15 +506,21 @@ async function post(id, obj, keepalive) {
   if (!res.ok) throw new Error(res.status);
   return (await res.json()).name;
 }
-// 접속 중 표시(30초마다): 상대가 지금 보고 있으면 폰 알림 신호를 아낀다
+// 접속 중 표시(20초마다): 상대가 지금 보고 있으면 폰 알림 신호를 아낀다.
+// 화면을 내리거나 PC 창을 벗어나면 바로 0으로 지워서, 그때부터는 알림이 가게 한다.
 const presKey = async id => (await inboxOf(id, cfg.me)).slice(2, 18);
-async function heartbeat() {
+const isTouch = () => window.matchMedia('(hover: none)').matches;
+const isHere = () => !document.hidden && (isTouch() || document.hasFocus());
+async function heartbeat(gone) {
   clearTimeout(heartbeat.t);
-  heartbeat.t = setTimeout(heartbeat, 30000);
-  if (document.hidden || !cfg) return;
+  heartbeat.t = setTimeout(heartbeat, 20000);
+  if (!cfg) return;
+  const here = !gone && isHere();
+  if (!here && heartbeat.off) return;   // 이미 지움
+  heartbeat.off = !here;
   for (const rm of cfg.rooms) {
     if (!R[rm.id]) continue;
-    try { await fetch(`${DB}/p/${R[rm.id].topic}/${await presKey(rm.id)}.json`, {method: 'PUT', body: JSON.stringify({'.sv': 'timestamp'})}); } catch (_) {}
+    try { await fetch(`${DB}/p/${R[rm.id].topic}/${await presKey(rm.id)}.json`, {method: 'PUT', keepalive: true, body: JSON.stringify(here ? {'.sv': 'timestamp'} : 0)}); } catch (_) {}
   }
 }
 
@@ -610,8 +616,8 @@ async function ping(id, text) {
   for (const n of r.nn) {
     if (n === cfg.me) continue;
     const ib = await inboxOf(id, n);
-    if (Date.now() - (pres[ib.slice(2, 18)] || 0) < 75000) continue;   // 지금 보고 있음
-    if (Date.now() - (lastPing[ib] || 0) < 60000) continue;           // 방금 보냄
+    if (Date.now() - (pres[ib.slice(2, 18)] || 0) < 45000) continue;   // 지금 보고 있음
+    if (Date.now() - (lastPing[ib] || 0) < 15000) continue;           // 방금 보냄
     lastPing[ib] = Date.now();
     try {
       await fetch(`${RELAY}/${await inboxOf(id, n)}`, {method: 'POST', body: await seal(r.key, {n: cfg.me, t: text.slice(0, 100), ts: Date.now()})});
@@ -1108,7 +1114,8 @@ function render() {
         if (inp.setRangeText) inp.setRangeText('\n', inp.selectionStart, inp.selectionEnd, 'end');
         return;
       }
-      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) {
+      // 폰 키보드의 return은 줄바꿈(카톡처럼), 전송은 전송 버튼으로. 한글 입력 중 엔터가 섞여 저절로 가던 문제
+      if (e.key === 'Enter' && !(isTouch() && inp.tagName === 'TEXTAREA') && !e.shiftKey && !e.isComposing && e.keyCode !== 229) {
         e.preventDefault();
         const t = inp.value;
         if (await send(t) && inp.value === t) inp.value = '';
@@ -1615,12 +1622,12 @@ document.addEventListener('drop', e => {
   const f = Array.from((e.dataTransfer && e.dataTransfer.files) || [])[0];
   if (f) sendPic(f);
 });
-window.addEventListener('blur', () => { if (cfg && cfg.autoHide && cur()) decoy(); });
-window.addEventListener('focus', () => { if (cur()) markRead(view); });
-window.addEventListener('pagehide', () => { if (cfg) flushAllReads(); });
+window.addEventListener('blur', () => { if (cfg && cfg.autoHide && cur()) decoy(); if (cfg && !isTouch()) heartbeat(true); });
+window.addEventListener('focus', () => { if (cfg) heartbeat(); if (cur()) markRead(view); });
+window.addEventListener('pagehide', () => { if (cfg) { flushAllReads(); heartbeat(true); } });
 document.addEventListener('visibilitychange', () => {
   if (cfg && document.hidden) flushAllReads();   // 앱을 내리는 순간 남은 읽음 신호를 바로 보냄
-  if (cfg && !document.hidden) heartbeat();
+  if (cfg) heartbeat(document.hidden);
   if (cfg && !document.hidden && cur() && !mobileSide) { R[view].unread = 0; paintSide(); paintTitle(); markRead(view); }
 });
 
