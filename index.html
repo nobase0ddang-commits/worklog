@@ -323,7 +323,7 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
     <div class="btns"><button id="fCancel" type="button">취소</button><button id="fSave" class="pri" type="button">저장</button></div>
     <button class="lnk" id="fClear" type="button">이 기기의 대화 기록 지우기</button>
     <p class="tip" style="display:none"><span id="qtm"></span></p>
-    <p class="tip">1:1 방 이름은 내 화면에서만 보이는 상대 표시 이름이에요. 단톡방에서는 각자의 '내 이름'으로 보여요.<br>Esc 키: 업무 화면 ↔ 대화 전환 · Enter 전송, Ctrl+Enter 줄바꿈<br>대화·사진은 암호화된 채로 서버에 보관돼서 새 기기에서도 최근 1000건까지 다시 받아와요.</p>
+    <p class="tip">1:1 방 이름은 내 화면에서만 보이는 상대 표시 이름이에요. 단톡방에서는 각자의 '내 이름'으로 보여요.<br>Esc 키: 업무 화면 ↔ 대화 전환 · Enter 전송, Ctrl+Enter 줄바꿈<br>대화·사진은 암호화된 채로 서버에 보관돼서 새 기기에서도 최근 1000건까지 다시 받아와요.<br>폰에서는 키보드 return이 줄바꿈이고, 전송은 전송 버튼으로 해요.<br>버전 <span id="verTxt"></span></p>
   </div>
 </div>
 <div id="toast"></div>
@@ -348,6 +348,7 @@ const RELAY = 'https://ntfy.sh';   // 폰 알림(웹 푸시) 신호용
 const DB = 'https://worklog-chat-c0a54-default-rtdb.asia-southeast1.firebasedatabase.app';   // 대화·첨부 저장(Firebase 실시간 DB)
 const VAPID = 'BEMjM0sNxh41x0a6Lz3YaqkJ7AUhZefxsOQgw-at69i0fM1CybVBcj7-QQXf4N_tPCgFnOXdRbQ5jrSrr9Yg9Lc';   // ntfy.sh 웹 푸시 공개키
 const MAX_BYTES = 2800;   // 암호화 후 ntfy 본문 한도(4096바이트) 안에 들도록
+const VER = '2026.11.02';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
 
 // ?p=xx 로 같은 브라우저에서 프로필을 나눠 쓸 수 있다(테스트용)
 const P = new URLSearchParams(location.search).get('p') || '';
@@ -641,6 +642,7 @@ async function send(text) {
     add(rm.id, m);
     ping(rm.id, text);
     recentEmoji(text);
+    if (checkUpdate.ready) setTimeout(checkUpdate, 500);   // 글을 보내 입력창이 비면 미뤄 둔 새로고침
     return true;
   } catch (_) { toast('전송 실패 — 네트워크를 확인하세요'); return false; }
 }
@@ -817,13 +819,21 @@ function reactHTML(rm, m) {
   return `<div class="reacts">${es.map(e => `<span class="rchip${g[e].indexOf(cfg.me) >= 0 ? ' on' : ''}" data-react="${esc(m.id)}" data-e="${esc(e)}" title="${esc(g[e].join(', '))}">${e} ${g[e].length}</span>`).join('')}</div>`;
 }
 // 내 메시지를 아직 안 읽은 사람 수(노란 숫자)
+// 사람별로 어디까지 읽었나: 읽음 신호와 그 사람이 마지막으로 보낸 메시지 중 늦은 쪽(답을 했으면 그 앞은 읽은 것)
+function readMap(id) {
+  const r = R[id], out = {};
+  Object.keys(r.ext.read).forEach(n => { if (n !== cfg.me) out[n] = Number(r.ext.read[n]) || 0; });
+  r.msgs.forEach(m => { if (!mine(m) && m.n && !(out[m.n] >= m.ts)) out[m.n] = m.ts; });
+  return out;
+}
 function unreadCount(rm, m) {
   if (!mine(m) || isDel(rm.id, m)) return 0;
-  const rd = R[rm.id].ext.read;
-  const ppl = members(rm.id);
-  Object.keys(rd).forEach(n => { if (n !== cfg.me && ppl.indexOf(n) < 0) ppl.push(n); });
-  if (!ppl.length) return rm.group ? 0 : 1;
-  return ppl.filter(n => (rd[n] || 0) < m.ts).length;
+  const rd = readMap(rm.id), ppl = Object.keys(rd);
+  // 1:1은 상대가 이름을 바꿨거나 기기마다 이름이 달라도 1까지만, 그중 하나라도 읽었으면 0
+  if (!rm.group) return ppl.some(n => rd[n] >= m.ts) ? 0 : 1;
+  // 단톡: 2주 넘게 말도 읽음도 없는 이름(바뀐 옛 이름 등)은 빼고 센다
+  const since = Date.now() - 14 * 864e5;
+  return ppl.filter(n => rd[n] > since && rd[n] < m.ts).length;
 }
 
 // ---------- 답장 ----------
@@ -1629,10 +1639,30 @@ document.addEventListener('visibilitychange', () => {
   if (cfg && document.hidden) flushAllReads();   // 앱을 내리는 순간 남은 읽음 신호를 바로 보냄
   if (cfg) heartbeat(document.hidden);
   if (cfg && !document.hidden && cur() && !mobileSide) { R[view].unread = 0; paintSide(); paintTitle(); markRead(view); }
+  if (!document.hidden) checkUpdate();
 });
+
+// 새 버전이 올라왔으면 알아서 새로고침(폰 홈 화면 앱은 내렸다 올려도 옛 화면 그대로라서).
+// 치던 글이 있으면 기다렸다가 비었을 때 한다.
+async function checkUpdate() {
+  if (P || checkUpdate.busy) return;
+  if (!checkUpdate.ready && Date.now() - (checkUpdate.at || 0) > 60000) {
+    checkUpdate.busy = true; checkUpdate.at = Date.now();
+    try {
+      const s = await (await fetch(location.pathname + '?v=' + Date.now(), {cache: 'no-store'})).text();
+      const v = (s.match(/const VER = '([^']+)'/) || [])[1];
+      if (v && v !== VER) checkUpdate.ready = true;
+    } catch (_) {}
+    checkUpdate.busy = false;
+  }
+  const inp = $('#inp');
+  if (checkUpdate.ready && (!inp || !inp.value.trim()) && $('#setup').classList.contains('hidden')) location.reload();
+}
+setInterval(checkUpdate, 10 * 60000);
 
 (async () => {
   if (!window.isSecureContext || !window.crypto || !crypto.subtle) { showErr('보안 연결(https)에서 열어주세요'); return; }
+  $('#verTxt').textContent = VER;
   if (!cfg) { openSetup(); return; }
   await connectAll();
 })();
