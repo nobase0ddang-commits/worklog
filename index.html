@@ -393,7 +393,7 @@ const RELAY = 'https://ntfy.sh';   // 폰 알림(웹 푸시) 신호용
 const DB = 'https://worklog-chat-c0a54-default-rtdb.asia-southeast1.firebasedatabase.app';   // 대화·첨부 저장(Firebase 실시간 DB)
 const VAPID = 'BEMjM0sNxh41x0a6Lz3YaqkJ7AUhZefxsOQgw-at69i0fM1CybVBcj7-QQXf4N_tPCgFnOXdRbQ5jrSrr9Yg9Lc';   // ntfy.sh 웹 푸시 공개키
 const MAX_BYTES = 2800;   // 암호화 후 ntfy 본문 한도(4096바이트) 안에 들도록
-const VER = '2026.11.02c';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
+const VER = '2026.11.02d';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
 
 // ?p=xx 로 같은 브라우저에서 프로필을 나눠 쓸 수 있다(테스트용)
 const P = new URLSearchParams(location.search).get('p') || '';
@@ -689,7 +689,7 @@ async function sendSys(id, obj) {
   const r = R[id];
   const o = Object.assign({n: cfg.me, ts: Date.now()}, obj);
   applySys(id, o);
-  try { r.seen.add(await post(id, o)); } catch (_) { toast('전송 실패 — 네트워크를 확인하세요'); }
+  try { r.seen.add(await post(id, o)); return true; } catch (_) { toast('전송 실패 — 네트워크를 확인하세요'); return false; }
 }
 
 // 읽음 표시: 방을 보고 있을 때 상대 메시지를 어디까지 읽었는지 잠깐 모아서 한 번 보낸다.
@@ -773,8 +773,16 @@ async function send(text, extra) {
   if (editTo) {   // 수정 중이면 새 메시지 대신 수정 신호
     const id = editTo, m = R[rm.id].msgs.find(z => z.id === id);
     if (text.length > 4000) { toast('메시지가 너무 길어요.'); return false; }
+    if (m && text !== textOf(rm.id, m)) {
+      const r = R[rm.id], prev = r.ext.edit[id];
+      if (!await sendSys(rm.id, {sys: 'edit', id, t: text})) {   // 실패하면 내 화면도 되돌리고 수정 상태 유지(다시 전송 가능)
+        if (prev === undefined) delete r.ext.edit[id]; else r.ext.edit[id] = prev;
+        save('ext_' + r.sk, r.ext);
+        renderList();
+        return false;
+      }
+    }
     setReply(null);
-    if (m && text !== textOf(rm.id, m)) await sendSys(rm.id, {sys: 'edit', id, t: text});
     sendTyping(false);
     return true;
   }
@@ -1064,11 +1072,12 @@ function openEmo(btn) {
     pn.querySelectorAll('[data-e]').forEach(el => el.addEventListener('click', ev => {
       ev.stopPropagation();
       const e = el.dataset.e;
-      if (big) { pn.classList.add('hidden'); send(e); return; }
+      if (big) { pn.classList.add('hidden'); if (editTo) setReply(null); send(e); return; }   // 수정 중이면 수정을 끝내고 새로 보냄
       const inp = $('#inp');
       if (!inp) return;
       if (inp.setRangeText && document.activeElement === inp) inp.setRangeText(e, inp.selectionStart, inp.selectionEnd, 'end');
       else inp.value += e;
+      saveDraft();   // 코드로 넣은 글자는 input 이벤트가 안 나서 직접 보관
       recentEmoji(e);
     }));
   };
@@ -1406,6 +1415,8 @@ function setView(v) {
   pollPres();
 }
 function decoy() {
+  closePops();   // 앱 밖에 떠 있는 갤러리·프로필·사진 보기도 함께 숨김
+  $('#viewer').classList.add('hidden');
   view = lastDecoy || 'team';
   chTab = 'note';      // 메신저형은 쪽지 수신함이 보이게
   mobileSide = true;
@@ -1437,18 +1448,24 @@ function render() {
     inp.addEventListener('keydown', async e => {
       if (e.key === 'Enter' && e.ctrlKey) {   // Ctrl+Enter 줄바꿈
         e.preventDefault();
-        if (inp.setRangeText) inp.setRangeText('\n', inp.selectionStart, inp.selectionEnd, 'end');
+        if (inp.setRangeText) { inp.setRangeText('\n', inp.selectionStart, inp.selectionEnd, 'end'); saveDraft(); }
         return;
       }
       // 폰 키보드의 return은 줄바꿈(카톡처럼), 전송은 전송 버튼으로. 한글 입력 중 엔터가 섞여 저절로 가던 문제
       if (e.key === 'Enter' && !(isTouch() && inp.tagName === 'TEXTAREA') && !e.shiftKey && !e.isComposing && e.keyCode !== 229) {
         e.preventDefault();
-        const t = inp.value;
-        if (await send(t) && inp.value === t) { inp.value = ''; saveDraft(); }
+        doSend();
       }
     });
+    // 보내는 동안 방을 옮겨도 보낸 방의 임시 글만 지운다
+    const doSend = async () => {
+      const t = inp.value, rid = view, wasEdit = !!editTo;
+      if (!await send(t)) return;
+      if (!wasEdit && drafts[rid] === t) { drafts[rid] = ''; save('drafts', drafts); }
+      if (view === rid && inp.value === t) inp.value = '';
+    };
     const btn = $('#sendBtn');
-    if (btn) btn.addEventListener('click', async () => { const t = inp.value; if (await send(t) && inp.value === t) { inp.value = ''; saveDraft(); } inp.focus(); });
+    if (btn) btn.addEventListener('click', async () => { await doSend(); inp.focus(); });
     if (cur()) inp.value = editTo ? editText : (drafts[view] || '');
     inp.addEventListener('input', () => { saveDraft(); sendTyping(!!inp.value.trim() && !editTo); });
     inp.addEventListener('paste', e => {
