@@ -281,6 +281,24 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
 .shake{animation:shk .6s}
 @keyframes shk{0%,100%{transform:none}15%,55%{transform:translateX(-7px)}35%,75%{transform:translateX(7px)}}
 #list{touch-action:manipulation}
+.av.ph{background-size:cover!important;background-position:center!important;color:transparent!important}
+.av[data-prof]{cursor:pointer}
+.stm{color:#777;font-size:11.5px;margin-left:6px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:40vw}
+.pfr{display:flex;gap:10px;align-items:center}
+.pfa{width:56px;height:56px;border-radius:50%;flex:none;display:grid;place-items:center;background:#86c6d8;color:#fff;font-size:20px;font-weight:600;background-size:cover;background-position:center}
+.pfa.ph{color:transparent}
+.pfc{flex:1;min-width:0}
+.pfb{display:flex;gap:6px;margin-top:6px}
+.pfb button{height:28px;padding:0 10px;border-radius:6px;background:#eef0f3;font-size:12px}
+#pcard{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(20,24,32,.45);z-index:26;display:grid;place-items:center;padding:16px}
+#pcard .pbox{position:relative;width:min(300px,100%);background:#fff;border-radius:12px;padding:26px 20px 20px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+#pcard .px{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;color:#777}
+#pcard .pav{width:110px;height:110px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#86c6d8;color:#fff;font-size:40px;font-weight:600;background-size:cover;background-position:center}
+#pcard .pav.ph{color:transparent}
+#pcard b{display:block;font-size:16px}
+#pcard p{margin-top:6px;color:#555;font-size:13px;line-height:1.5;word-break:break-word}
+#pcard .nil{color:#aaa}
+#pcard .pe{margin-top:14px;height:34px;padding:0 16px;border-radius:6px;background:#3b6fd4;color:#fff;font-weight:600}
 #gal{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(20,24,32,.45);z-index:25;display:grid;place-items:center;padding:16px}
 #gal .gbox{width:min(560px,100%);max-height:calc(100vh - 32px);background:#fff;border-radius:10px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.2)}
 #gal .gh{display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid #eee}
@@ -327,6 +345,9 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
     <p class="d">방마다 암호를 정해요. 같은 암호를 넣은 사람끼리 그 방에서 연결되고, 대화는 그 암호로 암호화돼요.</p>
     <label for="fMe">내 이름 (같은 방 사람들과 겹치지 않게)</label>
     <input id="fMe" type="text" maxlength="20">
+    <label>내 프로필 (같은 방 사람들에게 보여요)</label>
+    <div class="pfr"><div class="pfa" id="fPfA"></div><div class="pfc"><input id="fPfS" type="text" maxlength="40" placeholder="상태메시지 (비워도 돼요)">
+      <div class="pfb"><button type="button" id="fPfPick">사진 선택</button><button type="button" id="fPfDel">사진 빼기</button></div></div></div>
     <label>대화방</label>
     <div id="fRooms"></div>
     <button class="add" id="fAdd" type="button">+ 대화방 추가</button>
@@ -350,9 +371,11 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
 <div id="toast"></div>
 <input type="file" id="picFile" accept="image/*" hidden>
 <input type="file" id="anyFile" hidden>
+<input type="file" id="pfFile" accept="image/*" hidden>
 <div id="emoPanel" class="hidden"></div>
 <div id="menu" class="hidden"></div>
 <div id="gal" class="hidden"></div>
+<div id="pcard" class="hidden"></div>
 <div id="viewer" class="hidden"><img alt=""></div>
 
 <script>
@@ -370,7 +393,7 @@ const RELAY = 'https://ntfy.sh';   // 폰 알림(웹 푸시) 신호용
 const DB = 'https://worklog-chat-c0a54-default-rtdb.asia-southeast1.firebasedatabase.app';   // 대화·첨부 저장(Firebase 실시간 DB)
 const VAPID = 'BEMjM0sNxh41x0a6Lz3YaqkJ7AUhZefxsOQgw-at69i0fM1CybVBcj7-QQXf4N_tPCgFnOXdRbQ5jrSrr9Yg9Lc';   // ntfy.sh 웹 푸시 공개키
 const MAX_BYTES = 2800;   // 암호화 후 ntfy 본문 한도(4096바이트) 안에 들도록
-const VER = '2026.11.02b';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
+const VER = '2026.11.02c';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
 
 // ?p=xx 로 같은 브라우저에서 프로필을 나눠 쓸 수 있다(테스트용)
 const P = new URLSearchParams(location.search).get('p') || '';
@@ -473,7 +496,7 @@ async function doConnect() {
     const sk = d.topic.slice(2, 10);
     const msgs = load('msgs_' + sk, []);
     R[rm.id] = {pass: rm.pass, key: d.key, raw: d.raw, topic: d.topic, sk, msgs, seen: new Set(msgs.map(m => m.id)), unread: 0, nn: load('nn_' + sk, []),
-      ext: Object.assign({react: {}, del: {}, pin: null, read: {}, edit: {}}, load('ext_' + sk, {})), pres: {}, presAt: {}, myRead: load('mr2_' + sk, 0), divTs: 0};   // mr2: 옛 기록은 버리고 한 번 다시 보낸다
+      ext: Object.assign({react: {}, del: {}, pin: null, read: {}, edit: {}, prof: {}}, load('ext_' + sk, {})), pres: {}, presAt: {}, myRead: load('mr2_' + sk, 0), divTs: 0};   // mr2: 옛 기록은 버리고 한 번 다시 보낸다
   }
   if (!view || (isRoom(view) && !room(view))) view = cfg.rooms[0].id;
   if (isRoom(view)) lastRoom = view;
@@ -496,6 +519,7 @@ async function doConnect() {
   render();
   heartbeat();
   pollPres();
+  announceProf(false);
   if (cfg.notify) refreshPush(false).catch(() => {});
 }
 
@@ -648,6 +672,9 @@ function applySys(id, o) {
     const m = r.msgs.find(z => z.id === o.id);
     if (m && m.n !== n) return;   // 보낸 사람만 고칠 수 있다
     x.edit[o.id] = String(o.t || '').slice(0, 4000);
+  } else if (o.sys === 'prof') {   // 프로필: 이름별로 가장 최근 것만
+    if (x.prof[n] && x.prof[n].ts >= (Number(o.ts) || 0)) return;
+    x.prof[n] = {s: String(o.s || '').slice(0, 60), p: okPic(o.p) ? o.p : '', ts: Number(o.ts) || 0};
   } else if (o.sys === 'pin') {
     x.pin = o.id ? {id: String(o.id), n, t: String(o.t || '').slice(0, 80)} : null;
   } else if (o.sys === 'read') {
@@ -1084,13 +1111,68 @@ function openMenu(mid, x, y) {
     else if (a === 'del' && confirm('이 메시지를 삭제할까요? 상대 화면에서도 지워져요.')) sendSys(rm.id, {sys: 'del', id: mid});
   }));
 }
+// ---------- 프로필(사진·상태메시지) ----------
+// 내 프로필은 cfg.prof = {s, p, ts}. 방마다 sys 'prof'로 알리고(사진은 120px JPEG를 글자로 넣어서), 받은 것은 ext.prof[이름]에 둔다.
+const okPic = p => typeof p === 'string' && p.length < 16000 && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(p);
+function profFor(rm, n) {   // n: 보낸 사람 실제 이름. 1:1에서 null이면 상대
+  if (!rm || !R[rm.id]) return null;
+  if (n === cfg.me) return cfg.prof || null;
+  const pf = R[rm.id].ext.prof || {};
+  if (n && pf[n]) return pf[n];
+  if (rm.group) return null;
+  let best = null;
+  Object.keys(pf).forEach(k => { if (k !== cfg.me && (!best || pf[k].ts > best.ts)) best = pf[k]; });
+  return best;
+}
+async function avatarFrom(file) {
+  const bmp = await loadImage(file);
+  const sz = Math.min(bmp.width, bmp.height), S = 120;
+  const cv = Object.assign(document.createElement('canvas'), {width: S, height: S});
+  cv.getContext('2d').drawImage(bmp, (bmp.width - sz) / 2, (bmp.height - sz) / 2, sz, sz, 0, 0, S, S);
+  for (const q of [0.82, 0.7, 0.58, 0.45, 0.35]) {
+    const u = cv.toDataURL('image/jpeg', q);
+    if (u.length < 12000) return u;
+  }
+  throw new Error('too big');
+}
+async function announceProf(force) {
+  if (!cfg || !cfg.prof) return;
+  for (const rm of cfg.rooms) {
+    const r = R[rm.id];
+    if (!r) continue;
+    const k = 'pa_' + r.sk;
+    if (!force && Date.now() - load(k, 0) < 3 * 864e5) continue;   // 사흘마다 한 번(새 기기·기록 정리 대비)
+    try {
+      const o = {n: cfg.me, sys: 'prof', s: cfg.prof.s || '', p: cfg.prof.p || '', ts: cfg.prof.ts || Date.now()};
+      r.seen.add(await post(rm.id, o));
+      applySys(rm.id, o);
+      save(k, Date.now());
+    } catch (_) {}
+  }
+}
+function openProf(n) {
+  const rm = cur();
+  if (!rm) return;
+  const me = n === cfg.me, pf = profFor(rm, n || null);
+  const label = n ? n : rm.name;
+  const box = $('#pcard');
+  box.innerHTML = `<div class="pbox"><button type="button" class="px" title="닫기">✕</button>
+    <div class="pav${pf && pf.p ? ' ph' : ''}"${pf && pf.p ? ` style="background-image:url('${pf.p}')"` : ''}>${esc(initial(label))}</div>
+    <b>${esc(nameOnly(label))}${me ? ' (나)' : ''}</b><p>${pf && pf.s ? esc(pf.s) : '<span class="nil">상태메시지 없음</span>'}</p>
+    ${me ? '<button type="button" class="pe">프로필 편집</button>' : ''}</div>`;
+  box.classList.remove('hidden');
+  box.querySelector('.px').addEventListener('click', () => box.classList.add('hidden'));
+  const pe = box.querySelector('.pe');
+  if (pe) pe.addEventListener('click', () => { box.classList.add('hidden'); openSetup(); $('#fPfS').focus(); });
+}
+
 // ---------- 방 메뉴(머리글 ⋯) ----------
 function openRoomMenu(btn) {
   const rm = cur();
   if (!rm) return;
   const mn = $('#menu');
   mn.innerHTML = `<button data-a="nudge">👉 콕 찌르기</button><button data-a="gal">🖼 사진·파일 모아보기</button>
-    <button data-a="srch">🔍 대화 검색</button><button data-a="exp">💾 대화 내보내기(.txt)</button>`;
+    <button data-a="srch">🔍 대화 검색</button><button data-a="exp">💾 대화 내보내기(.txt)</button><button data-a="prof">👤 내 프로필</button>`;
   mn.classList.remove('hidden');
   const b = btn.getBoundingClientRect(), w = mn.offsetWidth;
   mn.style.left = Math.max(8, Math.min(b.right - w, window.innerWidth - w - 8)) + 'px';
@@ -1102,6 +1184,7 @@ function openRoomMenu(btn) {
     else if (a === 'gal') openGallery();
     else if (a === 'srch') toggleSearch();
     else if (a === 'exp') exportChat();
+    else if (a === 'prof') openProf(cfg.me);
   }));
 }
 let nudgeAt = 0;
@@ -1150,7 +1233,7 @@ function exportChat() {
 // 말풍선 두 번 누르기 → ❤️ 공감(다시 두 번 누르면 취소)
 function heartAt(t) {
   const el = t.closest && t.closest('#list [data-mid]');
-  if (!el || !cur() || t.closest('a, img.pic, [data-react], [data-file], [data-jump]')) return false;
+  if (!el || !cur() || t.closest('a, img.pic, [data-react], [data-file], [data-jump], [data-prof]')) return false;
   const mid = el.dataset.mid, m = R[view].msgs.find(z => z.id === mid);
   if (!m || isDel(view, m)) return false;
   const my = (R[view].ext.react[mid] || {})[cfg.me];
@@ -1504,9 +1587,10 @@ function NOTES() {
   ];
 }
 
-const avOf = name => `<div class="av">${esc(initial(name))}</div>`;
+// 아바타: 프로필 사진이 있으면 사진, 없으면 첫 글자. pk가 있으면 눌러서 프로필 보기
+const avOf = (name, pf, pk) => `<div class="av${pf && pf.p ? ' ph' : ''}"${pk != null ? ` data-prof="${esc(pk)}"` : ''}${pf && pf.p ? ` style="background-image:url('${pf.p}')"` : ''}>${esc(initial(name))}</div>`;
 function roomAv(rm) {
-  if (!rm.group) return avOf(rm.name);
+  if (!rm.group) return avOf(rm.name, profFor(rm, null));
   const mem = members(rm.id);
   return mem.length ? grpAv(mem) : avOf(rm.name);
 }
@@ -1532,8 +1616,9 @@ const SKINS = {
         hd = roomAv(rm);
         r2 = `<span style="color:#4b6fd0;width:14px;height:14px;display:inline-block">${IC.person}</span>${members(rm.id).length + 1}<span>${esc(rm.name)}</span><span class="dot" data-peer="1"></span>`;
       } else if (rm) {
-        hd = avOf(rm.name);
-        r2 = `${avOf(rm.name)}<span>${esc(nameOnly(rm.name))}</span><span class="dot" data-peer="1"></span>`;
+        const pf = profFor(rm, null);
+        hd = avOf(rm.name, pf, '');
+        r2 = `${avOf(rm.name, pf, '')}<span>${esc(nameOnly(rm.name))}</span><span class="dot" data-peer="1"></span>${pf && pf.s ? `<small class="stm">${esc(pf.s)}</small>` : ''}`;
       } else {
         const c = CHC[view];
         hd = c.grp ? grpAv(c.grp) : avOf(c.name);
@@ -1632,7 +1717,7 @@ const SKINS = {
         while (j < src.length && src[j].me === m.me && src[j].n === m.n && src[j].day === day && !src[j].div) j++;
         const run = src.slice(i, j);
         if (m.me) out += run.map((r, k) => `<div class="ch-m${k ? '' : ' first'}"${mid(r)}>${meta(r)}${cell(r)}</div>`).join('');
-        else out += `<div class="ch-o">${avOf(m.n)}<div class="oc"><div class="nm">${esc(m.n)}</div>
+        else out += `<div class="ch-o">${m.m ? avOf(m.n, profFor(rm, m.m.n), rm.group ? m.m.n : '') : avOf(m.n)}<div class="oc"><div class="nm">${esc(m.n)}</div>
           ${run.map(r => `<div class="row"${mid(r)}>${cell(r)}${meta(r)}</div>`).join('')}</div></div>`;
         i = j;
       }
@@ -1668,7 +1753,7 @@ const SKINS = {
       nav.querySelectorAll('[data-r]').forEach(el => el.addEventListener('click', () => setView(el.dataset.r)));
     },
     list() {
-      const item = (n, t, x, cont, id) => `<div class="c-msg${cont ? ' cont' : ''}"${id ? ` data-mid="${esc(id)}"` : ''}><div class="av" style="background:${colorOf(n)}">${esc(initial(n))}</div>
+      const item = (n, t, x, cont, id, pf, pk) => `<div class="c-msg${cont ? ' cont' : ''}"${id ? ` data-mid="${esc(id)}"` : ''}><div class="av${pf && pf.p ? ' ph' : ''}"${pk != null ? ` data-prof="${esc(pk)}"` : ''} style="background:${colorOf(n)}${pf && pf.p ? `;background-image:url('${pf.p}')` : ''}">${esc(initial(n))}</div>
         <div class="bd">${cont ? '' : `<div class="hd"><b>${esc(n)}</b><time>${t}</time></div>`}<div class="cb">${x}</div></div></div>`;
       const rm = cur();
       if (!rm) return fakeOf(view).lines.map(l => item(l[0] === '나' ? cfg.me : l[0], l[1], `<span class="txt">${esc(l[2])}</span>`)).join('');
@@ -1680,7 +1765,7 @@ const SKINS = {
         const cont = prev && prev.n === m.n && m.ts - prev.ts < 5 * 60e3;
         if (R[rm.id].divTs && !mine(m) && m.ts >= R[rm.id].divTs && !out.includes('c-unread')) out += '<div class="c-day c-unread">여기까지 읽었습니다</div>';
         const b = bodyOf(rm, m), c = unreadCount(rm, m);
-        out += item(who(rm, m), hm(m.ts) + (c ? ` <b class="rc">${c}</b>` : ''), `<div class="${b.kind === 'big' ? 'bigwrap' : ''}">${b.html}</div>${reactHTML(rm, m)}`, cont, m.id);
+        out += item(who(rm, m), hm(m.ts) + (c ? ` <b class="rc">${c}</b>` : ''), `<div class="${b.kind === 'big' ? 'bigwrap' : ''}">${b.html}</div>${reactHTML(rm, m)}`, cont, m.id, profFor(rm, m.n), mine(m) ? m.n : (rm.group ? m.n : ''));
         prev = m;
       }
       return out;
@@ -1785,10 +1870,30 @@ function openSetup() {
   $('#fClear').classList.toggle('hidden', !cfg);
   $('#fNtfBox').classList.toggle('hidden', !cfg);
   $('#fWarn').textContent = '';
+  pfDraft = Object.assign({s: '', p: ''}, cfg && cfg.prof);
+  $('#fPfS').value = pfDraft.s || '';
+  paintPfA();
   paintNtf();
   $('#setup').classList.remove('hidden');
   if (!cfg) $('#fMe').focus();
 }
+let pfDraft = {s: '', p: ''};
+function paintPfA() {
+  const a = $('#fPfA');
+  a.className = 'pfa' + (pfDraft.p ? ' ph' : '');
+  a.style.backgroundImage = pfDraft.p ? `url('${pfDraft.p}')` : '';
+  a.textContent = initial($('#fMe').value.trim() || '나');
+  $('#fPfDel').classList.toggle('hidden', !pfDraft.p);
+}
+$('#fPfPick').addEventListener('click', () => $('#pfFile').click());
+$('#fPfDel').addEventListener('click', () => { pfDraft.p = ''; paintPfA(); });
+$('#fMe').addEventListener('input', paintPfA);
+$('#pfFile').addEventListener('change', async e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  try { pfDraft.p = await avatarFrom(f); paintPfA(); } catch (_) { toast('이 사진은 쓸 수 없어요'); }
+});
 $('#fAdd').addEventListener('click', () => { const row = roomRow({}); $('#fRooms').appendChild(row); row.querySelector('.rn').focus(); });
 $('#fCancel').addEventListener('click', () => $('#setup').classList.add('hidden'));
 $('#fNtf').addEventListener('click', () => { if (pushOn()) disablePush(); else enablePush(); });
@@ -1810,16 +1915,20 @@ $('#fSave').addEventListener('click', async () => {
   if (new Set(rooms.map(r => r.pass)).size !== rooms.length) return warn('방마다 암호를 다르게 해주세요.');
   rooms.forEach(r => { if (!r.name) r.name = r.group ? '단톡방' : '상대'; });
   const old = cfg;
-  cfg = {me, skin: $('#fSkin').value, autoHide: $('#fAuto').checked, readRcpt: $('#fRead').checked, notify: !!(old && old.notify), rooms};
+  const op = (old && old.prof) || {s: '', p: ''}, ps = $('#fPfS').value.trim().slice(0, 40);
+  const pfChanged = ps !== (op.s || '') || (pfDraft.p || '') !== (op.p || '') || !old || old.me !== me;
+  const prof = {s: ps, p: pfDraft.p || '', ts: pfChanged ? Date.now() : (op.ts || Date.now())};
+  cfg = {me, skin: $('#fSkin').value, autoHide: $('#fAuto').checked, readRcpt: $('#fRead').checked, notify: !!(old && old.notify), rooms, prof};
   save('cfg', cfg);
   $('#fSave').disabled = true;
   try { await connectAll(); } finally { $('#fSave').disabled = false; }
   $('#setup').classList.add('hidden');
+  if (pfChanged && (prof.s || prof.p || (op.s || op.p))) announceProf(true).then(render);
   if (cfg.notify) refreshPush(!old || old.me !== me || JSON.stringify(old.rooms) !== JSON.stringify(rooms)).catch(() => {});
 });
 
 // ---------- 키·창 이벤트 ----------
-const closePops = () => { $('#emoPanel').classList.add('hidden'); $('#menu').classList.add('hidden'); $('#gal').classList.add('hidden'); };
+const closePops = () => { $('#emoPanel').classList.add('hidden'); $('#menu').classList.add('hidden'); $('#gal').classList.add('hidden'); $('#pcard').classList.add('hidden'); };
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && cfg && $('#setup').classList.contains('hidden')) {
     e.preventDefault();
@@ -1834,7 +1943,9 @@ $('#viewer').addEventListener('click', () => $('#viewer').classList.add('hidden'
 document.addEventListener('click', e => {
   const t = e.target;
   if (!t.closest) return;
-  if (!t.closest('#emoPanel') && !t.closest('#menu')) closePops();
+  if (!t.closest('#emoPanel, #menu, #gal .gbox, #pcard .pbox')) closePops();   // 창 안쪽을 누르면 닫지 않음
+  const pa = t.closest('[data-prof]');
+  if (pa && cur()) { openProf(pa.dataset.prof); return; }
   const im = t.closest('img.pic[src]');
   if (im) { $('#viewer img').src = im.src; $('#viewer').classList.remove('hidden'); return; }
   const rc = t.closest('[data-react]');
