@@ -273,6 +273,27 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
 .picBtn{cursor:pointer}
 #viewer{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.85);display:grid;place-items:center;z-index:30;cursor:zoom-out;padding:12px}
 #viewer img{max-width:100%;max-height:100%;object-fit:contain}
+/* 입력 중·수정·콕·모아보기 */
+.typing{flex:none;font-size:11.5px;color:#888;padding:3px 14px;background:inherit}
+.typing::before{content:"✎ "}
+.edt{display:block;font-size:10.5px;color:#888;margin-top:2px}
+.nudge{font-weight:700;color:#bd1d63;white-space:nowrap}
+.shake{animation:shk .6s}
+@keyframes shk{0%,100%{transform:none}15%,55%{transform:translateX(-7px)}35%,75%{transform:translateX(7px)}}
+#list{touch-action:manipulation}
+#gal{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(20,24,32,.45);z-index:25;display:grid;place-items:center;padding:16px}
+#gal .gbox{width:min(560px,100%);max-height:calc(100vh - 32px);background:#fff;border-radius:10px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+#gal .gh{display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid #eee}
+#gal .gh b{flex:1;font-size:14px}
+#gal .gh button{width:28px;height:28px;border-radius:50%;color:#777}
+#gal .gb{overflow:auto;padding:10px}
+#gal .gg{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px}
+#gal .gi{position:relative}
+#gal .gi img.pic{width:100%;height:100px;max-width:none;max-height:none;object-fit:cover;border-radius:4px}
+#gal .gi small{position:absolute;right:4px;bottom:3px;font-size:10px;color:#fff;text-shadow:0 0 3px #000}
+#gal .gf{display:flex;align-items:baseline;gap:6px;padding:9px 6px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:13px}
+#gal .gf b{flex:1;font-weight:600;word-break:break-all}
+#gal .gf small{color:#888;font-size:11px;white-space:nowrap}
 
 @media (max-width:860px){
   .ch-main{width:100%;border-right:0}
@@ -323,7 +344,7 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
     <div class="btns"><button id="fCancel" type="button">취소</button><button id="fSave" class="pri" type="button">저장</button></div>
     <button class="lnk" id="fClear" type="button">이 기기의 대화 기록 지우기</button>
     <p class="tip" style="display:none"><span id="qtm"></span></p>
-    <p class="tip">1:1 방 이름은 내 화면에서만 보이는 상대 표시 이름이에요. 단톡방에서는 각자의 '내 이름'으로 보여요.<br>Esc 키: 업무 화면 ↔ 대화 전환 · Enter 전송, Ctrl+Enter 줄바꿈<br>대화·사진은 암호화된 채로 서버에 보관돼서 새 기기에서도 최근 1000건까지 다시 받아와요.<br>폰에서는 키보드 return이 줄바꿈이고, 전송은 전송 버튼으로 해요.<br>버전 <span id="verTxt"></span></p>
+    <p class="tip">1:1 방 이름은 내 화면에서만 보이는 상대 표시 이름이에요. 단톡방에서는 각자의 '내 이름'으로 보여요.<br>Esc 키: 업무 화면 ↔ 대화 전환 · Enter 전송, Ctrl+Enter 줄바꿈<br>대화·사진은 암호화된 채로 서버에 보관돼서 새 기기에서도 최근 1000건까지 다시 받아와요.<br>폰에서는 키보드 return이 줄바꿈이고, 전송은 전송 버튼으로 해요.<br>말풍선 두 번 누르기: ❤️ · 길게 누르기(PC는 오른쪽 클릭): 답장·복사·수정·공지·삭제<br>대화방 머리글 ⋯: 콕 찌르기·사진/파일 모아보기·검색·대화 내보내기<br>버전 <span id="verTxt"></span></p>
   </div>
 </div>
 <div id="toast"></div>
@@ -331,6 +352,7 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
 <input type="file" id="anyFile" hidden>
 <div id="emoPanel" class="hidden"></div>
 <div id="menu" class="hidden"></div>
+<div id="gal" class="hidden"></div>
 <div id="viewer" class="hidden"><img alt=""></div>
 
 <script>
@@ -348,7 +370,7 @@ const RELAY = 'https://ntfy.sh';   // 폰 알림(웹 푸시) 신호용
 const DB = 'https://worklog-chat-c0a54-default-rtdb.asia-southeast1.firebasedatabase.app';   // 대화·첨부 저장(Firebase 실시간 DB)
 const VAPID = 'BEMjM0sNxh41x0a6Lz3YaqkJ7AUhZefxsOQgw-at69i0fM1CybVBcj7-QQXf4N_tPCgFnOXdRbQ5jrSrr9Yg9Lc';   // ntfy.sh 웹 푸시 공개키
 const MAX_BYTES = 2800;   // 암호화 후 ntfy 본문 한도(4096바이트) 안에 들도록
-const VER = '2026.11.02';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
+const VER = '2026.11.02b';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
 
 // ?p=xx 로 같은 브라우저에서 프로필을 나눠 쓸 수 있다(테스트용)
 const P = new URLSearchParams(location.search).get('p') || '';
@@ -434,7 +456,7 @@ async function inboxOf(id, name) {
 }
 
 // ---------- 송수신 ----------
-function setStatus(s) { status = s; document.querySelectorAll('.dot').forEach(d => { d.className = 'dot ' + s; }); paintStatus(); }
+function setStatus(s) { status = s; document.querySelectorAll('.dot:not([data-peer])').forEach(d => { d.className = 'dot ' + s; }); paintStatus(); paintPeer(); }
 
 // 설정 저장이 연결 중에 겹쳐도 꼬이지 않게 한 번에 하나씩
 let connecting = Promise.resolve();
@@ -451,7 +473,7 @@ async function doConnect() {
     const sk = d.topic.slice(2, 10);
     const msgs = load('msgs_' + sk, []);
     R[rm.id] = {pass: rm.pass, key: d.key, raw: d.raw, topic: d.topic, sk, msgs, seen: new Set(msgs.map(m => m.id)), unread: 0, nn: load('nn_' + sk, []),
-      ext: Object.assign({react: {}, del: {}, pin: null, read: {}}, load('ext_' + sk, {})), myRead: load('mr2_' + sk, 0), divTs: 0};   // mr2: 옛 기록은 버리고 한 번 다시 보낸다
+      ext: Object.assign({react: {}, del: {}, pin: null, read: {}, edit: {}}, load('ext_' + sk, {})), pres: {}, presAt: {}, myRead: load('mr2_' + sk, 0), divTs: 0};   // mr2: 옛 기록은 버리고 한 번 다시 보낸다
   }
   if (!view || (isRoom(view) && !room(view))) view = cfg.rooms[0].id;
   if (isRoom(view)) lastRoom = view;
@@ -469,9 +491,11 @@ async function doConnect() {
     st.addEventListener('put', onData);
     st.addEventListener('patch', onData);
     streams.push(st);
+    r.myKey = await presKey(rm.id);
   }
   render();
   heartbeat();
+  pollPres();
   if (cfg.notify) refreshPush(false).catch(() => {});
 }
 
@@ -493,12 +517,96 @@ async function onItem(id, k, v) {
   if (typeof o.t !== 'string') return;
   const m = {id: k, n: String(o.n || ''), t: o.t, ts: Number(o.ts) || Number(v.t) || Date.now()};
   if (o.re && typeof o.re.id === 'string') m.re = {id: o.re.id, n: String(o.re.n || ''), t: String(o.re.t || '').slice(0, 80)};
+  if (o.nudge) m.nudge = 1;
   const fu = o.fid ? `${DB}/f/${r.topic}/${encodeURIComponent(o.fid)}.json` : null;
   if (o.img && fu) Object.assign(m, {t: '사진', img: 1, u: fu, x: 9e15, mime: o.mime});
   if (o.file && fu) Object.assign(m, {t: '파일: ' + String(o.fname || ''), file: 1, fname: String(o.fname || '파일'), fsize: Number(o.fsize) || 0, u: fu, x: 9e15, mime: o.mime});
   add(id, m);
   if (m.img || m.file) fetchPic(id, m);
+  if (m.nudge && !mine(m) && view === id && Math.abs(Date.now() - m.ts) < 60000) shake();
 }
+// 접속·입력 중 표시: p/<토픽>/<해시>=접속 시각, <해시>t=입력 중 시각.
+// Firebase REST는 HTTP/1.1이라 브라우저가 한 서버에 연결을 6개까지만 열어서, 상시 연결 대신 보고 있는 방만 3초마다 확인한다.
+async function pollPres() {
+  clearTimeout(pollPres.t);
+  pollPres.t = setTimeout(pollPres, 3000);
+  const rm = cur();
+  if (!cfg || !rm || !R[rm.id] || document.hidden || pollPres.busy) return;
+  pollPres.busy = true;
+  const ac = window.AbortController ? new AbortController() : null;
+  const kill = setTimeout(() => { if (ac) ac.abort(); }, 8000);
+  try { applyPres(rm.id, (await (await fetch(`${DB}/p/${R[rm.id].topic}.json`, ac ? {signal: ac.signal} : {})).json()) || {}); } catch (_) {}
+  clearTimeout(kill);
+  pollPres.busy = false;
+}
+// 처음 본 값은 저장된 시각 그대로, 그 뒤로는 값이 바뀐 걸 본 순간을 기준으로(기기 시계 차이 무시)
+function applyPres(id, d) {
+  const r = R[id], now = Date.now();
+  if (!r) return;
+  Object.keys(r.pres).forEach(k => { if (!(k in d)) { delete r.pres[k]; delete r.presAt[k]; } });
+  Object.keys(d).forEach(k => {
+    const v = Number(d[k]) || 0;
+    if (!(k in r.pres)) r.presAt[k] = v ? Math.min(now, v) : 0;
+    else if (r.pres[k] !== v) r.presAt[k] = v ? now : 0;
+    r.pres[k] = v;
+  });
+  paintTyping(); paintPeer();
+}
+const PRES_ON = 45000, TYPE_ON = 7000;
+// 나 말고 지금 보고 있는 사람이 있나, 입력 중인 사람(해시)은 누구인가
+function othersState(id) {
+  const r = R[id], now = Date.now(), typing = [];
+  let online = false;
+  Object.keys(r.presAt).forEach(k => {
+    const base = k.replace(/t$/, '');   // 해시는 16진수라 끝에 t가 붙으면 입력 중 신호
+    if (base === r.myKey) return;
+    if (base !== k) { if (now - r.presAt[k] < TYPE_ON) typing.push(base); }
+    else if (now - r.presAt[k] < PRES_ON) online = true;
+  });
+  return {online, typing};
+}
+const pkCache = {};
+async function keyNames(id, keys) {
+  const out = [];
+  for (const n of members(id)) {
+    const c = id + '|' + n;
+    if (!pkCache[c]) pkCache[c] = (await inboxOf(id, n)).slice(2, 18);
+    if (keys.indexOf(pkCache[c]) >= 0) out.push(n);
+  }
+  return out;
+}
+async function paintTyping() {
+  const el = $('#typing'), rm = cur();
+  if (!el) return;
+  const st = rm && R[rm.id] ? othersState(rm.id) : {typing: []};
+  if (!st.typing.length) { el.classList.add('hidden'); return; }
+  let who = nameOnly(rm.name);
+  if (rm.group) { const ns = await keyNames(rm.id, st.typing); who = ns.length ? ns.map(nameOnly).join(', ') : '누군가'; }
+  el.textContent = `${who}님이 입력 중…`;
+  el.classList.remove('hidden');
+}
+// 머리글 초록 점: 상대가 지금 화면을 보고 있으면 초록, 아니면 회색, 연결이 끊기면 빨강
+function paintPeer() {
+  const rm = cur();
+  const on = !!(rm && R[rm.id] && othersState(rm.id).online);
+  document.querySelectorAll('[data-peer]').forEach(d => {
+    d.className = 'dot ' + (status === 'off' ? 'off' : on ? 'on' : '');
+    d.title = status === 'off' ? '연결 끊김' : on ? '접속 중' : '자리 비움';
+  });
+}
+setInterval(() => { if (cfg) { paintTyping(); paintPeer(); } }, 2000);
+// 내가 입력 중이라는 신호(3초에 한 번까지), 보내거나 지우면 0
+let typingAt = 0;
+function sendTyping(on) {
+  const rm = cur();
+  if (!cfg || !rm || !R[rm.id]) return;
+  if (on && Date.now() - typingAt < 3000) return;
+  if (!on && !typingAt) return;
+  typingAt = on ? Date.now() : 0;
+  const r = R[rm.id];
+  presKey(rm.id).then(k => fetch(`${DB}/p/${r.topic}/${k}t.json`, {method: 'PUT', body: JSON.stringify(on ? {'.sv': 'timestamp'} : 0)})).catch(() => {});
+}
+
 // 방에 한 건 올리기(메시지·신호 공통) → 저장 키
 async function post(id, obj, keepalive) {
   const r = R[id];
@@ -536,6 +644,10 @@ function applySys(id, o) {
     const m = r.msgs.find(z => z.id === o.id);
     if (m && m.n !== n) return;   // 보낸 사람만 지울 수 있다
     x.del[o.id] = 1;
+  } else if (o.sys === 'edit' && typeof o.id === 'string') {
+    const m = r.msgs.find(z => z.id === o.id);
+    if (m && m.n !== n) return;   // 보낸 사람만 고칠 수 있다
+    x.edit[o.id] = String(o.t || '').slice(0, 4000);
   } else if (o.sys === 'pin') {
     x.pin = o.id ? {id: String(o.id), n, t: String(o.t || '').slice(0, 80)} : null;
   } else if (o.sys === 'read') {
@@ -626,21 +738,30 @@ async function ping(id, text) {
   }
 }
 
-async function send(text) {
+async function send(text, extra) {
   text = text.trim();
   const rm = cur();
   if (!rm) return true;   // 위장 화면에서 친 내용은 보내지 않고 지우기만
   if (!text) return false;
-  const r = R[rm.id];
-  const payload = {n: cfg.me, t: text, ts: Date.now()};
+  if (editTo) {   // 수정 중이면 새 메시지 대신 수정 신호
+    const id = editTo, m = R[rm.id].msgs.find(z => z.id === id);
+    if (text.length > 4000) { toast('메시지가 너무 길어요.'); return false; }
+    setReply(null);
+    if (m && text !== textOf(rm.id, m)) await sendSys(rm.id, {sys: 'edit', id, t: text});
+    sendTyping(false);
+    return true;
+  }
+  const payload = Object.assign({n: cfg.me, t: text, ts: Date.now()}, extra);
   if (replyTo) payload.re = replyTo;
   if (te.encode(JSON.stringify(payload)).length > MAX_BYTES) { toast('메시지가 너무 길어요. 나눠서 보내주세요.'); return false; }
   try {
     const m = {id: await post(rm.id, payload), n: payload.n, t: payload.t, ts: payload.ts};
     if (payload.re) m.re = payload.re;
+    if (payload.nudge) m.nudge = 1;
     setReply(null);
     add(rm.id, m);
-    ping(rm.id, text);
+    sendTyping(false);
+    ping(rm.id, payload.nudge ? '콕 찔렀어요 👉' : text);
     recentEmoji(text);
     if (checkUpdate.ready) setTimeout(checkUpdate, 500);   // 글을 보내 입력창이 비면 미뤄 둔 새로고침
     return true;
@@ -794,10 +915,12 @@ function isBig(t) {
 }
 const kb = n => n < 1024 * 1024 ? Math.max(1, Math.round(n / 1024)) + 'KB' : (n / 1048576).toFixed(1) + 'MB';
 const isDel = (rid, m) => !!R[rid].ext.del[m.id];
+const isEdited = (rid, m) => typeof R[rid].ext.edit[m.id] === 'string';
+const textOf = (rid, m) => isEdited(rid, m) ? R[rid].ext.edit[m.id] : (m.t || '');
 function prevOf(rid, m) {
   if (!m) return '';
   if (isDel(rid, m)) return '삭제된 메시지입니다.';
-  return m.img ? '사진' : (m.t || '').split('\n')[0];
+  return m.img ? '사진' : textOf(rid, m).split('\n')[0];
 }
 // 말풍선 안쪽 내용 → {kind, html}
 function bodyOf(rm, m) {
@@ -806,8 +929,10 @@ function bodyOf(rm, m) {
   if (m.re) q = `<div class="quote" data-jump="${esc(m.re.id)}"><b>${esc(m.re.n === cfg.me ? cfg.me : nameOnly(rm.group ? m.re.n : rm.name))}</b><span>${esc(m.re.t)}</span></div>`;
   if (m.img) return {kind: 'img', html: q + picTag(m.id)};
   if (m.file) return {kind: 'file', html: q + `<span class="fcard" data-file="${esc(m.id)}"><i>📄</i><span><b>${esc(m.fname)}</b><small>${kb(m.fsize)} · 눌러서 저장</small></span></span>`};
-  if (!q && isBig(m.t)) return {kind: 'big', html: `<span class="bigemo">${esc(m.t)}</span>`};
-  return {kind: 'txt', html: q + `<span class="txt">${linkify(m.t)}</span>`};
+  if (m.nudge) return {kind: 'txt', html: `<span class="nudge">👉 콕! 찔렀어요</span>`};
+  const t = textOf(rm.id, m), ed = isEdited(rm.id, m) ? '<small class="edt">(수정됨)</small>' : '';
+  if (!q && !ed && isBig(t)) return {kind: 'big', html: `<span class="bigemo">${esc(t)}</span>`};
+  return {kind: 'txt', html: q + `<span class="txt">${linkify(t)}</span>${ed}`};
 }
 function reactHTML(rm, m) {
   const k = R[rm.id].ext.react[m.id];
@@ -837,8 +962,40 @@ function unreadCount(rm, m) {
 }
 
 // ---------- 답장 ----------
-let replyTo = null;
+let replyTo = null, editTo = null;
+// 내 메시지 고치기: 입력창에 원래 글을 넣고, 전송하면 수정 신호로 보낸다
+function setEdit(m) {
+  const rm = cur();
+  if (!rm || !m) return;
+  saveDraft();
+  setReply(null);
+  editTo = m.id;
+  editText = textOf(rm.id, m);
+  const i = $('#inp');
+  if (i) { i.value = editText; i.focus(); }
+  paintEditBar();
+}
+function paintEditBar() {
+  const bar = $('#replyBar');
+  if (!bar || !editTo) return;
+  bar.classList.remove('hidden');
+  bar.querySelector('span').textContent = '✎ 메시지 수정 중 — 고친 뒤 전송하면 바뀌어요 (✕ 취소)';
+}
+// 방마다 쓰다 만 글 보관(방을 옮기거나 화면이 다시 그려져도 남게)
+const drafts = load('drafts', {});
+let editText = '';
+function saveDraft() {
+  const i = $('#inp');
+  if (!i || !cur()) return;
+  if (editTo) { editText = i.value; return; }
+  drafts[view] = i.value;
+  clearTimeout(saveDraft.t);
+  saveDraft.t = setTimeout(() => save('drafts', drafts), 400);
+}
 function setReply(m) {
+  const wasEdit = !!editTo;
+  editTo = null;
+  if (wasEdit) { const i = $('#inp'); if (i) i.value = drafts[view] || ''; }   // 수정을 끝내거나 취소하면 쓰던 글로 되돌림
   const rm = cur();
   replyTo = (m && rm) ? {id: m.id, n: m.n, t: prevOf(rm.id, m).slice(0, 80)} : null;
   const bar = $('#replyBar');
@@ -906,7 +1063,8 @@ function openMenu(mid, x, y) {
   const myE = (R[rm.id].ext.react[mid] || {})[cfg.me];
   const mn = $('#menu');
   mn.innerHTML = `<div class="mq">${QUICK.map(e => `<span data-e="${e}" class="${e === myE ? 'on' : ''}">${e}</span>`).join('')}</div>
-    <button data-a="reply">답장</button>${m.img || m.file ? '' : '<button data-a="copy">복사</button>'}
+    <button data-a="reply">답장</button>${m.img || m.file || m.nudge ? '' : '<button data-a="copy">복사</button>'}
+    ${mine(m) && !m.img && !m.file && !m.nudge ? '<button data-a="edit">수정</button>' : ''}
     <button data-a="pin">공지로 등록</button>${mine(m) ? '<button data-a="del" class="dg">삭제</button>' : ''}`;
   mn.classList.remove('hidden');
   const w = mn.offsetWidth, h = mn.offsetHeight;
@@ -920,10 +1078,84 @@ function openMenu(mid, x, y) {
     mn.classList.add('hidden');
     const a = el.dataset.a;
     if (a === 'reply') { setReply(m); const i = $('#inp'); if (i) i.focus(); }
-    else if (a === 'copy') { (navigator.clipboard ? navigator.clipboard.writeText(m.t) : Promise.reject()).then(() => toast('복사했어요'), () => toast('복사하지 못했어요')); }
+    else if (a === 'edit') setEdit(m);
+    else if (a === 'copy') { (navigator.clipboard ? navigator.clipboard.writeText(textOf(rm.id, m)) : Promise.reject()).then(() => toast('복사했어요'), () => toast('복사하지 못했어요')); }
     else if (a === 'pin') sendSys(rm.id, {sys: 'pin', id: mid, t: prevOf(rm.id, m)});
     else if (a === 'del' && confirm('이 메시지를 삭제할까요? 상대 화면에서도 지워져요.')) sendSys(rm.id, {sys: 'del', id: mid});
   }));
+}
+// ---------- 방 메뉴(머리글 ⋯) ----------
+function openRoomMenu(btn) {
+  const rm = cur();
+  if (!rm) return;
+  const mn = $('#menu');
+  mn.innerHTML = `<button data-a="nudge">👉 콕 찌르기</button><button data-a="gal">🖼 사진·파일 모아보기</button>
+    <button data-a="srch">🔍 대화 검색</button><button data-a="exp">💾 대화 내보내기(.txt)</button>`;
+  mn.classList.remove('hidden');
+  const b = btn.getBoundingClientRect(), w = mn.offsetWidth;
+  mn.style.left = Math.max(8, Math.min(b.right - w, window.innerWidth - w - 8)) + 'px';
+  mn.style.top = Math.min(b.bottom + 6, window.innerHeight - mn.offsetHeight - 8) + 'px';
+  mn.querySelectorAll('[data-a]').forEach(el => el.addEventListener('click', () => {
+    mn.classList.add('hidden');
+    const a = el.dataset.a;
+    if (a === 'nudge') nudge();
+    else if (a === 'gal') openGallery();
+    else if (a === 'srch') toggleSearch();
+    else if (a === 'exp') exportChat();
+  }));
+}
+let nudgeAt = 0;
+async function nudge() {
+  if (Date.now() - nudgeAt < 10000) { toast('조금 있다가 다시 찔러주세요'); return; }
+  nudgeAt = Date.now();
+  if (editTo) setReply(null);
+  await send('콕', {nudge: 1});
+}
+function shake() {
+  const a = $('#app');
+  a.classList.remove('shake'); void a.offsetWidth; a.classList.add('shake');
+  setTimeout(() => a.classList.remove('shake'), 700);
+  if (navigator.vibrate) navigator.vibrate([80, 60, 80]);
+}
+// 이 방에 오간 사진·파일 모아보기(최근 것부터)
+function openGallery() {
+  const rm = cur();
+  if (!rm) return;
+  const ms = R[rm.id].msgs.filter(m => (m.img || m.file) && !isDel(rm.id, m)).reverse();
+  const g = $('#gal');
+  const pics = ms.filter(m => m.img), files = ms.filter(m => m.file);
+  g.innerHTML = `<div class="gbox"><div class="gh"><b>사진·파일 (${ms.length})</b><button type="button" title="닫기">✕</button></div><div class="gb">
+    ${pics.length ? `<div class="gg">${pics.map(m => `<div class="gi">${picTag(m.id)}<small>${esc(ymd(m.ts).slice(5))}</small></div>`).join('')}</div>` : ''}
+    ${files.map(m => `<div class="gf" data-file="${esc(m.id)}">📄 <b>${esc(m.fname)}</b><small>${kb(m.fsize)} · ${esc(ymd(m.ts))}</small></div>`).join('')}
+    ${ms.length ? '' : '<p class="empty">아직 주고받은 사진·파일이 없어요</p>'}</div></div>`;
+  g.classList.remove('hidden');
+  g.querySelector('.gh button').addEventListener('click', () => g.classList.add('hidden'));
+  fillPics();
+}
+// 대화를 글 파일로 저장(기기에만)
+function exportChat() {
+  const rm = cur();
+  if (!rm) return;
+  const lines = R[rm.id].msgs.filter(m => !isDel(rm.id, m)).map(m => {
+    const d = new Date(m.ts);
+    const body = m.img ? '[사진]' : m.file ? `[파일] ${m.fname}` : m.nudge ? '[콕 찌르기]' : textOf(rm.id, m);
+    return `[${ymd(m.ts)} ${pad(d.getHours())}:${pad(d.getMinutes())}] ${who(rm, m)}: ${body}`;
+  });
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([lines.join('\n')], {type: 'text/plain;charset=utf-8'})),
+    download: `업무기록_${ymd(Date.now()).replace(/-/g, '')}.txt`});
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('대화를 파일로 저장했어요');
+}
+// 말풍선 두 번 누르기 → ❤️ 공감(다시 두 번 누르면 취소)
+function heartAt(t) {
+  const el = t.closest && t.closest('#list [data-mid]');
+  if (!el || !cur() || t.closest('a, img.pic, [data-react], [data-file], [data-jump]')) return false;
+  const mid = el.dataset.mid, m = R[view].msgs.find(z => z.id === mid);
+  if (!m || isDel(view, m)) return false;
+  const my = (R[view].ext.react[mid] || {})[cfg.me];
+  sendSys(view, {sys: 'react', id: mid, e: my === '❤️' ? '' : '❤️'});
+  return true;
 }
 function jumpTo(mid) {
   const el = document.querySelector(`#list [data-mid="${CSS.escape(mid)}"]`);
@@ -1088,6 +1320,7 @@ function setView(v) {
   setReply(null);
   searchQ = '';
   render();
+  pollPres();
 }
 function decoy() {
   view = lastDecoy || 'team';
@@ -1128,11 +1361,13 @@ function render() {
       if (e.key === 'Enter' && !(isTouch() && inp.tagName === 'TEXTAREA') && !e.shiftKey && !e.isComposing && e.keyCode !== 229) {
         e.preventDefault();
         const t = inp.value;
-        if (await send(t) && inp.value === t) inp.value = '';
+        if (await send(t) && inp.value === t) { inp.value = ''; saveDraft(); }
       }
     });
     const btn = $('#sendBtn');
-    if (btn) btn.addEventListener('click', async () => { const t = inp.value; if (await send(t) && inp.value === t) inp.value = ''; inp.focus(); });
+    if (btn) btn.addEventListener('click', async () => { const t = inp.value; if (await send(t) && inp.value === t) { inp.value = ''; saveDraft(); } inp.focus(); });
+    if (cur()) inp.value = editTo ? editText : (drafts[view] || '');
+    inp.addEventListener('input', () => { saveDraft(); sendTyping(!!inp.value.trim() && !editTo); });
     inp.addEventListener('paste', e => {
       const f = Array.from((e.clipboardData && e.clipboardData.files) || [])[0];
       if (f) { e.preventDefault(); sendPic(f); }
@@ -1143,6 +1378,7 @@ function render() {
       host.insertAdjacentHTML('beforebegin', '<div class="replyBar hidden" id="replyBar"><span></span><button type="button">✕</button></div>');
       $('#replyBar button').addEventListener('click', () => setReply(null));
       if (replyTo) { const k = replyTo; replyTo = null; setReply(R[view].msgs.find(m => m.id === k.id)); }
+      else if (editTo) paintEditBar();
     }
   }
   const list = $('#list');
@@ -1158,12 +1394,14 @@ function render() {
       go(d);
     }));
     if (searchQ) { sb.classList.remove('hidden'); si.value = searchQ; }
+    if (cfg.skin !== 'sheet') list.insertAdjacentHTML('afterend', '<div class="typing hidden" id="typing"></div>');
   }
+  app.querySelectorAll('.roomBtn').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); if (cur()) openRoomMenu(el); }));
   app.querySelectorAll('.picBtn').forEach(el => el.addEventListener('click', () => { if (cur()) $('#picFile').click(); }));
   app.querySelectorAll('.fileBtn').forEach(el => el.addEventListener('click', () => { if (cur()) $('#anyFile').click(); }));
   app.querySelectorAll('.emoBtn').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); if (cur()) openEmo(el); }));
   app.querySelectorAll('.srchBtn').forEach(el => el.addEventListener('click', () => { if (cur()) toggleSearch(); }));
-  renderList(); paintSide(); paintTitle(); setStatus(status);
+  renderList(); paintSide(); paintTitle(); setStatus(status); paintTyping();
 }
 function renderList() {
   const list = $('#list'); if (!list) return;
@@ -1292,10 +1530,10 @@ const SKINS = {
       let hd, r2;
       if (rm && rm.group) {
         hd = roomAv(rm);
-        r2 = `<span style="color:#4b6fd0;width:14px;height:14px;display:inline-block">${IC.person}</span>${members(rm.id).length + 1}<span>${esc(rm.name)}</span><span class="dot"></span>`;
+        r2 = `<span style="color:#4b6fd0;width:14px;height:14px;display:inline-block">${IC.person}</span>${members(rm.id).length + 1}<span>${esc(rm.name)}</span><span class="dot" data-peer="1"></span>`;
       } else if (rm) {
         hd = avOf(rm.name);
-        r2 = `${avOf(rm.name)}<span>${esc(nameOnly(rm.name))}</span><span class="dot"></span>`;
+        r2 = `${avOf(rm.name)}<span>${esc(nameOnly(rm.name))}</span><span class="dot" data-peer="1"></span>`;
       } else {
         const c = CHC[view];
         hd = c.grp ? grpAv(c.grp) : avOf(c.name);
@@ -1325,7 +1563,7 @@ const SKINS = {
         <section class="ch-chat">
           <header class="ch-head">
             <div class="r1"><span class="back">${IC.left}</span><span id="hdAv" style="display:contents">${hd}</span><span class="hi">${IC.grid}</span><span class="hi srchBtn" title="대화 검색">${IC.search}</span></div>
-            <div class="r2"><span id="hdR2" style="display:contents">${r2}</span><i class="sp"></i><span class="cb">${IC.bell}</span><span class="cb">${IC.kebab}</span></div>
+            <div class="r2"><span id="hdR2" style="display:contents">${r2}</span><i class="sp"></i><span class="cb">${IC.bell}</span><span class="cb roomBtn" title="더보기">${IC.kebab}</span></div>
           </header>
           <div class="ch-msgs" id="list"></div>
           <div class="ch-comp"><div class="ch-grip"></div>
@@ -1412,7 +1650,7 @@ const SKINS = {
           <nav class="c-nav" id="nav"></nav>
         </aside>
         <section class="c-main">
-          <header class="c-head"><button class="ic back">‹</button><b>${esc(title)}</b><small>${rm ? '<span id="qt"></span>' : ''}</small><i style="flex:1"></i><button class="ic srchBtn" title="대화 검색">🔍</button></header>
+          <header class="c-head"><button class="ic back">‹</button><b>${esc(title)}</b><small>${rm ? '<span id="qt"></span>' : ''}</small><i style="flex:1"></i><span class="dot" data-peer="1" style="${rm ? '' : 'display:none'}"></span><button class="ic srchBtn" title="대화 검색">🔍</button><button class="ic roomBtn" title="더보기">⋯</button></header>
           <div class="c-list" id="list"></div>
           <div class="c-comp"><div class="c-box"><button class="fileBtn pb" title="파일·사진">＋</button><button class="emoBtn pb" title="이모지">☺</button><textarea id="inp" placeholder="${esc(title)}에 메시지 보내기"></textarea><button id="sendBtn">➤</button></div></div>
         </section></div>`;
@@ -1453,7 +1691,7 @@ const SKINS = {
     layout() {
       const tabs = ['파일', '홈', '삽입', '페이지 레이아웃', '수식', '데이터', '검토', '보기'];
       return `<div class="s">
-        <div class="s-tabs">${tabs.map(t => `<span class="${t === '홈' ? 'on' : t === '삽입' ? 'picBtn' : ''}">${t}</span>`).join('')}<i class="sp"></i><button class="ic gear" title="설정">⚙</button></div>
+        <div class="s-tabs">${tabs.map(t => `<span class="${t === '홈' ? 'on' : t === '삽입' ? 'picBtn' : t === '보기' ? 'roomBtn' : ''}">${t}</span>`).join('')}<i class="sp"></i><button class="ic gear" title="설정">⚙</button></div>
         <div class="s-tool"><span class="tb">붙여넣기</span><span class="sep"></span><span class="bx">맑은 고딕</span><span class="bx">11</span>
           <span class="tb"><b>가</b></span><span class="tb"><i>가</i></span><span class="tb"><u>가</u></span><span class="sep"></span>
           <span class="tb">≡</span><span class="tb">병합하고 가운데 맞춤</span><span class="sep"></span><span class="bx">일반</span><span class="tb">%</span><span class="tb">,</span>
@@ -1581,7 +1819,7 @@ $('#fSave').addEventListener('click', async () => {
 });
 
 // ---------- 키·창 이벤트 ----------
-const closePops = () => { $('#emoPanel').classList.add('hidden'); $('#menu').classList.add('hidden'); };
+const closePops = () => { $('#emoPanel').classList.add('hidden'); $('#menu').classList.add('hidden'); $('#gal').classList.add('hidden'); };
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && cfg && $('#setup').classList.contains('hidden')) {
     e.preventDefault();
@@ -1624,6 +1862,21 @@ document.addEventListener('touchstart', e => {
   const tc = e.touches[0];
   pressT = setTimeout(() => { pressT = null; openMenu(el.dataset.mid, tc.clientX, tc.clientY); }, 500);
 }, {passive: true});
+// 두 번 누르기 → ❤️ (PC 더블클릭, 폰은 같은 말풍선을 빠르게 두 번 톡)
+document.addEventListener('dblclick', e => {
+  if (isTouch() || !heartAt(e.target)) return;
+  const sel = window.getSelection && window.getSelection();
+  if (sel) sel.removeAllRanges();
+});
+let lastTap = {t: 0, mid: '', x: 0, y: 0}, tapStart = null;
+document.addEventListener('touchstart', e => { const tc = e.touches[0]; tapStart = tc ? {x: tc.clientX, y: tc.clientY} : null; }, {passive: true});
+document.addEventListener('touchend', e => {
+  const el = e.target.closest && e.target.closest('#list [data-mid]'), tc = e.changedTouches[0];
+  if (!el || !tc || !tapStart || Math.abs(tc.clientX - tapStart.x) > 10 || Math.abs(tc.clientY - tapStart.y) > 10) return;   // 스크롤은 톡이 아님
+  const now = Date.now();
+  if (lastTap.mid === el.dataset.mid && now - lastTap.t < 350) { lastTap = {t: 0, mid: ''}; if (heartAt(e.target)) e.preventDefault(); }
+  else lastTap = {t: now, mid: el.dataset.mid};
+});
 ['touchend', 'touchmove', 'touchcancel'].forEach(n => document.addEventListener(n, () => { if (pressT) { clearTimeout(pressT); pressT = null; } }, {passive: true}));
 document.addEventListener('dragover', e => { if (cur()) e.preventDefault(); });
 document.addEventListener('drop', e => {
