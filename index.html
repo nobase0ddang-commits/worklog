@@ -25,6 +25,9 @@ input,textarea,select{font:inherit;color:inherit}
 .dot.on{background:#2fb35a}.dot.off{background:#d9534f}
 .badge{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#e5483f;color:#fff;font-size:11px;font-weight:700;font-style:normal;line-height:1;white-space:nowrap;box-sizing:border-box;font-variant-numeric:tabular-nums;display:inline-grid;place-items:center}
 .txt{white-space:pre-wrap;word-break:break-word}
+.sending{opacity:.5}
+div.older{margin:6px auto 10px;padding:5px 14px;border-radius:14px;background:rgba(127,127,127,.12);color:#777;font-size:12px;cursor:pointer;width:max-content}
+tr.older td{color:#777;cursor:pointer}
 .empty{color:#999;text-align:center;padding:40px 16px;line-height:1.7}
 
 /* ---------- 메신저형 (CH) ---------- */
@@ -478,7 +481,7 @@ const RELAY = 'https://ntfy.sh';   // 폰 알림(웹 푸시) 신호용
 const DB = 'https://worklog-chat-c0a54-default-rtdb.asia-southeast1.firebasedatabase.app';   // 대화·첨부 저장(Firebase 실시간 DB)
 const VAPID = 'BEMjM0sNxh41x0a6Lz3YaqkJ7AUhZefxsOQgw-at69i0fM1CybVBcj7-QQXf4N_tPCgFnOXdRbQ5jrSrr9Yg9Lc';   // ntfy.sh 웹 푸시 공개키
 const MAX_BYTES = 2800;   // 암호화 후 ntfy 본문 한도(4096바이트) 안에 들도록
-const VER = '2026.11.03g';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
+const VER = '2026.11.03h';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
 
 // ?p=xx 로 같은 브라우저에서 프로필을 나눠 쓸 수 있다(테스트용)
 const P = new URLSearchParams(location.search).get('p') || '';
@@ -554,6 +557,18 @@ async function derive(pass) {
     topic: 'wt' + Array.from(bits.slice(32, 48), b => b.toString(16).padStart(2, '0')).join('')
   };
 }
+// 방 키는 한 번 계산해 이 기기에 보관해 두고 바로 쓴다(앱을 열 때마다 PBKDF2 20만 번 × 방 수를 다시 돌리면 폰에서 느려서).
+// 방 암호 자체가 이미 이 기기 설정에 있으니 보관해도 더 드러나는 것은 없다.
+async function roomKey(pass, dk) {
+  const h = b64(new Uint8Array(await crypto.subtle.digest('SHA-256', te.encode('dk|' + pass)))).slice(0, 16);
+  const c = dk[h];
+  if (c) {
+    try { const raw = ub64(c[0]); return {h, raw, topic: c[1], key: await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt'])}; } catch (_) {}
+  }
+  const d = await derive(pass);
+  dk[h] = [b64(d.raw), d.topic];
+  return Object.assign({h}, d);
+}
 async function seal(key, obj) {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const ct = new Uint8Array(await crypto.subtle.encrypt({name: 'AES-GCM', iv}, key, te.encode(JSON.stringify(obj))));
@@ -584,17 +599,20 @@ function connectAll() {
 async function doConnect() {
   streams.forEach(s => s.close()); streams = [];
   for (const id of Object.keys(R)) if (!room(id) || R[id].pass !== room(id).pass) delete R[id];
-  for (const rm of cfg.rooms) {
-    if (R[rm.id]) continue;
-    const d = await derive(rm.pass);
-    const sk = d.topic.slice(2, 10);
+  const dk = load('dk', {}), todo = cfg.rooms.filter(rm => !R[rm.id]);
+  const ds = await Promise.all(todo.map(rm => roomKey(rm.pass, dk)));   // 방이 여럿이면 한꺼번에
+  todo.forEach((rm, i) => {
+    const d = ds[i], sk = d.topic.slice(2, 10);
     const msgs = load('msgs_' + sk, []);
     // rk: 어디까지 읽었나. 처음엔 받은 데까지(lk)로 시작해서 바로 저장(그래야 lk가 앞서가도 안 읽은 게 남는다)
     const lk0 = load('lk_' + sk, ''), rk = load('rk_' + sk, '') || lk0;
     if (rk) save('rk_' + sk, rk);
-    R[rm.id] = {pass: rm.pass, key: d.key, raw: d.raw, topic: d.topic, sk, msgs, seen: new Set(msgs.map(m => m.id)), rk, fresh: !lk0, nn: load('nn_' + sk, []),
-      ext: Object.assign({react: {}, del: {}, pin: null, read: {}, edit: {}, prof: {}, vote: {}, vts: {}, vclose: {}}, load('ext_' + sk, {})), pres: {}, presAt: {}, myRead: load('mr2_' + sk, 0), divTs: 0};   // mr2: 옛 기록은 버리고 한 번 다시 보낸다
-  }
+    R[rm.id] = {pass: rm.pass, key: d.key, raw: d.raw, topic: d.topic, sk, dh: d.h, msgs, seen: new Set(msgs.map(m => m.id)), lk: lk0, rk, fresh: !lk0, lim: PAGE, first: '', nn: load('nn_' + sk, []),
+      ext: Object.assign({react: {}, del: {}, pin: null, read: {}, edit: {}, prof: {}, vote: {}, vts: {}, vclose: {}}, load('ext_' + sk, {})), pres: {}, presAt: {}, myRead: load('mr2_' + sk, 0), divId: ''};   // mr2: 옛 기록은 버리고 한 번 다시 보낸다
+  });
+  const keep = {};
+  cfg.rooms.forEach(rm => { const h = R[rm.id] && R[rm.id].dh; if (h && dk[h]) keep[h] = dk[h]; });
+  save('dk', keep);
   if (!view || (isRoom(view) && !room(view))) view = cfg.rooms[0].id;
   if (isRoom(view)) lastRoom = view;
   if (isRoom(view) && lockDue()) { view = lastDecoy || 'team'; chTab = 'note'; mobileSide = true; }   // 잠금: 위장 화면에서 시작
@@ -603,7 +621,7 @@ async function doConnect() {
   for (const rm of cfg.rooms) {
     const r = R[rm.id];
     // 처음엔 최근 1000건, 그다음부터는 마지막으로 받은 것 이후만
-    const lk = load('lk_' + r.sk, '');
+    const lk = r.lk;
     const q = 'orderBy=%22%24key%22&' + (lk ? 'startAt=%22' + encodeURIComponent(lk) + '%22' : 'limitToLast=1000');
     const st = new EventSource(`${DB}/m/${r.topic}.json?${q}`);
     st.onopen = () => { open.add(rm.id); setStatus('on'); };
@@ -629,29 +647,45 @@ function onPut(id, e) {
   if (!d.data) { if (d.path === '/') R[id].fresh = false; return; }
   const items = d.path === '/' ? Object.keys(d.data).sort().map(k => [k, d.data[k]]) : [[d.path.replace(/^\//, '').split('/')[0], d.data]];
   putChain = putChain.then(async () => {
-    for (const it of items) await onItem(id, it[0], it[1]);
-    const r = R[id];   // 이 기기에서 처음 받은 방: 지난 대화는 읽은 것으로
-    if (r && r.fresh && d.path === '/') { r.fresh = false; readTo(id, items[items.length - 1][0]); paintSide(); paintTitle(); }
-  });
+    const r = R[id];
+    if (!r) return;
+    // 앱을 열 때처럼 여러 건이 한꺼번에 오면, 한 건마다 저장하고 다시 그리지 않고 다 받은 뒤 한 번만
+    const many = items.length > 1;
+    if (many) r.bulk = true;
+    try { for (const it of items) await onItem(id, it[0], it[1], r); }
+    finally { if (many) { r.bulk = false; if (R[id] === r) flushBulk(id); } }
+    if (r.fresh && d.path === '/' && R[id] === r) { r.fresh = false; readTo(id, items[items.length - 1][0]); paintSide(); paintTitle(); }   // 이 기기에서 처음 받은 방: 지난 대화는 읽은 것으로
+  }).catch(e => console.error(e));   // 한 번 실패해도 다음 받기는 계속
 }
-async function onItem(id, k, v) {
+function flushBulk(id) {
   const r = R[id];
-  if (!r || !v || typeof v.d !== 'string' || r.seen.has(k)) return;
-  if (k > load('lk_' + r.sk, '')) save('lk_' + r.sk, k);
+  saveMsgs(r); save('ext_' + r.sk, r.ext);
+  if (r.lk) save('lk_' + r.sk, r.lk);
+  if (view === id) renderList();
+  paintSide(); paintTitle();
+}
+async function onItem(id, k, v, r) {   // r: 받기 시작할 때의 방(그사이 방 암호를 바꿔 R[id]가 새것이 되면 옛 항목은 버린다)
+  if (!r || R[id] !== r || !v || typeof v.d !== 'string' || r.seen.has(k)) return;
   const o = await unseal(r.key, v.d);
-  if (!o || r.seen.has(k)) return;
+  if (R[id] !== r) return;
+  if (o && !r.seen.has(k)) take(id, k, o, v);
+  if (k > r.lk) { r.lk = k; if (!r.bulk) save('lk_' + r.sk, k); }   // 받은 것을 저장한 뒤에 기록(중간에 꺼져도 빠뜨리지 않게)
+}
+function take(id, k, o, v) {
+  const r = R[id];
   if (o.sys) { r.seen.add(k); applySys(id, o); return; }
   if (typeof o.t !== 'string') return;
   const m = {id: k, n: String(o.n || ''), t: o.t, ts: Number(o.ts) || Number(v.t) || Date.now()};
   if (o.re && typeof o.re.id === 'string') m.re = {id: o.re.id, n: String(o.re.n || ''), t: String(o.re.t || '').slice(0, 80)};
   if (o.nudge) m.nudge = 1;
+  if (typeof o.c === 'string') m.c = o.c;   // 내가 보낸 것이면 보내는 중 말풍선과 맞추는 데만 쓴다
   const pl = o.poll;
   if (pl && typeof pl === 'object' && Array.isArray(pl.o) && pl.o.length >= 2) m.poll = {q: String(pl.q || '').slice(0, 100), o: pl.o.slice(0, 10).map(z => String(z).slice(0, 60)), multi: !!pl.multi};
   if (o.loc && Math.abs(+o.loc.a) <= 90 && Math.abs(+o.loc.o) <= 180) m.loc = {a: +o.loc.a, o: +o.loc.o};
   const at = o.fid && typeof o.fid === 'string' ? attOf(o) : null;
   if (at) Object.assign(m, at, {u: `${DB}/f/${r.topic}/${encodeURIComponent(o.fid)}.json`, x: 9e15, mime: o.mime});
   add(id, m);
-  if (at) fetchPic(id, m);
+  if (at && !r.fresh) fetchPic(id, m);   // 이 기기에서 처음 받는 지난 대화의 첨부는 화면에 나올 때 받는다
   if (m.nudge && !mine(m) && view === id && Math.abs(Date.now() - m.ts) < 60000) shake();
 }
 // 접속·입력 중 표시: p/<토픽>/<해시>=접속 시각, <해시>t=입력 중 시각.
@@ -789,7 +823,8 @@ function applySys(id, o) {
     if (n === cfg.me) {   // 내 다른 기기에서 읽음: 그 기기가 본 데까지 여기서도 읽은 것으로
       const t = Number(o.ts) || 0;
       readTo(id, r.msgs.reduce((a, m) => !mine(m) && m.ts <= t && isKey(m.id) && m.id > a ? m.id : a, ''));
-      paintSide(); paintTitle(); return;
+      if (!r.bulk) { paintSide(); paintTitle(); }
+      return;
     }
     if ((x.read[n] || 0) >= o.ts) return;
     x.read[n] = Number(o.ts) || 0;
@@ -807,6 +842,7 @@ function applySys(id, o) {
     if (m && m.n !== n) return;   // 올린 사람만 마감
     x.vclose[o.id] = 1;
   } else return;
+  if (r.bulk) return;   // 한꺼번에 받는 중이면 끝나고 한 번만
   save('ext_' + r.sk, x);
   if (view === id) renderList();
   paintSide(); paintTitle();
@@ -859,17 +895,39 @@ function setNotifyName(id, n, on) {
   save('nn_' + r.sk, r.nn);
 }
 
+const saveMsgs = r => save('msgs_' + r.sk, r.msgs.some(m => m.pend) ? r.msgs.filter(m => !m.pend) : r.msgs);
+// 시각 순 자리에 끼워 넣기(대개 맨 끝이라 전체를 다시 정렬하지 않는다)
+function insertMsg(r, m) {
+  let i = r.msgs.length;
+  while (i > 0 && r.msgs[i - 1].ts > m.ts) i--;
+  r.msgs.splice(i, 0, m);
+}
 function add(id, m) {
   const r = R[id];
   if (r.seen.has(m.id)) return;
   r.seen.add(m.id);
-  r.msgs.push(m);
-  r.msgs.sort((a, b) => a.ts - b.ts);
+  if (m.c) { const p = r.msgs.findIndex(z => z.pend && z.id === m.c); if (p >= 0) r.msgs.splice(p, 1); delete m.c; }   // 보내는 중 말풍선 → 진짜 메시지로
+  insertMsg(r, m);
   if (r.msgs.length > 3000) r.msgs = r.msgs.slice(-3000);
-  save('msgs_' + r.sk, r.msgs);
   if (mine(m) || (view === id && !mobileSide && !document.hidden)) readTo(id, m.id);   // 보고 있거나 내가 답했으면 그 앞까지 읽음
+  if (r.bulk) return;
+  saveMsgs(r);
   if (view === id) renderList();
   paintSide(); paintTitle();
+}
+// 보내는 중 말풍선: 서버 응답을 기다리지 않고 먼저 그린다(기기에 저장하지 않고, 확인되면 add가 진짜 메시지로 바꾼다)
+function pendAdd(id, m) {
+  m.pend = 1;
+  insertMsg(R[id], m);
+  if (view === id) renderList();
+  paintSide();
+}
+function pendDrop(id, m) {
+  const r = R[id], i = r.msgs.indexOf(m);
+  if (i < 0) return;
+  r.msgs.splice(i, 1);
+  if (view === id) renderList();
+  paintSide();
 }
 
 // 알림을 켠 상대에게 짧은 알림 신호를 보낸다(상대 알림함 토픽으로)
@@ -912,23 +970,34 @@ async function send(text, extra) {
     sendTyping(false);
     return true;
   }
-  const payload = Object.assign({n: cfg.me, t: text, ts: Date.now()}, extra);
-  if (replyTo) payload.re = replyTo;
+  const cid = 'p_' + Math.random().toString(36).slice(2, 10);   // 보내는 중 말풍선 id = 돌아올 메시지의 c
+  const payload = Object.assign({n: cfg.me, t: text, ts: Date.now(), c: cid}, extra);
+  const re = replyTo;
+  if (re) payload.re = re;
   if (te.encode(JSON.stringify(payload)).length > MAX_BYTES) { toast('메시지가 너무 길어요. 나눠서 보내주세요.'); return false; }
+  // 서버 응답(싱가포르까지 왕복)을 기다리지 않고 말풍선부터 띄운다. 실패하면 거두고 글은 입력창에 되돌린다.
+  const tmp = {id: cid, n: payload.n, t: payload.t, ts: payload.ts};
+  if (re) tmp.re = re;
+  if (payload.nudge) tmp.nudge = 1;
+  if (payload.poll) tmp.poll = payload.poll;
+  if (payload.loc) tmp.loc = payload.loc;
+  setReply(null);
+  sendTyping(false);
+  pendAdd(rm.id, tmp);
   try {
-    const m = {id: await post(rm.id, payload), n: payload.n, t: payload.t, ts: payload.ts};
-    if (payload.re) m.re = payload.re;
-    if (payload.nudge) m.nudge = 1;
-    if (payload.poll) m.poll = payload.poll;
-    if (payload.loc) m.loc = payload.loc;
-    setReply(null);
-    add(rm.id, m);
-    sendTyping(false);
+    const m = Object.assign({}, tmp, {id: await post(rm.id, payload), c: cid});
+    delete m.pend;
+    add(rm.id, m);   // 내 메시지가 스트림으로 먼저 돌아왔으면 add는 건너뛰고, 그쪽에서 이미 바꿔 놓았다
     if (!payload.q) ping(rm.id, payload.nudge ? '콕 찔렀어요 👉' : text);   // q: 조용히 보내기(알림 없이)
     recentEmoji(text);
     if (checkUpdate.ready) setTimeout(checkUpdate, 500);   // 글을 보내 입력창이 비면 미뤄 둔 새로고침
     return true;
-  } catch (_) { toast('전송 실패 — 네트워크를 확인하세요'); return false; }
+  } catch (_) {
+    pendDrop(rm.id, tmp);
+    if (re && view === rm.id && !replyTo && !editTo) { const om = R[rm.id].msgs.find(z => z.id === re.id); if (om) setReply(om); }
+    toast('전송 실패 — 네트워크를 확인하세요');
+    return false;
+  }
 }
 
 // ---------- 사진 ----------
@@ -964,7 +1033,7 @@ async function idbPut(name, store, k, v) {
   } catch (_) {}
 }
 const PICDB = 'wt' + P + '_pics';
-const picTag = id => `<img class="pic" data-pic="${esc(id)}" alt="사진">`;
+const picTag = id => `<img class="pic" data-pic="${esc(id)}"${picUrls.has(id) ? ` src="${picUrls.get(id)}"` : ''} alt="사진">`;
 
 // 이미 받는 중이면 그 작업이 끝나기를 같이 기다린다(받는 중에 누른 재생·전달이 바로 실패하지 않게)
 function fetchPic(id, m) {
@@ -986,31 +1055,27 @@ async function getPic(id, m) {
 // 받기에 실패한 것은 30초 동안 다시 받지 않는다(오프라인일 때 끝없이 되풀이하지 않게)
 const picFail = new Map();
 const canFetch = m => m && m.u && Date.now() < m.x && !(Date.now() - (picFail.get(m.id) || 0) < 30000);
+const fromIdb = async id => {
+  if (!picUrls.has(id)) { const blob = await idbGet(PICDB, 'p', id); if (blob && !picUrls.has(id)) picUrls.set(id, URL.createObjectURL(blob)); }
+  return picUrls.has(id);
+};
 async function fillPics() {
   const rm = cur();
-  for (const el of document.querySelectorAll('img.pic[data-pic]:not([src])')) {
+  await Promise.all(Array.from(document.querySelectorAll('img.pic[data-pic]:not([src])'), async el => {
     const pid = el.dataset.pic;
-    if (!picUrls.has(pid)) {
-      const blob = await idbGet(PICDB, 'p', pid);
-      if (blob) picUrls.set(pid, URL.createObjectURL(blob));
-    }
-    if (picUrls.has(pid)) { el.src = picUrls.get(pid); continue; }
+    if (await fromIdb(pid)) { el.src = picUrls.get(pid); return; }
     const m = rm && R[rm.id].msgs.find(x => x.id === pid);
     if (canFetch(m)) { el.alt = '사진 받는 중…'; fetchPic(rm.id, m); }
     else if (m && m.u && picFail.has(pid)) el.alt = '사진을 받지 못했어요';
-    else el.replaceWith(Object.assign(document.createElement('span'), {className: 'pic-gone', textContent: '사진 (보관 기간이 지났어요)'}));
-  }
+    else if (!/^p_/.test(pid)) el.replaceWith(Object.assign(document.createElement('span'), {className: 'pic-gone', textContent: '사진 (보관 기간이 지났어요)'}));
+  }));
   // 음성도 미리 받아 둔다(아이폰은 누르는 순간 바로 재생해야 소리가 나서)
-  for (const el of document.querySelectorAll('.vcard[data-voice]:not(.ok)')) {
+  await Promise.all(Array.from(document.querySelectorAll('.vcard[data-voice]:not(.ok)'), async el => {
     const vid = el.dataset.voice;
-    if (!picUrls.has(vid)) {
-      const blob = await idbGet(PICDB, 'p', vid);
-      if (blob) picUrls.set(vid, URL.createObjectURL(blob));
-    }
-    if (picUrls.has(vid)) { el.classList.add('ok'); continue; }
+    if (await fromIdb(vid)) { el.classList.add('ok'); return; }
     const m = rm && R[rm.id].msgs.find(x => x.id === vid);
     if (canFetch(m)) fetchPic(rm.id, m);
-  }
+  }));
 }
 
 function loadImage(file) {
@@ -1042,12 +1107,23 @@ const attOf = o => o.img ? {t: '사진', img: 1}
 const isAtt = m => !!(m.img || m.file || m.voice);
 const mapUrl = l => `https://map.kakao.com/link/map/${encodeURIComponent('보낸 위치')},${l.a},${l.o}`;
 // 첨부 하나를 방 키로 암호화해 올리고 메시지로 알린다(전달할 때는 다른 방으로도)
-async function postAtt(rid, blob, meta) {
+// blob은 줄이는 중인 Promise여도 된다. preview: 그동안 말풍선에 보여 줄 원본 그림
+async function postAtt(rid, blob, meta, preview) {
   upBusy++;
-  try { await postAttNow(rid, blob, meta); } finally { upBusy--; }
+  try { await postAttNow(rid, blob, meta, preview); } finally { upBusy--; }
 }
-async function postAttNow(rid, blob, meta) {
-  const r = R[rid];
+async function postAttNow(rid, blob, meta, preview) {
+  const r = R[rid], ts = Date.now();
+  // 올리는 동안 말풍선부터 띄운다(사진은 고른 그림을 바로 보여 준다)
+  const tmp = Object.assign({id: 'p_' + Math.random().toString(36).slice(2, 10), n: cfg.me, ts}, attOf(meta));
+  const pv = preview || (blob instanceof Blob ? blob : null), tu = pv && (meta.img || meta.voice) ? URL.createObjectURL(pv) : '';
+  if (tu) picUrls.set(tmp.id, tu);
+  pendAdd(rid, tmp);
+  try { await upAtt(rid, r, await blob, meta, tmp.id); }
+  catch (e) { pendDrop(rid, tmp); throw e; }
+  finally { picUrls.delete(tmp.id); if (tu) setTimeout(() => URL.revokeObjectURL(tu), 3000); }
+}
+async function upAtt(rid, r, blob, meta, cid) {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const ct = new Uint8Array(await crypto.subtle.encrypt({name: 'AES-GCM', iv}, r.key, await blob.arrayBuffer()));
   const body = new Uint8Array(12 + ct.length); body.set(iv); body.set(ct, 12);
@@ -1055,12 +1131,13 @@ async function postAttNow(rid, blob, meta) {
   const fr = await fetch(`${DB}/f/${r.topic}.json`, {method: 'POST', body: JSON.stringify(b64big(body))});
   if (!fr.ok) throw new Error(fr.status);
   const fid = (await fr.json()).name;
-  const payload = Object.assign({n: cfg.me, t: '', fid, mime, ts: Date.now()}, meta);
+  const payload = Object.assign({n: cfg.me, t: '', fid, mime, ts: Date.now(), c: cid}, meta);   // 시각은 올리기가 끝난 지금(그사이 온 메시지보다 뒤로)
   const mid = await post(rid, payload);
-  await idbPut(PICDB, 'p', mid, blob);
   if (payload.img || payload.voice) picUrls.set(mid, URL.createObjectURL(blob));
-  const m = Object.assign({id: mid, n: cfg.me, u: `${DB}/f/${r.topic}/${fid}.json`, x: 9e15, mime, ts: payload.ts}, attOf(payload));
-  add(rid, m);
+  const m = Object.assign({id: mid, n: cfg.me, u: `${DB}/f/${r.topic}/${fid}.json`, x: 9e15, mime, ts: payload.ts, c: cid}, attOf(payload));
+  if (r.seen.has(mid)) { if (view === rid) renderList(); }   // 스트림으로 먼저 돌아왔으면 그림만 다시
+  else add(rid, m);
+  idbPut(PICDB, 'p', mid, blob);
   ping(rid, m.img ? '' : m.voice ? '🎤 음성 메시지' : m.t);
 }
 // 사진은 줄여서, 그 밖의 파일은 그대로(5MB까지) 보낸다. rid: 고를 때 보던 방(보내는 사이 방을 옮겨도 그 방으로)
@@ -1069,11 +1146,8 @@ async function sendPic(file, rid, quiet) {
   if (!rid || !R[rid] || !file) return false;
   const isImg = /^image\/(jpeg|png|gif|webp|heic|heif|bmp)/.test(file.type);
   if (!isImg && file.size > PIC_MAX) { toast('파일은 5MB까지 보낼 수 있어요'); return false; }
-  if (!quiet) toast(isImg ? '사진 보내는 중…' : '파일 보내는 중…');
-  try {
-    const blob = isImg ? await shrink(file) : file;
-    await postAtt(rid, blob, isImg ? {img: 1} : {file: 1, fname: file.name.slice(0, 80), fsize: file.size});
-    if (!quiet) toast(isImg ? '사진을 보냈어요' : '파일을 보냈어요');
+  try {   // 보내는 동안은 흐린 말풍선이 먼저 떠 있다
+    await postAtt(rid, isImg ? shrink(file) : file, isImg ? {img: 1} : {file: 1, fname: file.name.slice(0, 80), fsize: file.size}, isImg && !/heic|heif/i.test(file.type) ? file : null);
     return true;
   } catch (e) { toast(e.message === 'too big' ? '사진이 너무 커요' : '전송 실패 — 네트워크를 확인하세요'); return false; }
 }
@@ -1304,14 +1378,17 @@ function reactHTML(rm, m) {
 }
 // 내 메시지를 아직 안 읽은 사람 수(노란 숫자)
 // 사람별로 어디까지 읽었나: 읽음 신호와 그 사람이 마지막으로 보낸 메시지 중 늦은 쪽(답을 했으면 그 앞은 읽은 것)
+let readMemo = null;   // 목록을 그리는 동안만 써서 메시지마다 다시 세지 않게
 function readMap(id) {
+  if (readMemo && readMemo[id]) return readMemo[id];
   const r = R[id], out = {};
+  if (readMemo) readMemo[id] = out;
   Object.keys(r.ext.read).forEach(n => { if (n !== cfg.me) out[n] = Number(r.ext.read[n]) || 0; });
   r.msgs.forEach(m => { if (!mine(m) && m.n && !(out[m.n] >= m.ts)) out[m.n] = m.ts; });
   return out;
 }
 function unreadCount(rm, m) {
-  if (!mine(m) || isDel(rm.id, m)) return 0;
+  if (!mine(m) || m.pend || isDel(rm.id, m)) return 0;
   const rd = readMap(rm.id), ppl = Object.keys(rd);
   // 1:1은 상대가 이름을 바꿨거나 기기마다 이름이 달라도 1까지만, 그중 하나라도 읽었으면 0
   if (!rm.group) return ppl.some(n => rd[n] >= m.ts) ? 0 : 1;
@@ -1596,7 +1673,7 @@ function shake() {
 function openGallery() {
   const rm = cur();
   if (!rm) return;
-  const ms = R[rm.id].msgs.filter(m => (m.img || m.file) && !isDel(rm.id, m)).reverse();
+  const ms = R[rm.id].msgs.filter(m => (m.img || m.file) && !m.pend && !isDel(rm.id, m)).reverse();
   const g = $('#gal');
   const pics = ms.filter(m => m.img), files = ms.filter(m => m.file);
   g.innerHTML = `<div class="gbox"><div class="gh"><b>사진·파일 (${ms.length})</b><button type="button" title="닫기">✕</button></div><div class="gb">
@@ -1611,7 +1688,7 @@ function openGallery() {
 function exportChat() {
   const rm = cur();
   if (!rm) return;
-  const lines = R[rm.id].msgs.filter(m => !isDel(rm.id, m)).map(m => {
+  const lines = R[rm.id].msgs.filter(m => !m.pend && !isDel(rm.id, m)).map(m => {
     const d = new Date(m.ts);
     const body = m.img ? '[사진]' : m.file ? `[파일] ${m.fname}` : m.voice ? `[음성 메시지 ${mmss(m.dur || 0)}]` : m.nudge ? '[콕 찌르기]'
       : m.poll ? `[투표] ${m.poll.q} (${m.poll.o.join(' / ')})` : textOf(rm.id, m);
@@ -1634,9 +1711,16 @@ function heartAt(t) {
   return true;
 }
 function jumpTo(mid) {
-  const el = document.querySelector(`#list [data-mid="${CSS.escape(mid)}"]`);
+  let el = document.querySelector(`#list [data-mid="${CSS.escape(mid)}"]`);
+  const rm = cur();
+  if (!el && rm) {   // 화면에 안 그린 옛 메시지면 거기까지 펼쳐서
+    const r = R[rm.id], i = r.msgs.findIndex(m => m.id === mid);
+    if (i >= 0) { r.lim = Math.max(r.lim || PAGE, r.msgs.length - i + 10); renderList(); el = document.querySelector(`#list [data-mid="${CSS.escape(mid)}"]`); }
+  }
   if (!el) { toast('원래 메시지를 찾을 수 없어요'); return; }
-  el.scrollIntoView({block: 'center', behavior: 'smooth'});
+  const lst = $('#list'), far = lst && Math.abs(el.getBoundingClientRect().top - lst.getBoundingClientRect().top) > lst.clientHeight * 3;
+  if (lst) lst._stick = false;
+  el.scrollIntoView({block: 'center', behavior: far ? 'auto' : 'smooth'});
   el.classList.add('flash');
   setTimeout(() => el.classList.remove('flash'), 1500);
 }
@@ -1652,7 +1736,7 @@ function pollHTML(rm, m) {
 }
 function vote(pid, i) {
   const r = R[view], m = r && r.msgs.find(z => z.id === pid);
-  if (!m || !m.poll || r.ext.vclose[pid] || isDel(view, m) || i >= m.poll.o.length) return;
+  if (!m || m.pend || !m.poll || r.ext.vclose[pid] || isDel(view, m) || i >= m.poll.o.length) return;
   const was = (r.ext.vote[pid] || {})[cfg.me] || [];
   const c = m.poll.multi ? (was.indexOf(i) >= 0 ? was.filter(z => z !== i) : was.concat(i).sort((a, b) => a - b))
                          : (was.length === 1 && was[0] === i ? [] : [i]);   // 같은 것을 다시 누르면 취소
@@ -1737,7 +1821,7 @@ let viewIds = [], viewAt = 0, viewBlob = null;
 function openViewer(mid) {
   const rm = cur();
   if (!rm) return;
-  viewIds = R[rm.id].msgs.filter(m => m.img && !isDel(rm.id, m)).map(m => m.id);
+  viewIds = R[rm.id].msgs.filter(m => m.img && !m.pend && !isDel(rm.id, m)).map(m => m.id);
   viewAt = Math.max(0, viewIds.indexOf(mid));
   $('#viewer img').removeAttribute('src');
   $('#viewer').classList.remove('hidden');
@@ -1867,11 +1951,17 @@ function toggleSearch() {
   const show = bar.classList.contains('hidden');
   bar.classList.toggle('hidden', !show);
   if (show) bar.querySelector('input').focus();
-  else { searchQ = ''; bar.querySelector('input').value = ''; renderList(); }
+  else {
+    searchQ = ''; bar.querySelector('input').value = '';
+    const r = cur() && R[view], list = $('#list');
+    if (r) { r.lim = PAGE; r.first = ''; }
+    renderList();
+    if (list) list.scrollTop = list.scrollHeight;
+  }
 }
 function paintSearch(jump) {
-  const list = $('#list'), bar = $('#srchBar');
-  if (!list || !bar) return;
+  const list = $('#list'), bar = $('#srchBar'), rm = cur();
+  if (!list || !bar || !rm) return;
   const marks = [];
   if (searchQ) {
     const q = searchQ.toLowerCase();
@@ -1898,14 +1988,16 @@ function paintSearch(jump) {
       });
     });
   }
-  bar.querySelector('.cnt').textContent = searchQ ? (marks.length ? `${Math.min(searchIdx, marks.length - 1) + 1}/${marks.length}` : '없음') : '';
-  if (marks.length && jump) {
-    searchIdx = ((searchIdx % marks.length) + marks.length) % marks.length;
-    const mk = marks[marks.length - 1 - searchIdx];   // 최근 것부터
-    mk.classList.add('cur');
-    mk.scrollIntoView({block: 'center'});
-    bar.querySelector('.cnt').textContent = `${searchIdx + 1}/${marks.length}`;
-  }
+  const hits = searchQ ? searchHits(rm.id) : [], cnt = bar.querySelector('.cnt');
+  if (!hits.length) { cnt.textContent = searchQ ? '없음' : ''; return; }
+  searchIdx = ((searchIdx % hits.length) + hits.length) % hits.length;   // 0이 가장 최근
+  cnt.textContent = `${searchIdx + 1}/${hits.length}`;
+  if (!jump) return;
+  list._stick = false;
+  const el = list.querySelector(`[data-mid="${CSS.escape(R[rm.id].msgs[hits[searchIdx]].id)}"]`);
+  const mk = el && el.querySelector('mark');
+  if (mk) { mk.classList.add('cur'); mk.scrollIntoView({block: 'center'}); }
+  else if (el) el.scrollIntoView({block: 'center'});
 }
 
 // ---------- 알림(웹 푸시) ----------
@@ -1994,14 +2086,16 @@ function setView(v) {
   if (isRoom(v) && lockDue()) { askLock(() => setView(v)); return; }
   if (isRoom(v)) awayAt = 0; else markAway();
   stopRec(false); stopVoice();   // 녹음·재생은 방을 옮기면 그만
-  if (isRoom(view) && R[view] && view !== v) R[view].divTs = 0;
+  if (isRoom(view) && R[view] && view !== v) R[view].divId = '';
   view = v;
   if (isRoom(v) && R[v]) {
     lastRoom = v;
     const r = R[v];
     // "여기까지 읽었습니다" 선: 안 읽은 첫 메시지 앞
     const f = r.fresh ? null : r.msgs.find(m => isKey(m.id) && m.id > r.rk && !mine(m) && !r.ext.del[m.id]);
-    if (f) r.divTs = f.ts;
+    if (f) r.divId = f.id;
+    r.lim = f ? Math.max(PAGE, r.msgs.length - r.msgs.indexOf(f) + 10) : PAGE;
+    r.first = '';
     readTo(v, lastKey(v));
   } else if (!isRoom(v)) lastDecoy = v;
   mobileSide = false;
@@ -2110,12 +2204,16 @@ function render() {
     }
   }
   const list = $('#list');
-  if (list) list.addEventListener('scroll', paintNewBtn, {passive: true});
+  if (list) list.addEventListener('scroll', () => {
+    list._stick = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
+    paintNewBtn();
+    if (list.scrollTop < 150 && cfg.skin !== 'sheet') loadOlder();
+  }, {passive: true});
   if (list && cur()) {
     list.insertAdjacentHTML('beforebegin', '<div class="pinBar hidden" id="pinBar"></div><div class="srchBar hidden" id="srchBar"><input placeholder="대화 내용 검색"><span class="cnt"></span><button type="button" data-d="1" title="이전">▲</button><button type="button" data-d="-1" title="다음">▼</button><button type="button" data-d="0" title="닫기">✕</button></div>');
     const sb = $('#srchBar'), si = sb.querySelector('input');
     const go = d => { searchIdx += d; searchJump = true; renderList(); };
-    si.addEventListener('input', () => { searchQ = si.value.trim(); searchIdx = 0; searchJump = true; renderList(); });
+    si.addEventListener('input', () => { clearTimeout(si.t); si.t = setTimeout(() => { if (!si.isConnected) return; searchQ = si.value.trim(); searchIdx = 0; searchJump = true; renderList(); }, 200); });
     si.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(e.shiftKey ? -1 : 1); } });
     sb.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
       const d = +b.dataset.d;
@@ -2134,17 +2232,55 @@ function render() {
   app.querySelectorAll('.srchBtn').forEach(el => el.addEventListener('click', () => { if (cur()) toggleSearch(); }));
   renderList(); paintSide(); paintTitle(); setStatus(status); paintTyping();
 }
+// 화면에는 최근 PAGE개만 그린다(대화가 수천 개면 전부 그리는 데 몇 초씩 걸려서). 위로 올리면 더 불러온다.
+const PAGE = 150, OLDER = '<div class="older" data-older>↑ 이전 대화 더 보기</div>';
+function visFrom(id) {
+  const r = R[id], ms = r.msgs;
+  let from = Math.max(0, ms.length - (r.lim || PAGE));
+  if (searchQ) {   // 검색 중이면 지금 고른 결과까지만 펼친다
+    const h = searchHits(id);
+    if (h.length) from = Math.min(from, Math.max(0, h[((searchIdx % h.length) + h.length) % h.length] - 5));
+  }
+  return from;
+}
+// 검색에 걸린 글 메시지의 자리(최근 것부터). 화면에 그린 것만이 아니라 저장된 대화 전체에서 찾는다.
+function searchHits(id) {
+  const q = searchQ.toLowerCase(), ms = R[id].msgs, out = [];
+  for (let i = ms.length - 1; i >= 0; i--) {
+    const m = ms[i];
+    if (!m.pend && !isAtt(m) && !m.poll && !m.loc && !m.nudge && !isDel(id, m) && textOf(id, m).toLowerCase().indexOf(q) >= 0) out.push(i);
+  }
+  return out;
+}
+function loadOlder() {
+  const rm = cur(), list = $('#list');
+  if (!rm || !list || loadOlder.busy || !visFrom(rm.id)) return;
+  loadOlder.busy = true;
+  const fromBottom = list.scrollHeight - list.scrollTop;
+  R[rm.id].lim = (R[rm.id].lim || PAGE) + PAGE;
+  renderList();
+  list.scrollTop = list.scrollHeight - fromBottom;   // 보던 자리 그대로
+  loadOlder.busy = false;
+}
 function renderList() {
   const list = $('#list'); if (!list) { paintNewBtn(); return; }
   const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
   const keep = list.scrollTop;
-  list.innerHTML = SKINS[cfg.skin].list();
+  const rm = cur(), r = rm && R[rm.id];
+  // 위로 올려 보는 중이면 새 메시지가 와도 맨 위에 그리던 메시지는 남긴다(그리는 범위가 밀려 화면이 튀지 않게)
+  if (r && !atBottom && r.first) { const i = r.msgs.findIndex(m => m.id === r.first); if (i >= 0) r.lim = Math.max(r.lim || PAGE, r.msgs.length - i); }
+  readMemo = {};
+  try { list.innerHTML = SKINS[cfg.skin].list(); } finally { readMemo = null; }
+  if (r) { const f = r.msgs[visFrom(rm.id)]; r.first = f ? f.id : ''; }
+  const ob = list.querySelector('[data-older]');
+  if (ob) ob.addEventListener('click', loadOlder);
   if (SKINS[cfg.skin].after) SKINS[cfg.skin].after(list);
   if (cfg.skin !== 'sheet') {
     // 위로 올려 지난 대화를 보는 중이면 자리를 지키고, 아니면 맨 아래로
     if (atBottom) {
       list.scrollTop = list.scrollHeight;
-      list.querySelectorAll('img.pic').forEach(im => im.addEventListener('load', () => { list.scrollTop = list.scrollHeight; }, {once: true}));
+      list._stick = true;   // 사진이 늦게 뜨면 다시 맨 아래로. 그사이 위로 올리거나 다른 메시지로 이동하면 끈다
+      list.querySelectorAll('img.pic').forEach(im => im.addEventListener('load', () => { if (list._stick) list.scrollTop = list.scrollHeight; }, {once: true}));
     } else list.scrollTop = keep;
   }
   fillPics();
@@ -2240,7 +2376,15 @@ function NOTES() {
 }
 
 // 아바타: 프로필 사진이 있으면 사진, 없으면 첫 글자. pk가 있으면 눌러서 프로필 보기
-const avOf = (name, pf, pk) => `<div class="av${pf && pf.p ? ' ph' : ''}"${pk != null ? ` data-prof="${esc(pk)}"` : ''}${pf && pf.p ? ` style="background-image:url('${pf.p}')"` : ''}>${esc(initial(name))}</div>`;
+const avUrls = new Map();
+function avUrl(p) {
+  if (!avUrls.has(p)) {
+    try { const i = p.indexOf(','); avUrls.set(p, URL.createObjectURL(new Blob([ub64(p.slice(i + 1))], {type: (p.match(/^data:([^;,]+)/) || [])[1] || 'image/jpeg'}))); }
+    catch (_) { avUrls.set(p, p); }
+  }
+  return avUrls.get(p);
+}
+const avOf = (name, pf, pk) => `<div class="av${pf && pf.p ? ' ph' : ''}"${pk != null ? ` data-prof="${esc(pk)}"` : ''}${pf && pf.p ? ` style="background-image:url('${avUrl(pf.p)}')"` : ''}>${esc(initial(name))}</div>`;
 function roomAv(rm) {
   if (!rm.group) return avOf(rm.name, profFor(rm, null));
   const mem = members(rm.id);
@@ -2342,25 +2486,27 @@ const SKINS = {
     },
     list() {
       const rm = cur();
-      let src, cell, meta;
+      let src, cell, meta, older = '';
       if (!rm) {
         src = CHC[view].lines.map(l => ({me: l[0] === '나', n: l[0], t: l[1], x: l[2], day: '오늘'}));
         cell = r => `<div class="bw"><div class="ch-bub txt">${esc(r.x)}</div></div>`;
         meta = r => `<span class="mt"><time>${r.t}</time></span>`;
       } else {
-        const R0 = R[rm.id], ms = R0.msgs;
-        if (!ms.length) return `<div class="ch-empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
+        const R0 = R[rm.id];
+        if (!R0.msgs.length) return `<div class="ch-empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
+        const from = visFrom(rm.id), ms = R0.msgs.slice(from);
+        if (from) older = OLDER;
         let divDone = false;
         src = ms.map(m => {
-          const div = !divDone && R0.divTs && !mine(m) && m.ts >= R0.divTs;
+          const div = !divDone && !!R0.divId && m.id === R0.divId;
           if (div) divDone = true;
-          return {m, id: m.id, me: mine(m), n: nameOnly(who(rm, m)), t: chatTime(m.ts), day: chatDay(m.ts), div};
+          return {m, id: m.pend ? '' : m.id, me: mine(m), n: nameOnly(who(rm, m)), t: chatTime(m.ts), day: chatDay(m.ts), div};
         });
-        cell = r => { const b = bodyOf(rm, r.m); return `<div class="bw"><div class="ch-bub ${b.kind}">${b.html}</div>${reactHTML(rm, r.m)}</div>`; };
+        cell = r => { const b = bodyOf(rm, r.m); return `<div class="bw"><div class="ch-bub ${b.kind}${r.m.pend ? ' sending' : ''}">${b.html}</div>${reactHTML(rm, r.m)}</div>`; };
         meta = r => { const c = unreadCount(rm, r.m); return `<span class="mt">${c ? `<b class="rc">${c}</b>` : ''}<time>${r.t}</time></span>`; };
       }
       const mid = r => r.id ? ` data-mid="${esc(r.id)}"` : '';
-      let out = '', day = '', i = 0;
+      let out = older, day = '', i = 0;
       while (i < src.length) {
         const m = src[i];
         if (m.day !== day) { day = m.day; out += `<div class="ch-day"><span>${esc(day)}</span></div>`; }
@@ -2405,19 +2551,19 @@ const SKINS = {
       nav.querySelectorAll('[data-r]').forEach(el => el.addEventListener('click', () => setView(el.dataset.r)));
     },
     list() {
-      const item = (n, t, x, cont, id, pf, pk) => `<div class="c-msg${cont ? ' cont' : ''}"${id ? ` data-mid="${esc(id)}"` : ''}><div class="av${pf && pf.p ? ' ph' : ''}"${pk != null ? ` data-prof="${esc(pk)}"` : ''} style="background:${colorOf(n)}${pf && pf.p ? `;background-image:url('${pf.p}')` : ''}">${esc(initial(n))}</div>
+      const item = (n, t, x, cont, id, pf, pk) => `<div class="c-msg${cont ? ' cont' : ''}"${id ? ` data-mid="${esc(id)}"` : ''}><div class="av${pf && pf.p ? ' ph' : ''}"${pk != null ? ` data-prof="${esc(pk)}"` : ''} style="background:${colorOf(n)}${pf && pf.p ? `;background-image:url('${avUrl(pf.p)}')` : ''}">${esc(initial(n))}</div>
         <div class="bd">${cont ? '' : `<div class="hd"><b>${esc(n)}</b><time>${t}</time></div>`}<div class="cb">${x}</div></div></div>`;
       const rm = cur();
       if (!rm) return fakeOf(view).lines.map(l => item(l[0] === '나' ? cfg.me : l[0], l[1], `<span class="txt">${esc(l[2])}</span>`)).join('');
-      const ms = R[rm.id].msgs;
-      if (!ms.length) return `<div class="empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
-      let out = '', day = '', prev = null;
+      if (!R[rm.id].msgs.length) return `<div class="empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
+      const from = visFrom(rm.id), ms = R[rm.id].msgs.slice(from);
+      let out = from ? OLDER : '', day = '', prev = null, divDone = false;
       for (const m of ms) {
         if (ymd(m.ts) !== day) { day = ymd(m.ts); out += `<div class="c-day">${dayLabel(m.ts)}</div>`; prev = null; }
         const cont = prev && prev.n === m.n && m.ts - prev.ts < 5 * 60e3;
-        if (R[rm.id].divTs && !mine(m) && m.ts >= R[rm.id].divTs && !out.includes('c-unread')) out += '<div class="c-day c-unread">여기까지 읽었습니다</div>';
+        if (!divDone && R[rm.id].divId && m.id === R[rm.id].divId) { divDone = true; out += '<div class="c-day c-unread">여기까지 읽었습니다</div>'; }
         const b = bodyOf(rm, m), c = unreadCount(rm, m);
-        out += item(who(rm, m), hm(m.ts) + (c ? ` <b class="rc">${c}</b>` : ''), `<div class="${b.kind === 'big' ? 'bigwrap' : ''}">${b.html}</div>${reactHTML(rm, m)}`, cont, m.id, profFor(rm, m.n), mine(m) ? m.n : (rm.group ? m.n : ''));
+        out += item(who(rm, m), hm(m.ts) + (c ? ` <b class="rc">${c}</b>` : ''), `<div class="${b.kind === 'big' ? 'bigwrap' : ''}${m.pend ? ' sending' : ''}">${b.html}</div>${reactHTML(rm, m)}`, cont, m.pend ? '' : m.id, profFor(rm, m.n), mine(m) ? m.n : (rm.group ? m.n : ''));
         prev = m;
       }
       return out;
@@ -2454,16 +2600,17 @@ const SKINS = {
       let r = 1;
       const rm = cur();
       if (rm) {
-        const ms = R[rm.id].msgs;
+        const all = R[rm.id].msgs, from = visFrom(rm.id), ms = all.slice(from);
         rows.push(`<tr class="hd"><th>${r++}</th><td>No</td><td>일자</td><td>시간</td><td>담당</td><td>내용</td><td>비고</td></tr>`);
+        if (from) rows.push(`<tr class="older" data-older><th>${r++}</th><td class="ce">…</td><td colspan="5">↑ 이전 기록 ${from}건 더 보기</td></tr>`);
         ms.forEach((m, i) => {
           const b = bodyOf(rm, m), c = unreadCount(rm, m), k = R[rm.id].ext.react[m.id];
           const note = (c ? `미확인 ${c}` : '') + (k && Object.keys(k).length ? ' ' + Object.keys(k).map(n => k[n]).join('') : '');
-          rows.push(`<tr class="${mine(m) ? 'me' : ''}" data-mid="${esc(m.id)}"><th>${r++}</th><td class="ce">${i + 1}</td><td class="ce">${ymd(m.ts)}</td><td class="ce">${hm(m.ts)}</td>
+          rows.push(`<tr class="${mine(m) ? 'me' : ''}${m.pend ? ' sending' : ''}"${m.pend ? '' : ` data-mid="${esc(m.id)}"`}><th>${r++}</th><td class="ce">${from + i + 1}</td><td class="ce">${ymd(m.ts)}</td><td class="ce">${hm(m.ts)}</td>
           <td class="d">${esc(who(rm, m))}</td><td class="e">${b.html}</td><td>${esc(note)}</td></tr>`);
         });
         const sel = r;
-        rows.push(`<tr><th>${r++}</th><td class="ce">${ms.length + 1}</td><td></td><td></td><td></td><td class="sel"></td><td></td></tr>`);
+        rows.push(`<tr><th>${r++}</th><td class="ce">${all.length + 1}</td><td></td><td></td><td></td><td class="sel"></td><td></td></tr>`);
         this.selRow = sel;
       } else {
         const months = ['7월', '8월', '9월', '10월'];
@@ -2664,9 +2811,9 @@ document.addEventListener('click', e => {
   const po = t.closest('.poll [data-opt]');
   if (po && cur()) { vote(po.closest('.poll').dataset.poll, +po.dataset.opt); return; }
   const pc = t.closest('.poll .pclose');
-  if (pc && cur()) { const rid = view, pid = pc.closest('.poll').dataset.poll; if (confirm('투표를 마감할까요? 마감하면 더 고를 수 없어요.') && R[rid]) sendSys(rid, {sys: 'vclose', id: pid}); return; }
+  if (pc && cur()) { const rid = view, pid = pc.closest('.poll').dataset.poll; if (!/^p_/.test(pid) && confirm('투표를 마감할까요? 마감하면 더 고를 수 없어요.') && R[rid]) sendSys(rid, {sys: 'vclose', id: pid}); return; }
   const fc = t.closest('[data-file]');
-  if (fc && cur()) saveFile(view, fc.dataset.file);
+  if (fc && cur() && !/^p_/.test(fc.dataset.file)) saveFile(view, fc.dataset.file);
 });
 // 메시지 메뉴: PC는 오른쪽 클릭, 폰은 길게 누르기
 document.addEventListener('contextmenu', e => {
