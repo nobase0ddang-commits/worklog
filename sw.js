@@ -32,7 +32,8 @@ async function handle(e) {
     try {
       const cfg = await pushCfg();
       const rm = cfg && cfg.rooms.find(r => r.inbox === msg.topic);
-      if (rm && msg.message) {
+      if (rm && cfg.hide) tag = rm.inbox;   // 잠금을 켰으면 방 이름·내용 없이 "새 메시지"만
+      else if (rm && msg.message) {
         const key = await crypto.subtle.importKey('raw', rm.key, 'AES-GCM', false, ['decrypt']);
         const [a, b] = msg.message.split('.');
         const pt = await crypto.subtle.decrypt({name: 'AES-GCM', iv: ub64(a)}, key, ub64(b));

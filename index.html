@@ -312,14 +312,63 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
 #gal .gf{display:flex;align-items:baseline;gap:6px;padding:9px 6px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:13px}
 #gal .gf b{flex:1;font-weight:600;word-break:break-all}
 #gal .gf small{color:#888;font-size:11px;white-space:nowrap}
+/* 투표·위치·사진 보기·새 메시지·잠금·글자 크기 */
+.poll{min-width:210px;max-width:300px}
+.poll .pq{display:block;font-size:13.5px;margin-bottom:1px;word-break:break-word}
+.poll>small{display:block;color:#777;font-size:11px;margin-bottom:4px}
+.poll .po{position:relative;display:flex;align-items:center;gap:6px;border:1px solid #d5d5d9;border-radius:6px;padding:6px 9px;margin-top:5px;background:#fff;cursor:pointer;overflow:hidden;user-select:none;-webkit-user-select:none}
+.poll .po i{position:absolute;left:0;top:0;bottom:0;background:#fde3ee}
+.poll .po span,.poll .po em{position:relative}
+.poll .po span{flex:1;word-break:break-word}
+.poll .po em{font-style:normal;font-weight:700;color:#bd1d63;font-size:12px}
+.poll .po.on{border-color:#bd1d63;font-weight:600}
+.poll .po.on span::before{content:"✓ "}
+.poll .po.x{cursor:default}
+.poll .pclose{margin-top:7px;font-size:11.5px;color:#777;text-decoration:underline}
+.s-grid .poll .po{padding:2px 6px;margin-top:2px}
+.lcard{display:flex;align-items:center;gap:8px;min-width:150px;color:inherit;text-decoration:none;-webkit-touch-callout:none}
+.lcard i{font-style:normal;font-size:24px}
+.lcard b{display:block;font-weight:600}
+.lcard small{color:#2a5bd7;font-size:11px}
+.vcard .vspd{font-size:10.5px;font-weight:700;color:#555;border:1px solid rgba(0,0,0,.2);border-radius:8px;padding:0 5px;line-height:16px;flex:none}
+#gal .pmk{display:flex;flex-direction:column;gap:8px;padding:14px}
+#gal .pmk input:not([type]){height:36px;border:1px solid #ccc;border-radius:6px;padding:0 10px;font-size:16px;width:100%}
+#gal .pmk .pos{display:flex;flex-direction:column;gap:6px}
+#gal .pmk .padd{align-self:flex-start;color:#3b6fd4;font-size:12.5px;padding:2px 0}
+#gal .pmk label{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#444}
+#gal .pmk .pgo{height:38px;border-radius:6px;background:#bd1d63;color:#fff;font-weight:600;margin-top:4px}
+#viewer .vv{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:64px;font-size:34px;line-height:1;color:#fff;background:rgba(255,255,255,.12);border-radius:8px;cursor:pointer}
+#viewer .vprev{left:10px}
+#viewer .vnext{right:10px}
+#viewer .vt{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;gap:14px;padding:12px 12px max(12px,env(safe-area-inset-bottom));color:#ddd;font-size:13px;cursor:default}
+#viewer .vsave{height:30px;padding:0 16px;border-radius:15px;background:rgba(255,255,255,.2);color:#fff;cursor:pointer}
+#newBtn{position:fixed;transform:translateX(-50%);z-index:9;max-width:min(360px,80vw);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;background:#fff;border:1px solid #d6d6dc;border-radius:16px;padding:6px 14px;font-size:12px;color:#333;box-shadow:0 4px 14px rgba(0,0,0,.15);cursor:pointer}
+#newBtn.pend{background:#bd1d63;color:#fff;border-color:#bd1d63}
+#sendBtn{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+#lock{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(20,24,32,.55);z-index:60;display:grid;place-items:center;padding:16px}
+#lock .lbox{width:min(300px,100%);background:#fff;border-radius:10px;padding:22px 20px 14px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+#lock b{display:block;font-size:15px}
+#lock p{margin:6px 0 12px;color:#666;font-size:12.5px}
+.pin{-webkit-text-security:disc;text-security:disc}
+#lock input{width:150px;height:42px;text-align:center;font-size:22px;letter-spacing:10px;border:1px solid #bbb;border-radius:6px}
+#lock .lerr{min-height:18px;margin-top:8px;color:#d33;font-size:12px}
+#lock .lbtn{display:flex;justify-content:space-between;margin-top:6px}
+#lock .lbtn button{font-size:12px;color:#777;padding:6px}
+#lock.bad .lbox{animation:shk .4s}
+body[data-fs="s"] .ch-bub,body[data-fs="s"] .c-msg .cb{font-size:12px}
+body[data-fs="s"] .s-grid td.e{font-size:11px}
+body[data-fs="l"] .ch-bub,body[data-fs="l"] .c-msg .cb{font-size:15px}
+body[data-fs="l"] .s-grid td.e{font-size:13.5px}
+body[data-fs="xl"] .ch-bub,body[data-fs="xl"] .c-msg .cb{font-size:17px}
+body[data-fs="xl"] .s-grid td.e{font-size:15px}
 /* 음성·전달·책갈피·밀어서 답장 */
-.vcard{display:flex;align-items:center;gap:8px;width:220px;max-width:100%;cursor:pointer;user-select:none;-webkit-user-select:none}
+.vcard{display:flex;align-items:center;gap:8px;width:240px;max-width:100%;cursor:pointer;user-select:none;-webkit-user-select:none}
 .vcard .vp{font-style:normal;width:28px;height:28px;border-radius:50%;background:#3a3a3a;color:#fff;display:grid;place-items:center;font-size:10px;flex:none}
 .vcard.on .vp{background:#bd1d63}
 .vcard .vbar{flex:1;height:4px;border-radius:2px;background:rgba(0,0,0,.14);overflow:hidden}
 .vcard .vbar i{display:block;height:100%;width:0;background:#3a3a3a}
 .vcard small{font-size:11.5px;color:#555;min-width:30px;font-variant-numeric:tabular-nums}
-.s-grid .vcard{width:150px}
+.s-grid .vcard{width:170px}
 .s-grid .vcard .vp{width:20px;height:20px;font-size:8px}
 .micBtn{cursor:pointer}
 .micBtn.on{color:#d33!important}
@@ -385,13 +434,19 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
     </select>
     <label class="chk"><input id="fAuto" type="checkbox"> 창을 벗어나면 자동으로 업무 화면으로 전환</label>
     <label class="chk"><input id="fRead" type="checkbox"> 읽음 표시 보내기 (상대 화면의 노란 숫자 1이 사라짐)</label>
+    <label for="fFs">대화 글자 크기</label>
+    <select id="fFs"><option value="s">작게</option><option value="m">보통</option><option value="l">크게</option><option value="xl">아주 크게</option></select>
+    <label for="fLock">잠금 비밀번호 (숫자 4자리)</label>
+    <input id="fLock" class="pin" type="text" inputmode="numeric" maxlength="4" autocomplete="off" spellcheck="false">
+    <label class="chk hidden" id="fLockOffL"><input id="fLockOff" type="checkbox"> 잠금 끄기</label>
+    <p class="d" style="margin-top:4px">켜 두면 앱을 열 때, 그리고 1분 넘게 업무 화면이었거나 앱을 내려 뒀다가 대화로 돌아올 때 물어봐요.</p>
     <div id="fNtfBox"><label>이 기기로 알림 받기</label>
       <div class="ntf"><span id="fNtfTxt">꺼짐</span><button type="button" id="fNtf">알림 켜기</button></div></div>
     <div class="warn" id="fWarn"></div>
     <div class="btns"><button id="fCancel" type="button">취소</button><button id="fSave" class="pri" type="button">저장</button></div>
     <button class="lnk" id="fClear" type="button">이 기기의 대화 기록 지우기</button>
     <p class="tip" style="display:none"><span id="qtm"></span></p>
-    <p class="tip">1:1 방 이름은 내 화면에서만 보이는 상대 표시 이름이에요. 단톡방에서는 각자의 '내 이름'으로 보여요.<br>Esc 키: 업무 화면 ↔ 대화 전환 · Enter 전송, Ctrl+Enter 줄바꿈<br>대화·사진은 암호화된 채로 서버에 보관돼서 새 기기에서도 최근 1000건까지 다시 받아와요.<br>폰에서는 키보드 return이 줄바꿈이고, 전송은 전송 버튼으로 해요.<br>말풍선 두 번 누르기: ❤️ · 길게 누르기(PC는 오른쪽 클릭): 답장·복사·전달·수정·책갈피·공지·삭제<br>폰에서 말풍선을 옆으로 밀면 답장 · 마이크 버튼: 음성 메시지 · 사진·파일은 여러 개 한 번에<br>대화방 머리글 ⋯: 콕 찌르기·사진/파일 모아보기·책갈피·검색·대화 내보내기<br>버전 <span id="verTxt"></span></p>
+    <p class="tip">1:1 방 이름은 내 화면에서만 보이는 상대 표시 이름이에요. 단톡방에서는 각자의 '내 이름'으로 보여요.<br>Esc 키: 업무 화면 ↔ 대화 전환 · Enter 전송, Ctrl+Enter 줄바꿈<br>대화·사진은 암호화된 채로 서버에 보관돼서 새 기기에서도 최근 1000건까지 다시 받아와요.<br>폰에서는 키보드 return이 줄바꿈이고, 전송은 전송 버튼으로 해요.<br>말풍선 두 번 누르기: ❤️ · 길게 누르기(PC는 오른쪽 클릭): 답장·복사·전달·수정·책갈피·공지·삭제<br>폰에서 말풍선을 옆으로 밀면 답장 · 마이크 버튼: 음성 메시지 · 사진·파일은 여러 개 한 번에<br>전송 단추 오른쪽 클릭(폰은 길게 누르기): 조용히 보내기 · 사진을 누르면 넘겨 보기·저장<br>대화방 머리글 ⋯: 콕 찌르기·투표·위치 보내기·사진/파일 모아보기·책갈피·검색·방 알림 끄기·대화 내보내기<br>버전 <span id="verTxt"></span></p>
   </div>
 </div>
 <div id="toast"></div>
@@ -403,7 +458,10 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
 <div id="menu" class="hidden"></div>
 <div id="gal" class="hidden"></div>
 <div id="pcard" class="hidden"></div>
-<div id="viewer" class="hidden"><img alt=""></div>
+<div id="viewer" class="hidden"><img alt=""><button type="button" class="vv vprev" title="이전 사진">‹</button><button type="button" class="vv vnext" title="다음 사진">›</button><div class="vt"><span class="vcnt"></span><button type="button" class="vsave">저장</button></div></div>
+<button id="newBtn" class="hidden" type="button"></button>
+<div id="lock" class="hidden"><div class="lbox"><b>보안 확인</b><p>잠금 비밀번호 4자리를 입력하세요</p><input class="pin" type="text" inputmode="numeric" maxlength="4" autocomplete="off" spellcheck="false"><div class="lerr"></div>
+  <div class="lbtn"><button type="button" class="lforgot">비밀번호를 잊었어요</button><button type="button" class="lx">닫기</button></div></div></div>
 
 <script>
 function showErr(msg) {
@@ -420,7 +478,7 @@ const RELAY = 'https://ntfy.sh';   // 폰 알림(웹 푸시) 신호용
 const DB = 'https://worklog-chat-c0a54-default-rtdb.asia-southeast1.firebasedatabase.app';   // 대화·첨부 저장(Firebase 실시간 DB)
 const VAPID = 'BEMjM0sNxh41x0a6Lz3YaqkJ7AUhZefxsOQgw-at69i0fM1CybVBcj7-QQXf4N_tPCgFnOXdRbQ5jrSrr9Yg9Lc';   // ntfy.sh 웹 푸시 공개키
 const MAX_BYTES = 2800;   // 암호화 후 ntfy 본문 한도(4096바이트) 안에 들도록
-const VER = '2026.11.03c';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
+const VER = '2026.11.03f';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
 
 // ?p=xx 로 같은 브라우저에서 프로필을 나눠 쓸 수 있다(테스트용)
 const P = new URLSearchParams(location.search).get('p') || '';
@@ -524,10 +582,11 @@ async function doConnect() {
     const sk = d.topic.slice(2, 10);
     const msgs = load('msgs_' + sk, []);
     R[rm.id] = {pass: rm.pass, key: d.key, raw: d.raw, topic: d.topic, sk, msgs, seen: new Set(msgs.map(m => m.id)), unread: 0, nn: load('nn_' + sk, []),
-      ext: Object.assign({react: {}, del: {}, pin: null, read: {}, edit: {}, prof: {}}, load('ext_' + sk, {})), pres: {}, presAt: {}, myRead: load('mr2_' + sk, 0), divTs: 0};   // mr2: 옛 기록은 버리고 한 번 다시 보낸다
+      ext: Object.assign({react: {}, del: {}, pin: null, read: {}, edit: {}, prof: {}, vote: {}, vts: {}, vclose: {}}, load('ext_' + sk, {})), pres: {}, presAt: {}, myRead: load('mr2_' + sk, 0), divTs: 0};   // mr2: 옛 기록은 버리고 한 번 다시 보낸다
   }
   if (!view || (isRoom(view) && !room(view))) view = cfg.rooms[0].id;
   if (isRoom(view)) lastRoom = view;
+  if (isRoom(view) && lockDue()) { view = lastDecoy || 'team'; chTab = 'note'; mobileSide = true; }   // 잠금: 위장 화면에서 시작
   setStatus('');
   const open = new Set();
   for (const rm of cfg.rooms) {
@@ -570,6 +629,9 @@ async function onItem(id, k, v) {
   const m = {id: k, n: String(o.n || ''), t: o.t, ts: Number(o.ts) || Number(v.t) || Date.now()};
   if (o.re && typeof o.re.id === 'string') m.re = {id: o.re.id, n: String(o.re.n || ''), t: String(o.re.t || '').slice(0, 80)};
   if (o.nudge) m.nudge = 1;
+  const pl = o.poll;
+  if (pl && typeof pl === 'object' && Array.isArray(pl.o) && pl.o.length >= 2) m.poll = {q: String(pl.q || '').slice(0, 100), o: pl.o.slice(0, 10).map(z => String(z).slice(0, 60)), multi: !!pl.multi};
+  if (o.loc && Math.abs(+o.loc.a) <= 90 && Math.abs(+o.loc.o) <= 180) m.loc = {a: +o.loc.a, o: +o.loc.o};
   const at = o.fid && typeof o.fid === 'string' ? attOf(o) : null;
   if (at) Object.assign(m, at, {u: `${DB}/f/${r.topic}/${encodeURIComponent(o.fid)}.json`, x: 9e15, mime: o.mime});
   add(id, m);
@@ -645,7 +707,10 @@ function paintPeer() {
     d.title = status === 'off' ? '연결 끊김' : on ? '접속 중' : '자리 비움';
   });
 }
-setInterval(() => { if (cfg) { paintTyping(); paintPeer(); } }, 2000);
+setInterval(() => {
+  if (cfg) { paintTyping(); paintPeer(); }
+  if (lockOn() && !$('#setup').classList.contains('hidden') && lockDue()) $('#setup').classList.add('hidden');
+}, 2000);
 // 내가 입력 중이라는 신호(3초에 한 번까지), 보내거나 지우면 0
 let typingAt = 0;
 function sendTyping(on) {
@@ -707,6 +772,19 @@ function applySys(id, o) {
   } else if (o.sys === 'read') {
     if (n === cfg.me || (x.read[n] || 0) >= o.ts) return;
     x.read[n] = Number(o.ts) || 0;
+  } else if (o.sys === 'vote' && typeof o.id === 'string' && Array.isArray(o.c)) {   // 투표: 사람마다 고른 항목 번호
+    const m = r.msgs.find(z => z.id === o.id);
+    if ((m && !m.poll) || x.vclose[o.id]) return;
+    const tk = o.id + '|' + n, ts = Number(o.ts) || 0;
+    if ((x.vts[tk] || 0) > ts) return;   // 더 늦게 고른 것이 이미 있음
+    x.vts[tk] = ts;
+    const k = x.vote[o.id] || (x.vote[o.id] = {});
+    const c = o.c.filter(i => Number.isInteger(i) && i >= 0 && i < 10).slice(0, 10);
+    if (c.length) k[n] = c; else delete k[n];
+  } else if (o.sys === 'vclose' && typeof o.id === 'string') {
+    const m = r.msgs.find(z => z.id === o.id);
+    if (m && m.n !== n) return;   // 올린 사람만 마감
+    x.vclose[o.id] = 1;
   } else return;
   save('ext_' + r.sk, x);
   if (view === id) renderList();
@@ -820,10 +898,12 @@ async function send(text, extra) {
     const m = {id: await post(rm.id, payload), n: payload.n, t: payload.t, ts: payload.ts};
     if (payload.re) m.re = payload.re;
     if (payload.nudge) m.nudge = 1;
+    if (payload.poll) m.poll = payload.poll;
+    if (payload.loc) m.loc = payload.loc;
     setReply(null);
     add(rm.id, m);
     sendTyping(false);
-    ping(rm.id, payload.nudge ? '콕 찔렀어요 👉' : text);
+    if (!payload.q) ping(rm.id, payload.nudge ? '콕 찔렀어요 👉' : text);   // q: 조용히 보내기(알림 없이)
     recentEmoji(text);
     if (checkUpdate.ready) setTimeout(checkUpdate, 500);   // 글을 보내 입력창이 비면 미뤄 둔 새로고침
     return true;
@@ -939,6 +1019,7 @@ const attOf = o => o.img ? {t: '사진', img: 1}
   : o.file ? {t: '파일: ' + String(o.fname || ''), file: 1, fname: String(o.fname || '파일'), fsize: Number(o.fsize) || 0}
   : o.voice ? {t: '음성 메시지', voice: 1, dur: Math.max(0, Math.min(600, Number(o.dur) || 0))} : null;
 const isAtt = m => !!(m.img || m.file || m.voice);
+const mapUrl = l => `https://map.kakao.com/link/map/${encodeURIComponent('보낸 위치')},${l.a},${l.o}`;
 // 첨부 하나를 방 키로 암호화해 올리고 메시지로 알린다(전달할 때는 다른 방으로도)
 async function postAtt(rid, blob, meta) {
   upBusy++;
@@ -1020,16 +1101,8 @@ async function startRec() {
   stopVoice();   // 재생 소리가 녹음에 섞이지 않게
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { toast('이 브라우저는 녹음을 지원하지 않아요'); return; }
   let stream;
-  startRec.asking = true;   // 권한 창이 떠서 창 포커스가 빠져도 바로 위장 화면으로 넘어가지 않게
-  try { stream = await navigator.mediaDevices.getUserMedia({audio: true}); }
+  try { stream = await withPerm(() => navigator.mediaDevices.getUserMedia({audio: true})); }
   catch (e) { toast(e && e.name === 'NotFoundError' ? '연결된 마이크가 없어요' : '마이크를 쓸 수 없어요 — 마이크 권한을 허용해 주세요'); return; }
-  finally {
-    startRec.asking = false;
-    if (startRec.blurred) {   // 권한 창이 떠 있는 사이 다른 창으로 갔으면 그때 위장
-      startRec.blurred = false;
-      setTimeout(() => { if (cfg.autoHide && cur() && !document.hasFocus()) decoy(); }, 300);
-    }
-  }
   if (rec || view !== rm.id) { stream.getTracks().forEach(t => t.stop()); return; }   // 권한을 묻는 사이 방을 옮겼으면 그만
   let mr;
   try { const mt = recMime(); mr = new MediaRecorder(stream, mt ? {mimeType: mt} : undefined); }
@@ -1118,7 +1191,8 @@ async function toWav(blob) {
 }
 // 재생: 한 번에 하나만. 다시 누르면 일시정지
 let player = null, playId = '';
-const voiceTag = m => `<span class="vcard" data-voice="${esc(m.id)}" data-dur="${m.dur || 0}"><i class="vp">▶</i><span class="vbar"><i></i></span><small>${mmss(m.dur || 0)}</small></span>`;
+let voiceRate = [1, 1.5, 2].indexOf(load('vrate', 1)) >= 0 ? load('vrate', 1) : 1;   // 재생 속도(이 기기)
+const voiceTag = m => `<span class="vcard" data-voice="${esc(m.id)}" data-dur="${m.dur || 0}"><i class="vp">▶</i><span class="vbar"><i></i></span><small>${mmss(m.dur || 0)}</small><b class="vspd" title="재생 속도">${voiceRate}x</b></span>`;
 async function playVoice(mid) {
   const rid = view, m = R[rid] && R[rid].msgs.find(z => z.id === mid);
   if (!m) return;
@@ -1133,6 +1207,7 @@ async function playVoice(mid) {
   if (view !== rid) return;
   const a = new Audio(picUrls.get(mid));
   player = a; playId = mid;
+  a.defaultPlaybackRate = a.playbackRate = voiceRate;
   a.ontimeupdate = a.onplay = a.onpause = paintVoice;
   a.onended = stopVoice;
   a.onerror = () => { if (player === a) { stopVoice(); toast('이 기기에서 재생할 수 없는 형식이에요'); } };
@@ -1190,6 +1265,8 @@ function bodyOf(rm, m) {
   if (m.img) return {kind: 'img', html: q + picTag(m.id)};
   if (m.file) return {kind: 'file', html: q + `<span class="fcard" data-file="${esc(m.id)}"><i>📄</i><span><b>${esc(m.fname)}</b><small>${kb(m.fsize)} · 눌러서 저장</small></span></span>`};
   if (m.voice) return {kind: 'voice', html: q + voiceTag(m)};
+  if (m.poll) return {kind: 'poll', html: q + pollHTML(rm, m)};
+  if (m.loc) return {kind: 'loc', html: q + `<a class="lcard" href="${mapUrl(m.loc)}" target="_blank" rel="noopener noreferrer"><i>📍</i><span><b>보낸 위치</b><small>지도에서 보기</small></span></a>`};
   if (m.nudge) return {kind: 'txt', html: `<span class="nudge">👉 콕! 찔렀어요</span>`};
   const t = textOf(rm.id, m), ed = isEdited(rm.id, m) ? '<small class="edt">(수정됨)</small>' : '';
   if (!q && !ed && isBig(t)) return {kind: 'big', html: `<span class="bigemo">${esc(t)}</span>`};
@@ -1324,10 +1401,10 @@ function openMenu(mid, x, y) {
   if (!m || isDel(rm.id, m)) return;
   const myE = (R[rm.id].ext.react[mid] || {})[cfg.me];
   const mn = $('#menu');
-  const plain = !isAtt(m) && !m.nudge;
+  const plain = !isAtt(m) && !m.nudge && !m.poll, editable = plain && !m.loc;
   mn.innerHTML = `<div class="mq">${QUICK.map(e => `<span data-e="${e}" class="${e === myE ? 'on' : ''}">${e}</span>`).join('')}</div>
-    <button data-a="reply">답장</button>${plain ? '<button data-a="copy">복사</button>' : ''}${m.nudge ? '' : '<button data-a="fwd">전달</button>'}
-    ${mine(m) && plain ? '<button data-a="edit">수정</button>' : ''}<button data-a="bm">${bmOf(rm.id).has(mid) ? '책갈피 빼기' : '책갈피'}</button>
+    <button data-a="reply">답장</button>${plain ? '<button data-a="copy">복사</button>' : ''}${m.nudge || m.poll ? '' : '<button data-a="fwd">전달</button>'}
+    ${mine(m) && editable ? '<button data-a="edit">수정</button>' : ''}<button data-a="bm">${bmOf(rm.id).has(mid) ? '책갈피 빼기' : '책갈피'}</button>
     <button data-a="pin">공지로 등록</button>${mine(m) ? '<button data-a="del" class="dg">삭제</button>' : ''}`;
   mn.classList.remove('hidden');
   const w = mn.offsetWidth, h = mn.offsetHeight;
@@ -1460,8 +1537,9 @@ function openRoomMenu(btn) {
   const rm = cur();
   if (!rm) return;
   const mn = $('#menu');
-  mn.innerHTML = `<button data-a="nudge">👉 콕 찌르기</button><button data-a="gal">🖼 사진·파일 모아보기</button><button data-a="bms">🔖 책갈피 모아보기</button>
-    <button data-a="srch">🔍 대화 검색</button><button data-a="exp">💾 대화 내보내기(.txt)</button><button data-a="prof">👤 내 프로필</button>`;
+  mn.innerHTML = `<button data-a="nudge">👉 콕 찌르기</button><button data-a="poll">📊 투표 만들기</button><button data-a="loc">📍 내 위치 보내기</button>
+    <button data-a="gal">🖼 사진·파일 모아보기</button><button data-a="bms">🔖 책갈피 모아보기</button><button data-a="srch">🔍 대화 검색</button>
+    <button data-a="mute">${muted(rm.id) ? '🔔 이 방 알림 다시 받기' : '🔕 이 방 알림 끄기 (이 기기)'}</button><button data-a="exp">💾 대화 내보내기(.txt)</button><button data-a="prof">👤 내 프로필</button>`;
   mn.classList.remove('hidden');
   const b = btn.getBoundingClientRect(), w = mn.offsetWidth;
   mn.style.left = Math.max(8, Math.min(b.right - w, window.innerWidth - w - 8)) + 'px';
@@ -1472,6 +1550,9 @@ function openRoomMenu(btn) {
     if (a === 'nudge') nudge();
     else if (a === 'gal') openGallery();
     else if (a === 'bms') openBookmarks();
+    else if (a === 'poll') openPollMaker();
+    else if (a === 'loc') sendLoc();
+    else if (a === 'mute') toggleMute();
     else if (a === 'srch') toggleSearch();
     else if (a === 'exp') exportChat();
     else if (a === 'prof') openProf(cfg.me);
@@ -1511,7 +1592,8 @@ function exportChat() {
   if (!rm) return;
   const lines = R[rm.id].msgs.filter(m => !isDel(rm.id, m)).map(m => {
     const d = new Date(m.ts);
-    const body = m.img ? '[사진]' : m.file ? `[파일] ${m.fname}` : m.voice ? `[음성 메시지 ${mmss(m.dur || 0)}]` : m.nudge ? '[콕 찌르기]' : textOf(rm.id, m);
+    const body = m.img ? '[사진]' : m.file ? `[파일] ${m.fname}` : m.voice ? `[음성 메시지 ${mmss(m.dur || 0)}]` : m.nudge ? '[콕 찌르기]'
+      : m.poll ? `[투표] ${m.poll.q} (${m.poll.o.join(' / ')})` : textOf(rm.id, m);
     return `[${ymd(m.ts)} ${pad(d.getHours())}:${pad(d.getMinutes())}] ${who(rm, m)}: ${body}`;
   });
   const a = Object.assign(document.createElement('a'), {
@@ -1523,7 +1605,7 @@ function exportChat() {
 // 말풍선 두 번 누르기 → ❤️ 공감(다시 두 번 누르면 취소)
 function heartAt(t) {
   const el = t.closest && t.closest('#list [data-mid]');
-  if (!el || !cur() || t.closest('a, img.pic, [data-react], [data-file], [data-voice], [data-jump], [data-prof]')) return false;
+  if (!el || !cur() || t.closest('a, img.pic, [data-react], [data-file], [data-voice], [data-jump], [data-prof], .poll')) return false;
   const mid = el.dataset.mid, m = R[view].msgs.find(z => z.id === mid);
   if (!m || isDel(view, m)) return false;
   const my = (R[view].ext.react[mid] || {})[cfg.me];
@@ -1536,6 +1618,211 @@ function jumpTo(mid) {
   el.scrollIntoView({block: 'center', behavior: 'smooth'});
   el.classList.add('flash');
   setTimeout(() => el.classList.remove('flash'), 1500);
+}
+
+// ---------- 투표 ----------
+function pollHTML(rm, m) {
+  const x = R[rm.id].ext, v = x.vote[m.id] || {}, closed = !!x.vclose[m.id] || isDel(rm.id, m);
+  const ppl = Object.keys(v), my = v[cfg.me] || [];
+  const who_ = m.poll.o.map((_, i) => ppl.filter(n => v[n].indexOf(i) >= 0));
+  return `<div class="poll" data-poll="${esc(m.id)}"><b class="pq">📊 ${esc(m.poll.q)}</b><small>${m.poll.multi ? '여러 개 선택 · ' : ''}${ppl.length}명 참여${closed ? ' · 마감됨' : ''}</small>
+    ${m.poll.o.map((o, i) => `<div class="po${my.indexOf(i) >= 0 ? ' on' : ''}${closed ? ' x' : ''}" data-opt="${i}" title="${esc(who_[i].map(nameOnly).join(', '))}"><i style="width:${ppl.length ? Math.round(who_[i].length / ppl.length * 100) : 0}%"></i><span>${esc(o)}</span><em>${who_[i].length}</em></div>`).join('')}
+    ${mine(m) && !closed ? '<button type="button" class="pclose">투표 마감</button>' : ''}</div>`;
+}
+function vote(pid, i) {
+  const r = R[view], m = r && r.msgs.find(z => z.id === pid);
+  if (!m || !m.poll || r.ext.vclose[pid] || isDel(view, m) || i >= m.poll.o.length) return;
+  const was = (r.ext.vote[pid] || {})[cfg.me] || [];
+  const c = m.poll.multi ? (was.indexOf(i) >= 0 ? was.filter(z => z !== i) : was.concat(i).sort((a, b) => a - b))
+                         : (was.length === 1 && was[0] === i ? [] : [i]);   // 같은 것을 다시 누르면 취소
+  sendSys(view, {sys: 'vote', id: pid, c});
+}
+function openPollMaker() {
+  const rm = cur();
+  if (!rm) return;
+  const g = $('#gal');
+  g.innerHTML = `<div class="gbox"><div class="gh"><b>투표 만들기</b><button type="button" title="닫기">✕</button></div><div class="gb pmk">
+    <input class="pq" maxlength="100" placeholder="무엇을 정할까요? (예: 저녁 메뉴)">
+    <div class="pos">${[1, 2, 3].map(i => `<input class="pi" maxlength="60" placeholder="항목 ${i}">`).join('')}</div>
+    <button type="button" class="padd">+ 항목 추가</button>
+    <label><input type="checkbox" class="pm"> 여러 개 고를 수 있게</label>
+    <button type="button" class="pgo">투표 올리기</button></div></div>`;
+  g.classList.remove('hidden');
+  g.querySelector('.gh button').addEventListener('click', () => g.classList.add('hidden'));
+  g.querySelector('.padd').addEventListener('click', () => {
+    const box = g.querySelector('.pos'), n = box.children.length;
+    if (n >= 10) { toast('항목은 10개까지예요'); return; }
+    box.insertAdjacentHTML('beforeend', `<input class="pi" maxlength="60" placeholder="항목 ${n + 1}">`);
+    box.lastElementChild.focus();
+  });
+  g.querySelector('.pgo').addEventListener('click', () => {
+    const q = g.querySelector('.pq').value.trim();
+    const o = Array.from(g.querySelectorAll('.pi'), el => el.value.trim()).filter((z, i, a) => z && a.indexOf(z) === i);
+    if (!q) { toast('무엇을 정할지 적어 주세요'); return; }
+    if (o.length < 2) { toast('항목을 2개 이상 넣어 주세요'); return; }
+    g.classList.add('hidden');
+    if (editTo) setReply(null);
+    send('📊 투표: ' + q, {poll: {q, o, multi: g.querySelector('.pm').checked}});
+  });
+  setTimeout(() => g.querySelector('.pq').focus(), 50);
+}
+// ---------- 위치 보내기 ----------
+// 권한 창(마이크·위치)이 떠서 창 포커스가 빠져도 바로 위장 화면으로 넘어가지 않게. 답한 뒤에도 다른 창에 가 있으면 그때 위장
+let permAsking = false, permBlurred = false;
+async function withPerm(f) {
+  permAsking = true;
+  try { return await f(); }
+  finally {
+    permAsking = false;
+    if (permBlurred) {
+      permBlurred = false;
+      setTimeout(() => { if (cfg.autoHide && cur() && !document.hasFocus()) decoy(); }, 300);
+    }
+  }
+}
+async function sendLoc() {
+  const rid = cur() && view;
+  if (!rid) return;
+  if (!navigator.geolocation) { toast('이 기기는 위치를 알 수 없어요'); return; }
+  if (!confirm('지금 내 위치를 이 방에 보낼까요?')) return;
+  toast('위치 찾는 중…');
+  let p;
+  const get = () => new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {enableHighAccuracy: true, timeout: 15000, maximumAge: 30000}));
+  let st = 'prompt';
+  try { if (navigator.permissions && navigator.permissions.query) st = (await navigator.permissions.query({name: 'geolocation'})).state; } catch (_) {}
+  try { p = await (st === 'granted' ? get() : withPerm(get)); }
+  catch (e) { toast(e && e.code === 1 ? '위치 권한을 허용해 주세요' : '위치를 찾지 못했어요'); return; }
+  if (view !== rid) return;
+  const loc = {a: Math.round(p.coords.latitude * 1e5) / 1e5, o: Math.round(p.coords.longitude * 1e5) / 1e5};
+  if (editTo) setReply(null);
+  send('📍 위치\n' + mapUrl(loc), {loc});
+}
+// ---------- 방별 알림 끄기(이 기기만) ----------
+// 이 기기의 알림 구독에서 그 방만 뺀다. 같은 이름의 다른 기기는 그대로 받는다.
+const muted = id => !!(cfg && cfg.mute && cfg.mute.indexOf(id) >= 0);
+let pushQ = Promise.resolve();
+function toggleMute() {
+  const rm = cur();
+  if (!rm) return;
+  const ms = cfg.mute || (cfg.mute = []), i = ms.indexOf(rm.id);
+  if (i >= 0) ms.splice(i, 1); else ms.push(rm.id);
+  save('cfg', cfg);
+  toast(i >= 0 ? '이 방 알림을 다시 받아요' : (pushOn() ? '이 기기에서 이 방 알림을 껐어요' : '이 방 알림을 껐어요 (이 기기는 알림이 꺼져 있어요)'));
+  if (pushOn()) pushQ = pushQ.then(() => refreshPush(false)).catch(() => {});   // 빠르게 껐다 켜도 순서대로
+  paintSide();
+}
+// ---------- 사진 크게 보기: 넘겨 보기·저장 ----------
+let viewIds = [], viewAt = 0, viewBlob = null;
+function openViewer(mid) {
+  const rm = cur();
+  if (!rm) return;
+  viewIds = R[rm.id].msgs.filter(m => m.img && !isDel(rm.id, m)).map(m => m.id);
+  viewAt = Math.max(0, viewIds.indexOf(mid));
+  $('#viewer img').removeAttribute('src');
+  $('#viewer').classList.remove('hidden');
+  showView();
+}
+async function showView() {
+  const v = $('#viewer'), id = viewIds[viewAt];
+  if (!id) return;
+  v.querySelector('.vcnt').textContent = `${viewAt + 1} / ${viewIds.length}`;
+  v.querySelector('.vprev').classList.toggle('hidden', viewAt <= 0);
+  v.querySelector('.vnext').classList.toggle('hidden', viewAt >= viewIds.length - 1);
+  if (!picUrls.has(id)) {
+    const b = await idbGet(PICDB, 'p', id);
+    if (b) picUrls.set(id, URL.createObjectURL(b));
+    else { const m = cur() && R[view].msgs.find(z => z.id === id); if (m) await fetchPic(view, m); }
+  }
+  if (viewIds[viewAt] !== id) return;
+  v.querySelector('img').src = picUrls.get(id) || '';
+  viewBlob = null;
+  const b = await idbGet(PICDB, 'p', id);
+  if (viewIds[viewAt] === id) viewBlob = b;
+}
+function stepView(d) {
+  const n = viewAt + d;
+  if (n < 0 || n >= viewIds.length) return;
+  viewAt = n;
+  showView();
+}
+// 저장: 폰은 공유 창(사진 앱에 저장), PC는 내려받기
+function saveView() {
+  const id = viewIds[viewAt], m = cur() && R[view].msgs.find(z => z.id === id), blob = viewBlob;
+  if (!blob || !m) { toast('사진을 아직 받는 중이에요'); return; }
+  const d = new Date(m.ts), ext = ((blob.type || '').split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+  const name = `사진_${ymd(m.ts).replace(/-/g, '')}_${pad(d.getHours())}${pad(d.getMinutes())}.${ext}`;
+  const f = new File([blob], name, {type: blob.type || 'image/jpeg'});
+  if (isTouch() && navigator.canShare && navigator.canShare({files: [f]})) { navigator.share({files: [f]}).catch(e => { if (!e || e.name !== 'AbortError') toast('저장하지 못했어요 — 사진을 길게 눌러 저장해 보세요'); }); return; }
+  const a = Object.assign(document.createElement('a'), {href: URL.createObjectURL(f), download: name});
+  document.body.appendChild(a); a.click(); a.remove();
+}
+// ---------- 새 메시지 바로가기(위로 올려 지난 대화를 보는 중일 때) ----------
+let newPend = '';
+function noteNew(atBottom) {
+  const rm = cur(), lm = rm && last(R[rm.id].msgs), key = rm ? rm.id + '|' + (lm ? lm.id : '') : '';
+  const sameRoom = rm && noteNew.key && noteNew.key.split('|')[0] === rm.id;
+  if (!sameRoom || atBottom) newPend = '';
+  else if (key !== noteNew.key && lm && !mine(lm)) newPend = `${nameOnly(who(rm, lm))}: ${prevOf(rm.id, lm)}`;
+  noteNew.key = key;
+  paintNewBtn();
+}
+function paintNewBtn() {
+  const b = $('#newBtn'), list = $('#list');
+  if (!list || !cur() || cfg.skin === 'sheet') { b.classList.add('hidden'); newPend = ''; return; }
+  const dist = list.scrollHeight - list.scrollTop - list.clientHeight;
+  if (dist < 80) newPend = '';
+  const show = !!newPend || dist > list.clientHeight * 1.5;
+  b.classList.toggle('hidden', !show);
+  if (!show) return;
+  b.textContent = newPend ? '↓ ' + newPend : '↓';
+  b.classList.toggle('pend', !!newPend);
+  const r = list.getBoundingClientRect();
+  b.style.left = (r.left + r.width / 2) + 'px';
+  b.style.bottom = (window.innerHeight - r.bottom + 12) + 'px';
+}
+// ---------- 잠금 비밀번호 ----------
+// 켜 두면 앱을 처음 열 때, 그리고 1분 넘게 위장 화면이었거나 앱을 내려 뒀다가 대화로 돌아올 때 4자리를 묻는다.
+const LOCK_AFTER = 60000;
+let unlocked = false, awayAt = 0, hiddenAt = 0, resumeRoom = '';
+const lockOn = () => !!(cfg && cfg.lock);
+function lockDue() {
+  if (!lockOn()) return false;
+  if ((!isRoom(view) || mobileSide) && awayAt && Date.now() - awayAt > LOCK_AFTER) unlocked = false;
+  return !unlocked;
+}
+const markAway = () => { if (!awayAt) awayAt = Date.now(); };   // 대화 화면을 떠난 시각(처음 떠난 때)
+async function pinHash(pin) {
+  const h = new Uint8Array(await crypto.subtle.digest('SHA-256', te.encode('wl|' + cfg.lockSalt + '|' + pin)));
+  return Array.from(h, b => b.toString(16).padStart(2, '0')).join('');
+}
+function askLock(then) {
+  const box = $('#lock'), i = box.querySelector('input');
+  askLock.then = then;
+  box.classList.remove('hidden');
+  i.value = '';
+  box.querySelector('.lerr').textContent = '';
+  setTimeout(() => i.focus(), 50);
+}
+async function tryPin() {
+  const box = $('#lock'), i = box.querySelector('input'), err = box.querySelector('.lerr');
+  i.value = i.value.replace(/\D/g, '').slice(0, 4);
+  if (i.value.length < 4) return;
+  const pin = i.value;
+  i.value = '';
+  if (Date.now() < (askLock.wait || 0)) { err.textContent = `${Math.ceil((askLock.wait - Date.now()) / 1000)}초 뒤에 다시 해 주세요`; return; }
+  if (await pinHash(pin) !== cfg.lock) {
+    askLock.fails = (askLock.fails || 0) + 1;
+    if (askLock.fails >= 5) { askLock.fails = 0; askLock.wait = Date.now() + 30000; err.textContent = '5번 틀려서 30초 동안 잠겨요'; }
+    else err.textContent = '비밀번호가 달라요';
+    box.classList.remove('bad'); void box.offsetWidth; box.classList.add('bad');
+    return;
+  }
+  askLock.fails = 0;
+  unlocked = true; awayAt = 0;
+  box.classList.add('hidden');
+  const f = askLock.then;
+  askLock.then = null;
+  if (f) f();
 }
 
 // ---------- 공지 띠 ----------
@@ -1633,10 +1920,13 @@ async function refreshPush(announce) {
   if (!sub) sub = await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: ub64u(VAPID)});
   const j = sub.toJSON();
   const rooms = [];
-  for (const rm of cfg.rooms) rooms.push({inbox: await inboxOf(rm.id, cfg.me), key: R[rm.id].raw, name: rm.name, group: !!rm.group});
-  await idbPut('wt_push', 'k', 'push', {rooms});
-  const res = await fetch(`${RELAY}/v1/webpush`, {method: 'POST', body: JSON.stringify({endpoint: j.endpoint, auth: j.keys.auth, p256dh: j.keys.p256dh, topics: rooms.map(x => x.inbox)})});
-  if (!res.ok) throw new Error('webpush ' + res.status);
+  for (const rm of cfg.rooms) if (!muted(rm.id)) rooms.push({inbox: await inboxOf(rm.id, cfg.me), key: R[rm.id].raw, name: rm.name, group: !!rm.group});
+  await idbPut('wt_push', 'k', 'push', {rooms, hide: lockOn()});   // 잠금을 켰으면 알림엔 "새 메시지"만
+  if (!rooms.length) await fetch(`${RELAY}/v1/webpush`, {method: 'DELETE', body: JSON.stringify({endpoint: j.endpoint})}).catch(() => {});   // 모든 방을 껐으면 구독만 내림
+  else {
+    const res = await fetch(`${RELAY}/v1/webpush`, {method: 'POST', body: JSON.stringify({endpoint: j.endpoint, auth: j.keys.auth, p256dh: j.keys.p256dh, topics: rooms.map(x => x.inbox)})});
+    if (!res.ok) throw new Error('webpush ' + res.status);
+  }
   for (const rm of cfg.rooms) {   // 8시간마다 "나 알림 받아요" 신호(새 기기·기록 정리 대비)
     const r = R[rm.id], k = 'ann_' + r.sk;
     if (!announce && Date.now() - load(k, 0) < 8 * 3600e3) continue;
@@ -1680,6 +1970,8 @@ const FAKE = [
 const fakeOf = k => FAKE.find(f => f.k === k);
 
 function setView(v) {
+  if (isRoom(v) && lockDue()) { askLock(() => setView(v)); return; }
+  if (isRoom(v)) awayAt = 0; else markAway();
   stopRec(false); stopVoice();   // 녹음·재생은 방을 옮기면 그만
   if (isRoom(view) && R[view] && view !== v) R[view].divTs = 0;
   view = v;
@@ -1698,6 +1990,7 @@ function setView(v) {
 }
 function decoy() {
   stopRec(false); stopVoice();   // 위장 화면에서 소리가 나거나 녹음이 이어지지 않게
+  markAway();
   clearTimeout(toast.h); $('#toast').classList.remove('show');
   closePops();   // 앱 밖에 떠 있는 갤러리·프로필·사진 보기도 함께 숨김
   $('#viewer').classList.add('hidden');
@@ -1725,8 +2018,9 @@ function render() {
   app.innerHTML = SKINS[cfg.skin].layout();
   if (SKINS[cfg.skin].bind) SKINS[cfg.skin].bind();
   app.querySelectorAll('[data-v]').forEach(el => el.addEventListener('click', () => setView(el.dataset.v)));
-  app.querySelectorAll('.gear').forEach(el => el.addEventListener('click', openSetup));
-  app.querySelectorAll('.back').forEach(el => el.addEventListener('click', () => { mobileSide = true; render(); }));
+  app.querySelectorAll('.gear').forEach(el => el.addEventListener('click', () => { if (lockDue()) askLock(openSetup); else { if (awayAt) awayAt = Date.now(); openSetup(); } }));   // 설정엔 방 암호가 있어서
+  document.body.dataset.fs = cfg.fs || 'm';
+  app.querySelectorAll('.back').forEach(el => el.addEventListener('click', () => { mobileSide = true; markAway(); render(); }));
   const inp = $('#inp');
   if (inp) {
     inp.addEventListener('keydown', async e => {
@@ -1743,18 +2037,41 @@ function render() {
     });
     // 입력창은 누르는 즉시 비운다(카톡처럼). 서버 응답을 기다렸다 비우면 그 사이 친 다음 글 때문에 보낸 글이 남았다.
     // 실패하면 보내려던 글을 앞에 되돌려 놓는다. 화면이 다시 그려졌을 수 있어 입력창은 그때그때 찾는다.
-    const doSend = async () => {
+    const doSend = async quiet => {
       const t = inp.value, rid = view, wasEdit = !!editTo, inRoom = !!cur();
       if (!t.trim() && inRoom) return;   // 빈 글(엔터가 두 번 들어온 경우 포함)은 무시
       inp.value = '';
       if (inRoom && !wasEdit) { drafts[rid] = ''; save('drafts', drafts); }
-      if (await send(t)) return;
+      if (await send(t, quiet ? {q: 1} : undefined)) return;
       const i = $('#inp');
       if (view === rid && i) { i.value = t + i.value; saveDraft(); }
       else if (inRoom && !wasEdit) { drafts[rid] = t + (drafts[rid] || ''); save('drafts', drafts); }
     };
     const btn = $('#sendBtn');
-    if (btn) btn.addEventListener('click', async () => { await doSend(); inp.focus(); });
+    if (btn) {
+      btn.addEventListener('click', async e => {
+        if (btn.lp) { btn.lp = false; e.stopPropagation(); return; }   // 길게 누른 뒤 떼는 클릭은 메뉴만
+        await doSend(); inp.focus();
+      });
+      // 조용히 보내기: PC는 전송 단추 오른쪽 클릭, 폰은 길게 누르기
+      const quietMenu = (x, y) => {
+        if (!cur() || !inp.value.trim() || editTo) return;
+        const mn = $('#menu');
+        mn.innerHTML = '<button data-a="quiet">🔕 조용히 보내기 <small>(상대에게 알림 없이)</small></button>';
+        mn.classList.remove('hidden');
+        mn.style.left = Math.max(8, Math.min(x - mn.offsetWidth / 2, window.innerWidth - mn.offsetWidth - 8)) + 'px';
+        mn.style.top = Math.max(8, y - mn.offsetHeight - 12) + 'px';
+        mn.querySelector('button').addEventListener('click', async () => { mn.classList.add('hidden'); await doSend(true); inp.focus(); });
+      };
+      btn.addEventListener('contextmenu', e => { e.preventDefault(); quietMenu(e.clientX, e.clientY); });
+      let lpT = null;
+      btn.addEventListener('touchstart', e => {
+        const tc = e.touches[0];
+        btn.lp = false;
+        lpT = setTimeout(() => { lpT = null; btn.lp = true; quietMenu(tc.clientX, tc.clientY); }, 500);
+      }, {passive: true});
+      ['touchend', 'touchmove', 'touchcancel'].forEach(n => btn.addEventListener(n, () => clearTimeout(lpT), {passive: true}));
+    }
     if (cur()) inp.value = editTo ? editText : (drafts[view] || '');
     inp.addEventListener('input', () => { saveDraft(); sendTyping(!!inp.value.trim() && !editTo); });
     inp.addEventListener('paste', e => {
@@ -1771,6 +2088,7 @@ function render() {
     }
   }
   const list = $('#list');
+  if (list) list.addEventListener('scroll', paintNewBtn, {passive: true});
   if (list && cur()) {
     list.insertAdjacentHTML('beforebegin', '<div class="pinBar hidden" id="pinBar"></div><div class="srchBar hidden" id="srchBar"><input placeholder="대화 내용 검색"><span class="cnt"></span><button type="button" data-d="1" title="이전">▲</button><button type="button" data-d="-1" title="다음">▼</button><button type="button" data-d="0" title="닫기">✕</button></div>');
     const sb = $('#srchBar'), si = sb.querySelector('input');
@@ -1795,7 +2113,7 @@ function render() {
   renderList(); paintSide(); paintTitle(); setStatus(status); paintTyping();
 }
 function renderList() {
-  const list = $('#list'); if (!list) return;
+  const list = $('#list'); if (!list) { paintNewBtn(); return; }
   const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
   const keep = list.scrollTop;
   list.innerHTML = SKINS[cfg.skin].list();
@@ -1810,6 +2128,7 @@ function renderList() {
   fillPics();
   if (player) paintVoice();
   if (cur()) bmOf(view).forEach(id => { const el = list.querySelector(`[data-mid="${CSS.escape(id)}"]`); if (el) el.classList.add('bm'); });
+  noteNew(atBottom);
   paintPin();
   if (searchQ || searchJump) paintSearch(searchJump);
   searchJump = false;
@@ -1970,7 +2289,7 @@ const SKINS = {
         </section></div>`;
     },
     bind() {
-      document.querySelectorAll('[data-tab]').forEach(el => el.addEventListener('click', () => { chTab = el.dataset.tab; mobileSide = true; render(); }));
+      document.querySelectorAll('[data-tab]').forEach(el => el.addEventListener('click', () => { chTab = el.dataset.tab; mobileSide = true; markAway(); render(); }));
     },
     side() {
       const ic = $('#chatIc');
@@ -1986,8 +2305,8 @@ const SKINS = {
       const items = roomsByRecent().map(rm => {
         const r = R[rm.id], lr = last(r.msgs);
         return {v: rm.id, f: lr ? (mine(lr) ? '나' : nameOnly(who(rm, lr))) : nameOnly(rm.name), w: lr ? listTime(lr.ts) : '',
-          l2: rm.group ? `<span class="ps">${IC.person}</span>${members(rm.id).length + 1}&nbsp; ${esc(rm.name)}` : esc(rm.name),
-          l3: prevOf(rm.id, lr), badge: r.unread, av: roomAv(rm)};
+          l2: (rm.group ? `<span class="ps">${IC.person}</span>${members(rm.id).length + 1}&nbsp; ${esc(rm.name)}` : esc(rm.name)) + (muted(rm.id) ? ' 🔕' : ''),
+          l3: lockOn() && (!isRoom(view) || !unlocked) ? '' : prevOf(rm.id, lr), badge: r.unread, av: roomAv(rm)};
       }).concat(['team', 'notice', 'lab'].map(k => {
         const c = CHC[k], ln = last(c.lines);
         return {v: k, f: ln[0], w: dayStr(c.ago) + ' ' + ln[1], l3: ln[2],
@@ -2055,7 +2374,7 @@ const SKINS = {
       const nav = $('#nav'); if (!nav) return;
       const real = (rm, h) => {
         const u = R[rm.id].unread;
-        return `<div class="c-ch${view === rm.id ? ' on' : ''}${u ? ' unread' : ''}" data-r="${rm.id}"><span class="h">${h}</span><span>${esc(rm.name)}</span>${u ? `<i class="badge">${u}</i>` : ''}</div>`;
+        return `<div class="c-ch${view === rm.id ? ' on' : ''}${u ? ' unread' : ''}" data-r="${rm.id}"><span class="h">${h}</span><span>${esc(rm.name)}${muted(rm.id) ? ' 🔕' : ''}</span>${u ? `<i class="badge">${u}</i>` : ''}</div>`;
       };
       const fake = v => `<div class="c-ch${view === v ? ' on' : ''}" data-r="${v}"><span class="h">#</span><span>${esc(fakeOf(v).name)}</span></div>`;
       const rs = cfg.rooms.filter(rm => R[rm.id]);
@@ -2177,6 +2496,11 @@ function openSetup() {
   $('#fSkin').value = cfg ? cfg.skin : 'msg';
   $('#fAuto').checked = !!(cfg && cfg.autoHide);
   $('#fRead').checked = !cfg || cfg.readRcpt !== false;
+  $('#fFs').value = (cfg && cfg.fs) || 'm';
+  $('#fLock').value = '';
+  $('#fLock').placeholder = cfg && cfg.lock ? '설정됨 — 바꿀 때만 새로 입력' : '비워 두면 잠금 안 씀';
+  $('#fLockOffL').classList.toggle('hidden', !(cfg && cfg.lock));
+  $('#fLockOff').checked = false;
   $('#fCancel').classList.toggle('hidden', !cfg);
   $('#fClear').classList.toggle('hidden', !cfg);
   $('#fNtfBox').classList.toggle('hidden', !cfg);
@@ -2213,7 +2537,9 @@ $('#fClear').addEventListener('click', () => {
   Object.keys(R).forEach(id => { R[id].msgs = []; R[id].seen = new Set(); save('msgs_' + R[id].sk, []); });
   $('#setup').classList.add('hidden'); render();
 });
+['input', 'click'].forEach(n => $('#setup').addEventListener(n, () => { if (awayAt && unlocked) awayAt = Date.now(); }));
 $('#fSave').addEventListener('click', async () => {
+  if (lockOn() && !unlocked) { askLock(() => $('#fSave').click()); return; }   // 설정을 연 채 다시 잠겼으면 비밀번호부터
   const warn = t => { $('#fWarn').textContent = t; };
   const me = $('#fMe').value.trim();
   const rooms = Array.from(document.querySelectorAll('#fRooms .rm')).map(d => ({
@@ -2224,15 +2550,26 @@ $('#fSave').addEventListener('click', async () => {
   if (!rooms.length) return warn('대화방을 하나 이상 넣어주세요.');
   if (rooms.some(r => r.pass.length < 4)) return warn('방 암호는 4자 이상으로 넣어주세요.');
   if (new Set(rooms.map(r => r.pass)).size !== rooms.length) return warn('방마다 암호를 다르게 해주세요.');
+  const lk = $('#fLock').value.trim();
+  if (lk && !/^\d{4}$/.test(lk)) return warn('잠금 비밀번호는 숫자 4자리로 넣어주세요.');
   rooms.forEach(r => { if (!r.name) r.name = r.group ? '단톡방' : '상대'; });
   const old = cfg;
   const op = (old && old.prof) || {s: '', p: ''}, ps = $('#fPfS').value.trim().slice(0, 40);
   const pfChanged = ps !== (op.s || '') || (pfDraft.p || '') !== (op.p || '') || !old || old.me !== me;
   const prof = {s: ps, p: pfDraft.p || '', ts: pfChanged ? Date.now() : (op.ts || Date.now())};
-  cfg = {me, skin: $('#fSkin').value, autoHide: $('#fAuto').checked, readRcpt: $('#fRead').checked, notify: !!(old && old.notify), rooms, prof};
+  cfg = {me, skin: $('#fSkin').value, autoHide: $('#fAuto').checked, readRcpt: $('#fRead').checked, notify: !!(old && old.notify), rooms, prof,
+    fs: $('#fFs').value, mute: ((old && old.mute) || []).filter(id => rooms.some(r => r.id === id)),
+    lock: $('#fLockOff').checked ? '' : ((old && old.lock) || ''), lockSalt: (old && old.lockSalt) || ''};
+  if (lk) {
+    cfg.lockSalt = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, '0')).join('');
+    cfg.lock = await pinHash(lk);
+    unlocked = true;
+  }
   save('cfg', cfg);
   $('#fSave').disabled = true;
   try { await connectAll(); } finally { $('#fSave').disabled = false; }
+  if (lk) toast('잠금 비밀번호를 정했어요');   // 설정 창이 열려 있을 때 띄워야 위장 화면에서도 보임
+  else if (old && old.lock && !cfg.lock) toast('잠금을 껐어요');
   $('#setup').classList.add('hidden');
   if (pfChanged && (prof.s || prof.p || (op.s || op.p))) announceProf(true).then(render);
   if (cfg.notify) refreshPush(!old || old.me !== me || JSON.stringify(old.rooms) !== JSON.stringify(rooms)).catch(() => {});
@@ -2241,6 +2578,8 @@ $('#fSave').addEventListener('click', async () => {
 // ---------- 키·창 이벤트 ----------
 const closePops = () => { $('#emoPanel').classList.add('hidden'); $('#menu').classList.add('hidden'); $('#gal').classList.add('hidden'); $('#pcard').classList.add('hidden'); };
 document.addEventListener('keydown', e => {
+  if (!$('#lock').classList.contains('hidden')) { if (e.key === 'Escape') { e.preventDefault(); $('#lock').classList.add('hidden'); askLock.then = null; } return; }
+  if (!$('#viewer').classList.contains('hidden') && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); stepView(e.key === 'ArrowLeft' ? -1 : 1); return; }
   if (e.key === 'Escape' && cfg && $('#setup').classList.contains('hidden')) {
     e.preventDefault();
     closePops();
@@ -2253,15 +2592,36 @@ let pickRid = '', pickAt = 0;
 ['#picFile', '#anyFile'].forEach(s => $(s).addEventListener('change', e => { const fs = Array.from(e.target.files || []); e.target.value = ''; sendFiles(fs, pickRid); }));
 $('#rec .rx').addEventListener('click', () => stopRec(false));
 $('#rec .rs').addEventListener('click', () => stopRec(true));
-$('#viewer').addEventListener('click', () => $('#viewer').classList.add('hidden'));
+$('#viewer').addEventListener('click', e => { if (!e.target.closest('.vv, .vt')) $('#viewer').classList.add('hidden'); });
+$('#viewer .vprev').addEventListener('click', () => stepView(-1));
+$('#viewer .vnext').addEventListener('click', () => stepView(1));
+$('#viewer .vsave').addEventListener('click', saveView);
+let vSw = null;   // 폰: 옆으로 밀어 넘기기
+$('#viewer').addEventListener('touchstart', e => { const tc = e.touches[0]; vSw = tc && e.touches.length === 1 ? {x: tc.clientX, y: tc.clientY} : null; }, {passive: true});
+$('#viewer').addEventListener('touchend', e => {
+  const tc = e.changedTouches[0], s = vSw;
+  vSw = null;
+  if (!s || !tc) return;
+  const dx = tc.clientX - s.x, dy = tc.clientY - s.y;
+  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) { e.preventDefault(); stepView(dx < 0 ? 1 : -1); }
+});
+$('#newBtn').addEventListener('click', () => { const l = $('#list'); if (l) l.scrollTop = l.scrollHeight; newPend = ''; paintNewBtn(); });
+// 잠금 창
+$('#lock input').addEventListener('input', tryPin);
+$('#lock .lx').addEventListener('click', () => { $('#lock').classList.add('hidden'); askLock.then = null; });
+$('#lock .lforgot').addEventListener('click', () => {
+  if (!confirm('이 기기의 설정(이름·방 암호·잠금)을 지우고 처음부터 다시 설정할까요?\n방 암호를 다시 넣으면 대화는 서버에서 다시 받아와요.')) return;
+  try { localStorage.removeItem(K('cfg')); } catch (_) {}
+  location.reload();
+});
 document.addEventListener('click', e => {
   const t = e.target;
   if (!t.closest) return;
-  if (!t.closest('#emoPanel, #menu, #gal .gbox, #pcard .pbox')) closePops();   // 창 안쪽을 누르면 닫지 않음
+  if (!t.closest('#emoPanel, #menu, #gal .gbox, #pcard .pbox, #viewer')) closePops();   // 창 안쪽을 누르면 닫지 않음
   const pa = t.closest('[data-prof]');
   if (pa && cur()) { openProf(pa.dataset.prof); return; }
   const im = t.closest('img.pic[src]');
-  if (im) { $('#viewer img').src = im.src; $('#viewer').classList.remove('hidden'); return; }
+  if (im) { openViewer(im.dataset.pic); return; }
   const rc = t.closest('[data-react]');
   if (rc && cur()) {   // 공감 칩: 누르면 같은 공감 넣기/빼기
     const my = (R[view].ext.react[rc.dataset.react] || {})[cfg.me];
@@ -2270,15 +2630,26 @@ document.addEventListener('click', e => {
   }
   const q = t.closest('[data-jump]');
   if (q) { jumpTo(q.dataset.jump); return; }
+  if (t.closest('.vspd') && cur()) {   // 음성 재생 속도 1 → 1.5 → 2배
+    voiceRate = voiceRate === 1 ? 1.5 : voiceRate === 1.5 ? 2 : 1;
+    save('vrate', voiceRate);
+    if (player) player.playbackRate = voiceRate;
+    document.querySelectorAll('.vspd').forEach(el => { el.textContent = voiceRate + 'x'; });
+    return;
+  }
   const vc = t.closest('[data-voice]');
   if (vc && cur()) { playVoice(vc.dataset.voice); return; }
+  const po = t.closest('.poll [data-opt]');
+  if (po && cur()) { vote(po.closest('.poll').dataset.poll, +po.dataset.opt); return; }
+  const pc = t.closest('.poll .pclose');
+  if (pc && cur()) { const rid = view, pid = pc.closest('.poll').dataset.poll; if (confirm('투표를 마감할까요? 마감하면 더 고를 수 없어요.') && R[rid]) sendSys(rid, {sys: 'vclose', id: pid}); return; }
   const fc = t.closest('[data-file]');
   if (fc && cur()) saveFile(view, fc.dataset.file);
 });
 // 메시지 메뉴: PC는 오른쪽 클릭, 폰은 길게 누르기
 document.addEventListener('contextmenu', e => {
   const el = e.target.closest && e.target.closest('#list [data-mid]');
-  if (!el || !cur() || (e.target.closest('a'))) return;
+  if (!el || !cur() || (e.target.closest('a:not(.lcard)'))) return;
   e.preventDefault();
   openMenu(el.dataset.mid, e.clientX, e.clientY);
 });
@@ -2345,13 +2716,20 @@ document.addEventListener('drop', e => {
 });
 window.addEventListener('blur', () => {
   if (cfg && cfg.autoHide && cur()) {
-    if (startRec.asking) startRec.blurred = true;     // 마이크 권한 창: 답한 뒤에 다시 본다
+    if (permAsking) permBlurred = true;               // 마이크·위치 권한 창: 답한 뒤에 다시 본다
     else if (Date.now() - pickAt > 1500) decoy();     // 사진·파일 고르는 창이 막 열린 것은 빼고
   } if (cfg && !isTouch()) heartbeat(true); });
 window.addEventListener('focus', () => { if (cfg) heartbeat(); if (cur()) markRead(view); });
 window.addEventListener('pagehide', () => { stopRec(false); stopVoice(); if (cfg) { flushAllReads(); heartbeat(true); } });
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { stopRec(false); stopVoice(); }   // 앱을 내리면 녹음·재생은 그만
+  if (document.hidden) {   // 앱을 내리면 녹음·재생은 그만
+    stopRec(false); stopVoice(); hiddenAt = Date.now();
+    if (lockOn() && cur() && !mobileSide) { resumeRoom = view; decoy(); }   // 잠금: 앱 전환 화면에 대화가 남지 않게 덮어 둔다
+  } else if (lockOn() && hiddenAt && Date.now() - hiddenAt > LOCK_AFTER) {   // 1분 넘게 내려 뒀으면 다시 잠금
+    unlocked = false; resumeRoom = '';
+    $('#setup').classList.add('hidden');
+    if (cur()) decoy();
+  } else if (resumeRoom && !document.hidden) { const r = resumeRoom; resumeRoom = ''; if (!isRoom(view) && room(r)) setView(r); }   // 금방 돌아왔으면 보던 방으로
   if (cfg && document.hidden) flushAllReads();   // 앱을 내리는 순간 남은 읽음 신호를 바로 보냄
   if (cfg) heartbeat(document.hidden);
   if (cfg && !document.hidden && cur() && !mobileSide) { R[view].unread = 0; paintSide(); paintTitle(); markRead(view); }
