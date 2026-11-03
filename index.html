@@ -104,43 +104,6 @@ tr.older td{color:#777;cursor:pointer}
 .ch-empty{color:#888;text-align:center;padding:40px 16px;line-height:1.7;font-size:12.5px}
 .ch-st{font-size:11px;color:#999;margin-left:6px}
 
-/* ---------- 협업툴형 ---------- */
-.c{display:flex;height:100%}
-.c-side{width:240px;flex:none;background:#2b2f3a;color:#c9ccd4;display:flex;flex-direction:column}
-.c-ws{height:50px;display:flex;align-items:center;gap:6px;padding:0 10px 0 16px;border-bottom:1px solid #3a3f4c;color:#fff}
-.c-ws b{flex:1;font-size:15px}
-.c-ws .ic{opacity:.6}
-.c-ws .ic:hover{background:#3a3f4c}
-.c-nav{overflow:auto;flex:1;padding:10px 0}
-.c-sec{padding:12px 16px 4px;font-size:12px;color:#8d929e}
-.c-ch{display:flex;align-items:center;gap:8px;padding:5px 16px;cursor:pointer}
-.c-ch:hover{background:#353a46}
-.c-ch.on{background:#4a6fd8;color:#fff}
-.c-ch .h{width:16px;text-align:center;opacity:.7}
-.c-ch span:nth-child(2){flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.c-ch.unread span:nth-child(2){color:#fff;font-weight:700}
-.c-main{flex:1;display:flex;flex-direction:column;min-width:0;background:#fff}
-.c-head{height:50px;display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:1px solid #e3e5e8}
-.c-head b{font-size:15px}
-.c-head small{color:#888}
-.c-list{flex:1;overflow:auto;padding:8px 0 12px}
-.c-day{display:flex;align-items:center;gap:10px;margin:14px 18px 4px;color:#666;font-size:12px;font-weight:600}
-.c-day::before,.c-day::after{content:"";flex:1;height:1px;background:#e3e5e8}
-.c-msg{display:flex;gap:10px;padding:5px 18px}
-.c-msg:hover{background:#f7f8f9}
-.c-msg .av{width:34px;height:34px;border-radius:6px;font-size:13px}
-.c-msg .bd{min-width:0;flex:1}
-.c-msg .hd b{margin-right:6px}
-.c-msg .hd time{font-size:11px;color:#999}
-.c-msg .txt{line-height:1.55;margin-top:1px}
-.c-msg.cont{padding-top:1px}
-.c-msg.cont .av{visibility:hidden;height:0}
-.c-comp{padding:0 18px 16px}
-.c-box{display:flex;align-items:flex-end;gap:6px;border:1px solid #c9ccd2;border-radius:8px;padding:8px 8px 8px 12px}
-.c-box:focus-within{border-color:#4a6fd8}
-.c-box textarea{flex:1;border:0;outline:none;resize:none;height:44px;line-height:1.5}
-.c-box button{width:34px;height:30px;border-radius:6px;background:#4a6fd8;color:#fff;font-size:13px}
-
 /* ---------- 시트형 ---------- */
 .s{display:flex;flex-direction:column;height:100%;background:#f3f3f3;font-size:12px}
 .s-tabs{display:flex;align-items:center;gap:2px;padding:0 8px;height:32px;background:#1f6e43;color:#fff}
@@ -230,7 +193,6 @@ tr.older td{color:#777;cursor:pointer}
 .ch-unread{display:flex;align-items:center;margin:14px 0;font-size:11.5px;color:#bd1d63}
 .ch-unread::before,.ch-unread::after{content:"";flex:1;height:1px;background:#e3a4bf}
 .ch-unread span{padding:0 8px}
-.c-unread{color:#d6455d}
 .flash{animation:fl 1.5s}
 @keyframes fl{0%,60%{background:rgba(255,214,0,.45)}100%{background:transparent}}
 mark{background:#ffe066;color:inherit;padding:0}
@@ -263,15 +225,12 @@ mark.cur{background:#ff9f1c}
 #menu button:hover{background:#f3f3f6}
 #menu .dg{color:#d33}
 @media (hover:none){#list [data-mid]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}}
-.c-msg .cb .txt{line-height:1.55}
-.c-box .pb{margin-right:2px}
 #toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#333;color:#fff;padding:8px 14px;border-radius:6px;font-size:12px;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none}
 #toast.show{opacity:.95}
 img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;min-height:40px;cursor:zoom-in;background:#ddd}
 .pic-gone{color:#888;font-size:12px}
 .ch-bub.im{padding:3px;background:#fff}
 .s-grid img.pic{max-height:90px;max-width:160px;min-height:0}
-.c-box .pb{width:30px;height:30px;border-radius:6px;background:#eceef1;color:#555;font-size:16px}
 .s-tabs .picBtn{cursor:pointer}
 .picBtn{cursor:pointer}
 #viewer{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.85);display:grid;place-items:center;z-index:30;cursor:zoom-out;padding:12px}
@@ -358,11 +317,11 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
 #lock .lbtn{display:flex;justify-content:space-between;margin-top:6px}
 #lock .lbtn button{font-size:12px;color:#777;padding:6px}
 #lock.bad .lbox{animation:shk .4s}
-body[data-fs="s"] .ch-bub,body[data-fs="s"] .c-msg .cb{font-size:12px}
+body[data-fs="s"] .ch-bub{font-size:12px}
 body[data-fs="s"] .s-grid td.e{font-size:11px}
-body[data-fs="l"] .ch-bub,body[data-fs="l"] .c-msg .cb{font-size:15px}
+body[data-fs="l"] .ch-bub{font-size:15px}
 body[data-fs="l"] .s-grid td.e{font-size:13.5px}
-body[data-fs="xl"] .ch-bub,body[data-fs="xl"] .c-msg .cb{font-size:17px}
+body[data-fs="xl"] .ch-bub{font-size:17px}
 body[data-fs="xl"] .s-grid td.e{font-size:15px}
 /* 음성·전달·책갈피·밀어서 답장 */
 .vcard{display:flex;align-items:center;gap:8px;width:240px;max-width:100%;cursor:pointer;user-select:none;-webkit-user-select:none}
@@ -375,7 +334,6 @@ body[data-fs="xl"] .s-grid td.e{font-size:15px}
 .s-grid .vcard .vp{width:20px;height:20px;font-size:8px}
 .micBtn{cursor:pointer}
 .micBtn.on{color:#d33!important}
-.c-box .micBtn.on{background:#fde3e3}
 .s-tabs .micBtn.on{font-weight:700}
 #rec{position:fixed;left:50%;bottom:140px;transform:translateX(-50%);z-index:21;display:flex;align-items:center;gap:10px;background:#222;color:#fff;padding:8px 10px 8px 14px;border-radius:24px;box-shadow:0 6px 24px rgba(0,0,0,.3);font-size:12.5px;white-space:nowrap}
 #rec .rdot{width:9px;height:9px;border-radius:50%;background:#ff4d4d;animation:rb 1s infinite}
@@ -387,7 +345,6 @@ body[data-fs="xl"] .s-grid td.e{font-size:15px}
 #menu .mh{padding:6px 10px 8px;font-size:12px;color:#777;border-bottom:1px solid #eee;margin-bottom:4px}
 #menu small{color:#999}
 .ch-m.bm .mt::before,.row.bm .mt::before{content:"🔖";font-size:10px;line-height:1.2}
-.c-msg.bm .cb::before{content:"🔖";float:right;font-size:11px;margin-left:6px}
 .s-grid tr.bm td.d::after{content:" 🔖";font-size:10px}
 @media (hover:none){#list [data-mid]{touch-action:pan-y}}
 
@@ -401,15 +358,10 @@ body[data-fs="xl"] .s-grid td.e{font-size:15px}
   .ch .back{display:none}
 }
 @media (max-width:700px){
-  .c-side{width:100%}
-  .c:not(.side) .c-side{display:none}
-  .c.side .c-main{display:none}
   .back{display:inline-grid}
-  .c-head{padding:0 8px}
-  .ch-comp textarea,.c-box textarea,.s-fx input{font-size:16px}
+  .ch-comp textarea,.s-fx input{font-size:16px}
   .ch-bub{max-width:70vw}
   .ch-bar{padding-bottom:max(10px,env(safe-area-inset-bottom))}
-  .c-comp{padding:0 10px max(10px,env(safe-area-inset-bottom))}
   .s-tool{display:none}
 }
 </style>
@@ -432,7 +384,6 @@ body[data-fs="xl"] .s-grid td.e{font-size:15px}
     <label for="fSkin">화면 스타일</label>
     <select id="fSkin">
       <option value="msg">사내 메신저형</option>
-      <option value="collab">업무 협업툴형</option>
       <option value="sheet">엑셀 시트형</option>
     </select>
     <label class="chk"><input id="fAuto" type="checkbox"> 창을 벗어나면 자동으로 업무 화면으로 전환</label>
@@ -481,7 +432,7 @@ const RELAY = 'https://ntfy.sh';   // 폰 알림(웹 푸시) 신호용
 const DB = 'https://worklog-chat-c0a54-default-rtdb.asia-southeast1.firebasedatabase.app';   // 대화·첨부 저장(Firebase 실시간 DB)
 const VAPID = 'BEMjM0sNxh41x0a6Lz3YaqkJ7AUhZefxsOQgw-at69i0fM1CybVBcj7-QQXf4N_tPCgFnOXdRbQ5jrSrr9Yg9Lc';   // ntfy.sh 웹 푸시 공개키
 const MAX_BYTES = 2800;   // 암호화 후 ntfy 본문 한도(4096바이트) 안에 들도록
-const VER = '2026.11.03h';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
+const VER = '2026.11.03i';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
 
 // ?p=xx 로 같은 브라우저에서 프로필을 나눠 쓸 수 있다(테스트용)
 const P = new URLSearchParams(location.search).get('p') || '';
@@ -495,6 +446,7 @@ if (cfg && !cfg.rooms) {   // 방 하나짜리 옛 설정 이어받기
   cfg = {me: cfg.me, skin: cfg.skin || 'msg', autoHide: !!cfg.autoHide, rooms: [{id: 'r_main', name: cfg.peer || '상대', pass: cfg.pass, group: false}]};
   save('cfg', cfg);
 }
+if (cfg && cfg.skin !== 'msg' && cfg.skin !== 'sheet') { cfg.skin = 'msg'; save('cfg', cfg); }   // 없앤 협업툴형을 쓰던 기기는 메신저형으로
 const R = {};   // 방 id → {pass, key, raw, topic, sk, msgs, seen, rk(어디까지 읽었나), nn(알림 받는 이름들)}
 let streams = [], status = '', quota = null;
 let view = null, lastRoom = null, lastDecoy = null, mobileSide = false;
@@ -2066,22 +2018,6 @@ async function disablePush() {
   paintNtf();
 }
 
-// ---------- 위장용 고정 내용 ----------
-const FAKE = [
-  {k: 'team', name: '품질관리팀', lines: [
-    ['박과장', '09:12', '이번 주 클레임 집계표 금요일까지 취합 부탁드립니다.'],
-    ['나', '09:15', '네 확인했습니다.'],
-    ['이주임', '10:02', '표시사항 검토 요청 건 회신 드렸습니다. 확인 부탁드려요.'],
-    ['박과장', '10:05', '감사합니다. 수정본은 공유폴더에 올려주세요.']]},
-  {k: 'notice', name: '공지사항', lines: [
-    ['총무팀', '08:30', '[안내] 11월 정기 소방훈련 일정 공유드립니다. 세부 일정은 게시판을 참고해 주세요.'],
-    ['인사팀', '어제', '[안내] 연말정산 사전 준비 서류 제출 기한은 11/14(금)입니다.']]},
-  {k: 'lab', name: '연구소 전체', lines: [
-    ['정책임', '어제', '분기 보고 자료 양식 변경되었습니다. 첨부 양식으로 작성 부탁드립니다.'],
-    ['최선임', '어제', '회의실 B 오후 2시 예약해 두었습니다.']]}
-];
-const fakeOf = k => FAKE.find(f => f.k === k);
-
 function setView(v) {
   if (isRoom(v) && lockDue()) { askLock(() => setView(v)); return; }
   if (isRoom(v)) awayAt = 0; else markAway();
@@ -2195,7 +2131,7 @@ function render() {
       if (fs.length) { e.preventDefault(); sendFiles(fs); }
     });
     // 답장 띠·검색 띠는 입력창/목록 앞에 공통으로 붙인다
-    const host = inp.closest('.ch-comp, .c-comp, .s-fx');
+    const host = inp.closest('.ch-comp, .s-fx');
     if (host && cur()) {
       host.insertAdjacentHTML('beforebegin', '<div class="replyBar hidden" id="replyBar"><span></span><button type="button">✕</button></div>');
       $('#replyBar button').addEventListener('click', () => setReply(null));
@@ -2294,10 +2230,8 @@ function renderList() {
 }
 function paintSide() { if (cfg && SKINS[cfg.skin].side) SKINS[cfg.skin].side(); }
 function paintTitle() {
-  const base = {msg: 'CH Messenger', collab: '업무공간', sheet: '업무관리대장.xlsx'}[cfg.skin];
-  const n = totalUnread();
-  document.title = (n && cfg.skin === 'collab') ? `(${n}) ${base}` : base;
-  document.querySelector('meta[name=theme-color]').content = {msg: '#bd1d63', collab: '#2b2f3a', sheet: '#1f6e43'}[cfg.skin];
+  document.title = {msg: 'CH Messenger', sheet: '업무관리대장.xlsx'}[cfg.skin];
+  document.querySelector('meta[name=theme-color]').content = {msg: '#bd1d63', sheet: '#1f6e43'}[cfg.skin];
 }
 function paintStatus() {
   if (quota != null) $('#qtm').textContent = quota;
@@ -2518,53 +2452,6 @@ const SKINS = {
         else out += `<div class="ch-o">${m.m ? avOf(m.n, profFor(rm, m.m.n), rm.group ? m.m.n : '') : avOf(m.n)}<div class="oc"><div class="nm">${esc(m.n)}</div>
           ${run.map(r => `<div class="row"${mid(r)}>${cell(r)}${meta(r)}</div>`).join('')}</div></div>`;
         i = j;
-      }
-      return out;
-    }
-  },
-
-  collab: {
-    layout() {
-      const rm = cur();
-      const title = rm ? (rm.group ? '# ' + rm.name : rm.name) : '# ' + fakeOf(view).name;
-      return `<div class="c${mobileSide ? ' side' : ''}">
-        <aside class="c-side">
-          <div class="c-ws"><b>업무공간</b><span class="dot"></span><button class="ic gear" title="설정">⚙</button></div>
-          <nav class="c-nav" id="nav"></nav>
-        </aside>
-        <section class="c-main">
-          <header class="c-head"><button class="ic back">‹</button><b>${esc(title)}</b><small>${rm ? '<span id="qt"></span>' : ''}</small><i style="flex:1"></i><span class="dot" data-peer="1" style="${rm ? '' : 'display:none'}"></span><button class="ic srchBtn" title="대화 검색">🔍</button><button class="ic roomBtn" title="더보기">⋯</button></header>
-          <div class="c-list" id="list"></div>
-          <div class="c-comp"><div class="c-box"><button class="fileBtn pb" title="파일·사진">＋</button><button class="emoBtn pb" title="이모지">☺</button><button class="micBtn pb" title="음성 메시지">🎤</button><textarea id="inp" placeholder="${esc(title)}에 메시지 보내기"></textarea><button id="sendBtn">➤</button></div></div>
-        </section></div>`;
-    },
-    side() {
-      const nav = $('#nav'); if (!nav) return;
-      const real = (rm, h) => {
-        const u = unreadOf(rm.id);
-        return `<div class="c-ch${view === rm.id ? ' on' : ''}${u ? ' unread' : ''}" data-r="${rm.id}"><span class="h">${h}</span><span>${esc(rm.name)}${muted(rm.id) ? ' 🔕' : ''}</span>${u ? `<i class="badge">${badgeN(u)}</i>` : ''}</div>`;
-      };
-      const fake = v => `<div class="c-ch${view === v ? ' on' : ''}" data-r="${v}"><span class="h">#</span><span>${esc(fakeOf(v).name)}</span></div>`;
-      const rs = cfg.rooms.filter(rm => R[rm.id]);
-      nav.innerHTML = `<div class="c-sec">채널</div>${fake('notice')}${fake('team')}${rs.filter(r => r.group).map(r => real(r, '#')).join('')}${fake('lab')}
-        <div class="c-sec">다이렉트 메시지</div>${rs.filter(r => !r.group).map(r => real(r, '●')).join('')}`;
-      nav.querySelectorAll('[data-r]').forEach(el => el.addEventListener('click', () => setView(el.dataset.r)));
-    },
-    list() {
-      const item = (n, t, x, cont, id, pf, pk) => `<div class="c-msg${cont ? ' cont' : ''}"${id ? ` data-mid="${esc(id)}"` : ''}><div class="av${pf && pf.p ? ' ph' : ''}"${pk != null ? ` data-prof="${esc(pk)}"` : ''} style="background:${colorOf(n)}${pf && pf.p ? `;background-image:url('${avUrl(pf.p)}')` : ''}">${esc(initial(n))}</div>
-        <div class="bd">${cont ? '' : `<div class="hd"><b>${esc(n)}</b><time>${t}</time></div>`}<div class="cb">${x}</div></div></div>`;
-      const rm = cur();
-      if (!rm) return fakeOf(view).lines.map(l => item(l[0] === '나' ? cfg.me : l[0], l[1], `<span class="txt">${esc(l[2])}</span>`)).join('');
-      if (!R[rm.id].msgs.length) return `<div class="empty">아직 대화가 없어요.<br>상대도 같은 방 암호로 접속하면 연결됩니다.</div>`;
-      const from = visFrom(rm.id), ms = R[rm.id].msgs.slice(from);
-      let out = from ? OLDER : '', day = '', prev = null, divDone = false;
-      for (const m of ms) {
-        if (ymd(m.ts) !== day) { day = ymd(m.ts); out += `<div class="c-day">${dayLabel(m.ts)}</div>`; prev = null; }
-        const cont = prev && prev.n === m.n && m.ts - prev.ts < 5 * 60e3;
-        if (!divDone && R[rm.id].divId && m.id === R[rm.id].divId) { divDone = true; out += '<div class="c-day c-unread">여기까지 읽었습니다</div>'; }
-        const b = bodyOf(rm, m), c = unreadCount(rm, m);
-        out += item(who(rm, m), hm(m.ts) + (c ? ` <b class="rc">${c}</b>` : ''), `<div class="${b.kind === 'big' ? 'bigwrap' : ''}${m.pend ? ' sending' : ''}">${b.html}</div>${reactHTML(rm, m)}`, cont, m.pend ? '' : m.id, profFor(rm, m.n), mine(m) ? m.n : (rm.group ? m.n : ''));
-        prev = m;
       }
       return out;
     }
