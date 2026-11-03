@@ -312,6 +312,32 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
 #gal .gf{display:flex;align-items:baseline;gap:6px;padding:9px 6px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:13px}
 #gal .gf b{flex:1;font-weight:600;word-break:break-all}
 #gal .gf small{color:#888;font-size:11px;white-space:nowrap}
+/* 음성·전달·책갈피·밀어서 답장 */
+.vcard{display:flex;align-items:center;gap:8px;width:220px;max-width:100%;cursor:pointer;user-select:none;-webkit-user-select:none}
+.vcard .vp{font-style:normal;width:28px;height:28px;border-radius:50%;background:#3a3a3a;color:#fff;display:grid;place-items:center;font-size:10px;flex:none}
+.vcard.on .vp{background:#bd1d63}
+.vcard .vbar{flex:1;height:4px;border-radius:2px;background:rgba(0,0,0,.14);overflow:hidden}
+.vcard .vbar i{display:block;height:100%;width:0;background:#3a3a3a}
+.vcard small{font-size:11.5px;color:#555;min-width:30px;font-variant-numeric:tabular-nums}
+.s-grid .vcard{width:150px}
+.s-grid .vcard .vp{width:20px;height:20px;font-size:8px}
+.micBtn{cursor:pointer}
+.micBtn.on{color:#d33!important}
+.c-box .micBtn.on{background:#fde3e3}
+.s-tabs .micBtn.on{font-weight:700}
+#rec{position:fixed;left:50%;bottom:140px;transform:translateX(-50%);z-index:21;display:flex;align-items:center;gap:10px;background:#222;color:#fff;padding:8px 10px 8px 14px;border-radius:24px;box-shadow:0 6px 24px rgba(0,0,0,.3);font-size:12.5px;white-space:nowrap}
+#rec .rdot{width:9px;height:9px;border-radius:50%;background:#ff4d4d;animation:rb 1s infinite}
+#rec b{font-variant-numeric:tabular-nums;font-size:14px}
+#rec span{color:#bbb}
+#rec button{height:28px;padding:0 12px;border-radius:14px;background:#444;color:#fff;font-size:12px}
+#rec .rs{background:#bd1d63;font-weight:600}
+@keyframes rb{50%{opacity:.25}}
+#menu .mh{padding:6px 10px 8px;font-size:12px;color:#777;border-bottom:1px solid #eee;margin-bottom:4px}
+#menu small{color:#999}
+.ch-m.bm .mt::before,.row.bm .mt::before{content:"🔖";font-size:10px;line-height:1.2}
+.c-msg.bm .cb::before{content:"🔖";float:right;font-size:11px;margin-left:6px}
+.s-grid tr.bm td.d::after{content:" 🔖";font-size:10px}
+@media (hover:none){#list [data-mid]{touch-action:pan-y}}
 
 @media (max-width:860px){
   .ch-main{width:100%;border-right:0}
@@ -365,12 +391,13 @@ img.pic{display:block;max-width:min(240px,60vw);max-height:280px;min-width:60px;
     <div class="btns"><button id="fCancel" type="button">취소</button><button id="fSave" class="pri" type="button">저장</button></div>
     <button class="lnk" id="fClear" type="button">이 기기의 대화 기록 지우기</button>
     <p class="tip" style="display:none"><span id="qtm"></span></p>
-    <p class="tip">1:1 방 이름은 내 화면에서만 보이는 상대 표시 이름이에요. 단톡방에서는 각자의 '내 이름'으로 보여요.<br>Esc 키: 업무 화면 ↔ 대화 전환 · Enter 전송, Ctrl+Enter 줄바꿈<br>대화·사진은 암호화된 채로 서버에 보관돼서 새 기기에서도 최근 1000건까지 다시 받아와요.<br>폰에서는 키보드 return이 줄바꿈이고, 전송은 전송 버튼으로 해요.<br>말풍선 두 번 누르기: ❤️ · 길게 누르기(PC는 오른쪽 클릭): 답장·복사·수정·공지·삭제<br>대화방 머리글 ⋯: 콕 찌르기·사진/파일 모아보기·검색·대화 내보내기<br>버전 <span id="verTxt"></span></p>
+    <p class="tip">1:1 방 이름은 내 화면에서만 보이는 상대 표시 이름이에요. 단톡방에서는 각자의 '내 이름'으로 보여요.<br>Esc 키: 업무 화면 ↔ 대화 전환 · Enter 전송, Ctrl+Enter 줄바꿈<br>대화·사진은 암호화된 채로 서버에 보관돼서 새 기기에서도 최근 1000건까지 다시 받아와요.<br>폰에서는 키보드 return이 줄바꿈이고, 전송은 전송 버튼으로 해요.<br>말풍선 두 번 누르기: ❤️ · 길게 누르기(PC는 오른쪽 클릭): 답장·복사·전달·수정·책갈피·공지·삭제<br>폰에서 말풍선을 옆으로 밀면 답장 · 마이크 버튼: 음성 메시지 · 사진·파일은 여러 개 한 번에<br>대화방 머리글 ⋯: 콕 찌르기·사진/파일 모아보기·책갈피·검색·대화 내보내기<br>버전 <span id="verTxt"></span></p>
   </div>
 </div>
 <div id="toast"></div>
-<input type="file" id="picFile" accept="image/*" hidden>
-<input type="file" id="anyFile" hidden>
+<input type="file" id="picFile" accept="image/*" multiple hidden>
+<input type="file" id="anyFile" multiple hidden>
+<div id="rec" class="hidden"><i class="rdot"></i><b>0:00</b><span>녹음 중 · 최대 2분</span><button type="button" class="rx">취소</button><button type="button" class="rs">보내기</button></div>
 <input type="file" id="pfFile" accept="image/*" hidden>
 <div id="emoPanel" class="hidden"></div>
 <div id="menu" class="hidden"></div>
@@ -393,7 +420,7 @@ const RELAY = 'https://ntfy.sh';   // 폰 알림(웹 푸시) 신호용
 const DB = 'https://worklog-chat-c0a54-default-rtdb.asia-southeast1.firebasedatabase.app';   // 대화·첨부 저장(Firebase 실시간 DB)
 const VAPID = 'BEMjM0sNxh41x0a6Lz3YaqkJ7AUhZefxsOQgw-at69i0fM1CybVBcj7-QQXf4N_tPCgFnOXdRbQ5jrSrr9Yg9Lc';   // ntfy.sh 웹 푸시 공개키
 const MAX_BYTES = 2800;   // 암호화 후 ntfy 본문 한도(4096바이트) 안에 들도록
-const VER = '2026.11.03a';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
+const VER = '2026.11.03c';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
 
 // ?p=xx 로 같은 브라우저에서 프로필을 나눠 쓸 수 있다(테스트용)
 const P = new URLSearchParams(location.search).get('p') || '';
@@ -439,6 +466,7 @@ function members(id) {
 }
 
 function toast(t) {
+  if (cfg && !cur() && $('#setup').classList.contains('hidden')) return;   // 위장 화면에 "○○로 전달했어요" 같은 글이 뜨지 않게
   const el = $('#toast'); el.textContent = t; el.classList.add('show');
   clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove('show'), 3000);
 }
@@ -542,11 +570,10 @@ async function onItem(id, k, v) {
   const m = {id: k, n: String(o.n || ''), t: o.t, ts: Number(o.ts) || Number(v.t) || Date.now()};
   if (o.re && typeof o.re.id === 'string') m.re = {id: o.re.id, n: String(o.re.n || ''), t: String(o.re.t || '').slice(0, 80)};
   if (o.nudge) m.nudge = 1;
-  const fu = o.fid ? `${DB}/f/${r.topic}/${encodeURIComponent(o.fid)}.json` : null;
-  if (o.img && fu) Object.assign(m, {t: '사진', img: 1, u: fu, x: 9e15, mime: o.mime});
-  if (o.file && fu) Object.assign(m, {t: '파일: ' + String(o.fname || ''), file: 1, fname: String(o.fname || '파일'), fsize: Number(o.fsize) || 0, u: fu, x: 9e15, mime: o.mime});
+  const at = o.fid && typeof o.fid === 'string' ? attOf(o) : null;
+  if (at) Object.assign(m, at, {u: `${DB}/f/${r.topic}/${encodeURIComponent(o.fid)}.json`, x: 9e15, mime: o.mime});
   add(id, m);
-  if (m.img || m.file) fetchPic(id, m);
+  if (at) fetchPic(id, m);
   if (m.nudge && !mine(m) && view === id && Math.abs(Date.now() - m.ts) < 60000) shake();
 }
 // 접속·입력 중 표시: p/<토픽>/<해시>=접속 시각, <해시>t=입력 중 시각.
@@ -812,7 +839,7 @@ function b64big(u8) {
   for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
   return btoa(s);
 }
-const picUrls = new Map(), picBusy = new Set();
+const picUrls = new Map(), picJobs = new Map();
 const dbs = {};
 function openDb(name) {
   if (!dbs[name]) dbs[name] = new Promise((res, rej) => {
@@ -838,9 +865,13 @@ async function idbPut(name, store, k, v) {
 const PICDB = 'wt' + P + '_pics';
 const picTag = id => `<img class="pic" data-pic="${esc(id)}" alt="사진">`;
 
-async function fetchPic(id, m) {
-  if (picBusy.has(m.id) || !m.u || !R[id]) return;
-  picBusy.add(m.id);
+// 이미 받는 중이면 그 작업이 끝나기를 같이 기다린다(받는 중에 누른 재생·전달이 바로 실패하지 않게)
+function fetchPic(id, m) {
+  if (!m.u || !R[id]) return Promise.resolve();
+  if (!picJobs.has(m.id)) picJobs.set(m.id, getPic(id, m).finally(() => { picJobs.delete(m.id); fillPics(); }));
+  return picJobs.get(m.id);
+}
+async function getPic(id, m) {
   try {
     const res = await fetch(m.u);
     // Firebase 첨부는 base64 문자열(JSON), 옛 ntfy 첨부는 바이너리
@@ -849,10 +880,11 @@ async function fetchPic(id, m) {
     const blob = new Blob([pt], {type: m.mime || 'image/jpeg'});
     await idbPut(PICDB, 'p', m.id, blob);
     picUrls.set(m.id, URL.createObjectURL(blob));
-  } catch (_) {}
-  picBusy.delete(m.id);
-  fillPics();
+  } catch (_) { picFail.set(m.id, Date.now()); }
 }
+// 받기에 실패한 것은 30초 동안 다시 받지 않는다(오프라인일 때 끝없이 되풀이하지 않게)
+const picFail = new Map();
+const canFetch = m => m && m.u && Date.now() < m.x && !(Date.now() - (picFail.get(m.id) || 0) < 30000);
 async function fillPics() {
   const rm = cur();
   for (const el of document.querySelectorAll('img.pic[data-pic]:not([src])')) {
@@ -863,8 +895,20 @@ async function fillPics() {
     }
     if (picUrls.has(pid)) { el.src = picUrls.get(pid); continue; }
     const m = rm && R[rm.id].msgs.find(x => x.id === pid);
-    if (m && m.u && Date.now() < m.x) { el.alt = '사진 받는 중…'; fetchPic(rm.id, m); }
+    if (canFetch(m)) { el.alt = '사진 받는 중…'; fetchPic(rm.id, m); }
+    else if (m && m.u && picFail.has(pid)) el.alt = '사진을 받지 못했어요';
     else el.replaceWith(Object.assign(document.createElement('span'), {className: 'pic-gone', textContent: '사진 (보관 기간이 지났어요)'}));
+  }
+  // 음성도 미리 받아 둔다(아이폰은 누르는 순간 바로 재생해야 소리가 나서)
+  for (const el of document.querySelectorAll('.vcard[data-voice]:not(.ok)')) {
+    const vid = el.dataset.voice;
+    if (!picUrls.has(vid)) {
+      const blob = await idbGet(PICDB, 'p', vid);
+      if (blob) picUrls.set(vid, URL.createObjectURL(blob));
+    }
+    if (picUrls.has(vid)) { el.classList.add('ok'); continue; }
+    const m = rm && R[rm.id].msgs.find(x => x.id === vid);
+    if (canFetch(m)) fetchPic(rm.id, m);
   }
 }
 
@@ -890,34 +934,64 @@ async function shrink(file) {
   throw new Error('too big');
 }
 
-// 사진은 줄여서, 그 밖의 파일은 그대로(2MB까지) 보낸다
-async function sendPic(file) {
-  const rm = cur();
-  if (!rm || !file) return;
-  const r = R[rm.id];
+// 첨부 신호(사진·파일·음성) → 메시지에 붙일 내용
+const attOf = o => o.img ? {t: '사진', img: 1}
+  : o.file ? {t: '파일: ' + String(o.fname || ''), file: 1, fname: String(o.fname || '파일'), fsize: Number(o.fsize) || 0}
+  : o.voice ? {t: '음성 메시지', voice: 1, dur: Math.max(0, Math.min(600, Number(o.dur) || 0))} : null;
+const isAtt = m => !!(m.img || m.file || m.voice);
+// 첨부 하나를 방 키로 암호화해 올리고 메시지로 알린다(전달할 때는 다른 방으로도)
+async function postAtt(rid, blob, meta) {
+  upBusy++;
+  try { await postAttNow(rid, blob, meta); } finally { upBusy--; }
+}
+async function postAttNow(rid, blob, meta) {
+  const r = R[rid];
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({name: 'AES-GCM', iv}, r.key, await blob.arrayBuffer()));
+  const body = new Uint8Array(12 + ct.length); body.set(iv); body.set(ct, 12);
+  const mime = blob.type || 'application/octet-stream';
+  const fr = await fetch(`${DB}/f/${r.topic}.json`, {method: 'POST', body: JSON.stringify(b64big(body))});
+  if (!fr.ok) throw new Error(fr.status);
+  const fid = (await fr.json()).name;
+  const payload = Object.assign({n: cfg.me, t: '', fid, mime, ts: Date.now()}, meta);
+  const mid = await post(rid, payload);
+  await idbPut(PICDB, 'p', mid, blob);
+  if (payload.img || payload.voice) picUrls.set(mid, URL.createObjectURL(blob));
+  const m = Object.assign({id: mid, n: cfg.me, u: `${DB}/f/${r.topic}/${fid}.json`, x: 9e15, mime, ts: payload.ts}, attOf(payload));
+  add(rid, m);
+  ping(rid, m.img ? '' : m.voice ? '🎤 음성 메시지' : m.t);
+}
+// 사진은 줄여서, 그 밖의 파일은 그대로(5MB까지) 보낸다. rid: 고를 때 보던 방(보내는 사이 방을 옮겨도 그 방으로)
+async function sendPic(file, rid, quiet) {
+  rid = rid || (cur() && view);
+  if (!rid || !R[rid] || !file) return false;
   const isImg = /^image\/(jpeg|png|gif|webp|heic|heif|bmp)/.test(file.type);
-  if (!isImg && file.size > PIC_MAX) { toast('파일은 5MB까지 보낼 수 있어요'); return; }
-  toast(isImg ? '사진 보내는 중…' : '파일 보내는 중…');
+  if (!isImg && file.size > PIC_MAX) { toast('파일은 5MB까지 보낼 수 있어요'); return false; }
+  if (!quiet) toast(isImg ? '사진 보내는 중…' : '파일 보내는 중…');
   try {
     const blob = isImg ? await shrink(file) : file;
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const ct = new Uint8Array(await crypto.subtle.encrypt({name: 'AES-GCM', iv}, r.key, await blob.arrayBuffer()));
-    const body = new Uint8Array(12 + ct.length); body.set(iv); body.set(ct, 12);
-    const mime = blob.type || 'application/octet-stream';
-    const fr = await fetch(`${DB}/f/${r.topic}.json`, {method: 'POST', body: JSON.stringify(b64big(body))});
-    if (!fr.ok) throw new Error(fr.status);
-    const fid = (await fr.json()).name;
-    const payload = isImg ? {n: cfg.me, t: '', img: 1, fid, mime, ts: Date.now()}
-                          : {n: cfg.me, t: '', file: 1, fid, fname: file.name.slice(0, 80), fsize: file.size, mime, ts: Date.now()};
-    const mid = await post(rm.id, payload);
-    await idbPut(PICDB, 'p', mid, blob);
-    if (isImg) picUrls.set(mid, URL.createObjectURL(blob));
-    const m = {id: mid, n: cfg.me, u: `${DB}/f/${r.topic}/${fid}.json`, x: 9e15, mime, ts: payload.ts};
-    Object.assign(m, isImg ? {t: '사진', img: 1} : {t: '파일: ' + payload.fname, file: 1, fname: payload.fname, fsize: payload.fsize});
-    add(rm.id, m);
-    ping(rm.id, isImg ? '' : m.t);
-    toast(isImg ? '사진을 보냈어요' : '파일을 보냈어요');
-  } catch (e) { toast(e.message === 'too big' ? '사진이 너무 커요' : '전송 실패 — 네트워크를 확인하세요'); }
+    await postAtt(rid, blob, isImg ? {img: 1} : {file: 1, fname: file.name.slice(0, 80), fsize: file.size});
+    if (!quiet) toast(isImg ? '사진을 보냈어요' : '파일을 보냈어요');
+    return true;
+  } catch (e) { toast(e.message === 'too big' ? '사진이 너무 커요' : '전송 실패 — 네트워크를 확인하세요'); return false; }
+}
+// 여러 개를 한 번에 고르거나 끌어 놓으면 차례로 보낸다(한 번에 20개까지)
+let upBusy = 0;   // 올리는 중인 첨부 수(그동안 새 버전 새로고침을 미룸)
+async function sendFiles(list, rid) {
+  const all = Array.from(list || []), fs = all.slice(0, 20);
+  rid = rid || (cur() && view);
+  if (!rid || !R[rid] || !fs.length) return;
+  if (fs.length === 1) { sendPic(fs[0], rid); return; }
+  let ok = 0;
+  upBusy++;
+  try {
+    for (let i = 0; i < fs.length; i++) {
+      toast(`보내는 중… (${i + 1}/${fs.length})`);
+      if (await sendPic(fs[i], rid, true)) ok++;
+    }
+  } finally { upBusy--; }
+  const cut = all.length > fs.length ? ` (한 번에 20개까지라 ${all.length - fs.length}개는 빠졌어요)` : '';
+  toast((ok === fs.length ? `${ok}개를 보냈어요` : `${fs.length}개 중 ${ok}개를 보냈어요`) + cut);
 }
 // 받은 파일 저장(기기에 보관된 것 → 없으면 서버에서 받아 복호화)
 async function saveFile(rid, mid) {
@@ -928,6 +1002,157 @@ async function saveFile(rid, mid) {
   if (!blob) { toast('파일을 받지 못했어요'); return; }
   const a = Object.assign(document.createElement('a'), {href: URL.createObjectURL(blob), download: m.fname || 'file'});
   document.body.appendChild(a); a.click(); a.remove();
+}
+
+// ---------- 음성 메시지 ----------
+// 마이크 버튼 → 녹음(최대 2분) → 사진처럼 암호화 첨부로 보낸다.
+// 아이폰에서도 틀 수 있게 mp4(AAC)로 녹음하고, 그게 안 되는 브라우저는 webm을 WAV로 바꿔 보낸다.
+const VOICE_MAX = 120;
+const mmss = s => `${Math.floor(s / 60)}:${pad(Math.floor(s % 60))}`;
+let rec = null;
+function recMime() {
+  const ok = t => { try { return MediaRecorder.isTypeSupported(t); } catch (_) { return false; } };
+  return ['audio/mp4;codecs=mp4a.40.2', 'audio/webm;codecs=opus', 'audio/mp4'].find(ok) || '';
+}
+async function startRec() {
+  const rm = cur();
+  if (rec || !rm) return;
+  stopVoice();   // 재생 소리가 녹음에 섞이지 않게
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { toast('이 브라우저는 녹음을 지원하지 않아요'); return; }
+  let stream;
+  startRec.asking = true;   // 권한 창이 떠서 창 포커스가 빠져도 바로 위장 화면으로 넘어가지 않게
+  try { stream = await navigator.mediaDevices.getUserMedia({audio: true}); }
+  catch (e) { toast(e && e.name === 'NotFoundError' ? '연결된 마이크가 없어요' : '마이크를 쓸 수 없어요 — 마이크 권한을 허용해 주세요'); return; }
+  finally {
+    startRec.asking = false;
+    if (startRec.blurred) {   // 권한 창이 떠 있는 사이 다른 창으로 갔으면 그때 위장
+      startRec.blurred = false;
+      setTimeout(() => { if (cfg.autoHide && cur() && !document.hasFocus()) decoy(); }, 300);
+    }
+  }
+  if (rec || view !== rm.id) { stream.getTracks().forEach(t => t.stop()); return; }   // 권한을 묻는 사이 방을 옮겼으면 그만
+  let mr;
+  try { const mt = recMime(); mr = new MediaRecorder(stream, mt ? {mimeType: mt} : undefined); }
+  catch (_) { stream.getTracks().forEach(t => t.stop()); toast('녹음을 시작하지 못했어요'); return; }
+  const r = {mr, stream, chunks: [], t0: Date.now(), rid: rm.id, send: false};
+  mr.ondataavailable = e => { if (e.data && e.data.size) r.chunks.push(e.data); };
+  mr.onstop = () => {   // 마이크가 빠지는 등 저절로 멈춘 경우
+    if (rec === r) { rec = null; clearInterval(r.timer); paintRec(); toast('녹음이 끊겼어요'); }
+    finishRec(r);
+  };
+  mr.start();
+  rec = r;
+  r.timer = setInterval(() => { if ((Date.now() - r.t0) / 1000 >= VOICE_MAX) stopRec(true); else paintRec(); }, 250);
+  paintRec();
+}
+function paintRec() {
+  const box = $('#rec');
+  box.classList.toggle('hidden', !rec);
+  document.querySelectorAll('.micBtn').forEach(b => b.classList.toggle('on', !!rec));
+  if (!rec) return;
+  box.querySelector('b').textContent = mmss((Date.now() - rec.t0) / 1000);
+  const i = $('#inp'), b = i && i.getBoundingClientRect();   // 대화 입력창 바로 위(시트형은 아래) 가운데에
+  if (!b || !b.width) return;
+  box.style.left = Math.max(box.offsetWidth / 2 + 8, Math.min(b.left + b.width / 2, window.innerWidth - box.offsetWidth / 2 - 8)) + 'px';
+  box.style.bottom = (b.top < window.innerHeight / 2 ? window.innerHeight - b.bottom - 12 - box.offsetHeight : Math.max(12, window.innerHeight - b.top + 12)) + 'px';
+}
+// send: true면 보내고, false면 버린다(취소·위장 전환·방 이동)
+function stopRec(send) {
+  const r = rec;
+  if (!r) return;
+  rec = null;
+  clearInterval(r.timer);
+  r.send = send;
+  r.dur = (Date.now() - r.t0) / 1000;
+  paintRec();
+  try { if (r.mr.state !== 'inactive') r.mr.stop(); else finishRec(r); } catch (_) { finishRec(r); }
+}
+async function finishRec(r) {
+  r.stream.getTracks().forEach(t => t.stop());
+  if (!r.send || r.done) return;
+  r.done = true;
+  if (r.dur < 1) { toast('너무 짧아요 — 1초 넘게 녹음해 주세요'); return; }
+  if (!r.chunks.length) { toast('녹음하지 못했어요 — 마이크를 확인해 주세요'); return; }
+  if (!R[r.rid]) return;
+  toast('음성 메시지 보내는 중…');
+  upBusy++;
+  try {
+    let blob = new Blob(r.chunks, {type: (r.mr.mimeType || r.chunks[0].type || 'audio/webm').split(';')[0]});
+    if (!/mp4|aac|mpeg/.test(blob.type)) {   // webm은 아이폰이 못 틀어서 WAV로
+      try { blob = await toWav(blob); } catch (_) { throw new Error('conv'); }
+    }
+    if (blob.size > PIC_MAX) throw new Error('too big');
+    await postAtt(r.rid, blob, {voice: 1, dur: Math.round((await lenOf(blob)) || r.dur)});
+    toast('음성 메시지를 보냈어요');
+  } catch (e) { toast(e.message === 'too big' ? '녹음이 너무 길어요' : e.message === 'conv' ? '녹음을 변환하지 못했어요' : '전송 실패 — 네트워크를 확인하세요'); }
+  finally { upBusy--; }
+}
+// 실제 녹음 길이(누른 시간보다 녹음 시작이 조금 늦어서). 못 읽으면 0
+const lenOf = blob => new Promise(res => {
+  const a = new Audio(), u = URL.createObjectURL(blob);
+  const done = v => { URL.revokeObjectURL(u); res(v); };
+  a.onloadedmetadata = () => done(isFinite(a.duration) ? a.duration : 0);
+  a.onerror = () => done(0);
+  setTimeout(() => done(0), 1500);
+  a.src = u;
+});
+// 녹음본 → 16kHz 모노 WAV(1분에 약 1.9MB)
+async function toWav(blob) {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  const ac = new AC();
+  try {
+    const src = await ac.decodeAudioData(await blob.arrayBuffer());
+    const rate = 16000, oc = new OfflineAudioContext(1, Math.max(1, Math.ceil(src.duration * rate)), rate);
+    const bs = oc.createBufferSource();
+    bs.buffer = src; bs.connect(oc.destination); bs.start();
+    const pcm = (await oc.startRendering()).getChannelData(0);
+    const dv = new DataView(new ArrayBuffer(44 + pcm.length * 2));
+    const str = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+    str(0, 'RIFF'); dv.setUint32(4, 36 + pcm.length * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+    dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true); dv.setUint32(24, rate, true);
+    dv.setUint32(28, rate * 2, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true);
+    str(36, 'data'); dv.setUint32(40, pcm.length * 2, true);
+    for (let i = 0; i < pcm.length; i++) dv.setInt16(44 + i * 2, Math.max(-1, Math.min(1, pcm[i])) * 0x7fff, true);
+    return new Blob([dv], {type: 'audio/wav'});
+  } finally { if (ac.close) ac.close(); }
+}
+// 재생: 한 번에 하나만. 다시 누르면 일시정지
+let player = null, playId = '';
+const voiceTag = m => `<span class="vcard" data-voice="${esc(m.id)}" data-dur="${m.dur || 0}"><i class="vp">▶</i><span class="vbar"><i></i></span><small>${mmss(m.dur || 0)}</small></span>`;
+async function playVoice(mid) {
+  const rid = view, m = R[rid] && R[rid].msgs.find(z => z.id === mid);
+  if (!m) return;
+  if (player && playId === mid) { if (player.paused) player.play().catch(() => {}); else player.pause(); return; }
+  stopVoice();
+  if (!picUrls.has(mid)) {
+    const blob = await idbGet(PICDB, 'p', mid);
+    if (blob) picUrls.set(mid, URL.createObjectURL(blob));
+    else if (m.u) { toast('음성 받는 중…'); picFail.delete(mid); await fetchPic(rid, m); }
+  }
+  if (!picUrls.has(mid)) { toast('음성을 받지 못했어요'); return; }
+  if (view !== rid) return;
+  const a = new Audio(picUrls.get(mid));
+  player = a; playId = mid;
+  a.ontimeupdate = a.onplay = a.onpause = paintVoice;
+  a.onended = stopVoice;
+  a.onerror = () => { if (player === a) { stopVoice(); toast('이 기기에서 재생할 수 없는 형식이에요'); } };
+  a.play().catch(e => { if (player === a && e && e.name === 'NotAllowedError') { stopVoice(); toast('음성을 받았어요 — 한 번 더 눌러 주세요'); } });
+  paintVoice();
+}
+function stopVoice() {
+  if (player) { player.pause(); player = null; }
+  playId = '';
+  paintVoice();
+}
+function paintVoice() {
+  document.querySelectorAll('.vcard[data-voice]').forEach(el => {
+    const on = !!player && el.dataset.voice === playId, dur = +el.dataset.dur || 0;
+    const d = on && isFinite(player.duration) && player.duration > 0 ? player.duration : dur;
+    el.classList.toggle('on', on && !player.paused);
+    el.querySelector('.vp').textContent = on && !player.paused ? '❚❚' : '▶';
+    el.querySelector('.vbar i').style.width = on && d ? Math.min(100, player.currentTime / d * 100) + '%' : '0';
+    el.querySelector('small').textContent = mmss(on && player.currentTime ? player.currentTime : dur);
+  });
 }
 
 async function refreshQuota() {
@@ -964,6 +1189,7 @@ function bodyOf(rm, m) {
   if (m.re) q = `<div class="quote" data-jump="${esc(m.re.id)}"><b>${esc(m.re.n === cfg.me ? cfg.me : nameOnly(rm.group ? m.re.n : rm.name))}</b><span>${esc(m.re.t)}</span></div>`;
   if (m.img) return {kind: 'img', html: q + picTag(m.id)};
   if (m.file) return {kind: 'file', html: q + `<span class="fcard" data-file="${esc(m.id)}"><i>📄</i><span><b>${esc(m.fname)}</b><small>${kb(m.fsize)} · 눌러서 저장</small></span></span>`};
+  if (m.voice) return {kind: 'voice', html: q + voiceTag(m)};
   if (m.nudge) return {kind: 'txt', html: `<span class="nudge">👉 콕! 찔렀어요</span>`};
   const t = textOf(rm.id, m), ed = isEdited(rm.id, m) ? '<small class="edt">(수정됨)</small>' : '';
   if (!q && !ed && isBig(t)) return {kind: 'big', html: `<span class="bigemo">${esc(t)}</span>`};
@@ -1098,9 +1324,10 @@ function openMenu(mid, x, y) {
   if (!m || isDel(rm.id, m)) return;
   const myE = (R[rm.id].ext.react[mid] || {})[cfg.me];
   const mn = $('#menu');
+  const plain = !isAtt(m) && !m.nudge;
   mn.innerHTML = `<div class="mq">${QUICK.map(e => `<span data-e="${e}" class="${e === myE ? 'on' : ''}">${e}</span>`).join('')}</div>
-    <button data-a="reply">답장</button>${m.img || m.file || m.nudge ? '' : '<button data-a="copy">복사</button>'}
-    ${mine(m) && !m.img && !m.file && !m.nudge ? '<button data-a="edit">수정</button>' : ''}
+    <button data-a="reply">답장</button>${plain ? '<button data-a="copy">복사</button>' : ''}${m.nudge ? '' : '<button data-a="fwd">전달</button>'}
+    ${mine(m) && plain ? '<button data-a="edit">수정</button>' : ''}<button data-a="bm">${bmOf(rm.id).has(mid) ? '책갈피 빼기' : '책갈피'}</button>
     <button data-a="pin">공지로 등록</button>${mine(m) ? '<button data-a="del" class="dg">삭제</button>' : ''}`;
   mn.classList.remove('hidden');
   const w = mn.offsetWidth, h = mn.offsetHeight;
@@ -1118,7 +1345,60 @@ function openMenu(mid, x, y) {
     else if (a === 'copy') { (navigator.clipboard ? navigator.clipboard.writeText(textOf(rm.id, m)) : Promise.reject()).then(() => toast('복사했어요'), () => toast('복사하지 못했어요')); }
     else if (a === 'pin') sendSys(rm.id, {sys: 'pin', id: mid, t: prevOf(rm.id, m)});
     else if (a === 'del' && confirm('이 메시지를 삭제할까요? 상대 화면에서도 지워져요.')) sendSys(rm.id, {sys: 'del', id: mid});
+    else if (a === 'fwd') setTimeout(() => openForward(rm.id, m, x, y), 0);   // 이 클릭이 끝난 뒤에 열어야 바로 닫히지 않음
+    else if (a === 'bm') toggleBm(rm.id, mid);
   }));
+}
+// 전달: 보낼 방 고르기
+function openForward(fromId, m, x, y) {
+  const rs = cfg.rooms.filter(rm => R[rm.id]);
+  const mn = $('#menu');
+  mn.innerHTML = `<div class="mh">어느 방으로 전달할까요?</div>${rs.map(rm => `<button data-to="${esc(rm.id)}">${esc(rm.group ? '# ' + rm.name : nameOnly(rm.name))}${rm.id === fromId ? ' <small>(이 방)</small>' : ''}</button>`).join('')}`;
+  mn.classList.remove('hidden');
+  mn.style.left = Math.max(8, Math.min(x, window.innerWidth - mn.offsetWidth - 8)) + 'px';
+  mn.style.top = Math.max(8, Math.min(y, window.innerHeight - mn.offsetHeight - 8)) + 'px';
+  mn.querySelectorAll('[data-to]').forEach(el => el.addEventListener('click', () => { mn.classList.add('hidden'); forwardTo(fromId, m, el.dataset.to); }));
+}
+// 글은 그대로, 사진·파일·음성은 받는 방의 키로 다시 암호화해서 보낸다
+async function forwardTo(fromId, m, toId) {
+  const rm = room(toId);
+  if (!rm || !R[toId]) return;
+  const label = rm.group ? rm.name : nameOnly(rm.name);
+  try {
+    if (isAtt(m)) {
+      let blob = await idbGet(PICDB, 'p', m.id);
+      if (!blob && m.u) { toast('원본 받는 중…'); picFail.delete(m.id); await fetchPic(fromId, m); blob = await idbGet(PICDB, 'p', m.id); }
+      if (!blob) { toast('원본을 받지 못해 전달할 수 없어요'); return; }
+      toast('전달하는 중…');
+      await postAtt(toId, blob, m.img ? {img: 1} : m.file ? {file: 1, fname: m.fname, fsize: m.fsize} : {voice: 1, dur: m.dur});
+    } else {
+      const t = textOf(fromId, m), payload = {n: cfg.me, t, ts: Date.now()};
+      add(toId, {id: await post(toId, payload), n: cfg.me, t, ts: payload.ts});
+      ping(toId, t);
+    }
+    toast(`'${label}'(으)로 전달했어요`);
+  } catch (_) { toast('전달 실패 — 네트워크를 확인하세요'); }
+}
+// 책갈피: 다시 찾을 메시지 표시(이 기기에만 보관)
+const bmOf = id => R[id].bm || (R[id].bm = new Set(load('bm_' + R[id].sk, [])));
+function toggleBm(id, mid) {
+  const s = bmOf(id), on = !s.has(mid);
+  if (on) s.add(mid); else s.delete(mid);
+  save('bm_' + R[id].sk, Array.from(s));
+  renderList();
+  toast(on ? '책갈피에 넣었어요' : '책갈피에서 뺐어요');
+}
+function openBookmarks() {
+  const rm = cur();
+  if (!rm) return;
+  const s = bmOf(rm.id), ms = R[rm.id].msgs.filter(m => s.has(m.id) && !isDel(rm.id, m)).reverse();
+  const g = $('#gal');
+  g.innerHTML = `<div class="gbox"><div class="gh"><b>책갈피 (${ms.length})</b><button type="button" title="닫기">✕</button></div><div class="gb">
+    ${ms.map(m => `<div class="gf" data-bmj="${esc(m.id)}">🔖 <b>${esc(mine(m) ? '나' : nameOnly(who(rm, m)))}: ${esc(prevOf(rm.id, m).slice(0, 80))}</b><small>${esc(ymd(m.ts))}</small></div>`).join('')}
+    ${ms.length ? '' : '<p class="empty">책갈피한 메시지가 없어요.<br>메시지를 길게 누르거나(PC는 오른쪽 클릭) 책갈피를 고르세요.</p>'}</div></div>`;
+  g.classList.remove('hidden');
+  g.querySelector('.gh button').addEventListener('click', () => g.classList.add('hidden'));
+  g.querySelectorAll('[data-bmj]').forEach(el => el.addEventListener('click', () => { g.classList.add('hidden'); jumpTo(el.dataset.bmj); }));
 }
 // ---------- 프로필(사진·상태메시지) ----------
 // 내 프로필은 cfg.prof = {s, p, ts}. 방마다 sys 'prof'로 알리고(사진은 120px JPEG를 글자로 넣어서), 받은 것은 ext.prof[이름]에 둔다.
@@ -1180,7 +1460,7 @@ function openRoomMenu(btn) {
   const rm = cur();
   if (!rm) return;
   const mn = $('#menu');
-  mn.innerHTML = `<button data-a="nudge">👉 콕 찌르기</button><button data-a="gal">🖼 사진·파일 모아보기</button>
+  mn.innerHTML = `<button data-a="nudge">👉 콕 찌르기</button><button data-a="gal">🖼 사진·파일 모아보기</button><button data-a="bms">🔖 책갈피 모아보기</button>
     <button data-a="srch">🔍 대화 검색</button><button data-a="exp">💾 대화 내보내기(.txt)</button><button data-a="prof">👤 내 프로필</button>`;
   mn.classList.remove('hidden');
   const b = btn.getBoundingClientRect(), w = mn.offsetWidth;
@@ -1191,6 +1471,7 @@ function openRoomMenu(btn) {
     const a = el.dataset.a;
     if (a === 'nudge') nudge();
     else if (a === 'gal') openGallery();
+    else if (a === 'bms') openBookmarks();
     else if (a === 'srch') toggleSearch();
     else if (a === 'exp') exportChat();
     else if (a === 'prof') openProf(cfg.me);
@@ -1230,7 +1511,7 @@ function exportChat() {
   if (!rm) return;
   const lines = R[rm.id].msgs.filter(m => !isDel(rm.id, m)).map(m => {
     const d = new Date(m.ts);
-    const body = m.img ? '[사진]' : m.file ? `[파일] ${m.fname}` : m.nudge ? '[콕 찌르기]' : textOf(rm.id, m);
+    const body = m.img ? '[사진]' : m.file ? `[파일] ${m.fname}` : m.voice ? `[음성 메시지 ${mmss(m.dur || 0)}]` : m.nudge ? '[콕 찌르기]' : textOf(rm.id, m);
     return `[${ymd(m.ts)} ${pad(d.getHours())}:${pad(d.getMinutes())}] ${who(rm, m)}: ${body}`;
   });
   const a = Object.assign(document.createElement('a'), {
@@ -1242,7 +1523,7 @@ function exportChat() {
 // 말풍선 두 번 누르기 → ❤️ 공감(다시 두 번 누르면 취소)
 function heartAt(t) {
   const el = t.closest && t.closest('#list [data-mid]');
-  if (!el || !cur() || t.closest('a, img.pic, [data-react], [data-file], [data-jump], [data-prof]')) return false;
+  if (!el || !cur() || t.closest('a, img.pic, [data-react], [data-file], [data-voice], [data-jump], [data-prof]')) return false;
   const mid = el.dataset.mid, m = R[view].msgs.find(z => z.id === mid);
   if (!m || isDel(view, m)) return false;
   const my = (R[view].ext.react[mid] || {})[cfg.me];
@@ -1399,6 +1680,7 @@ const FAKE = [
 const fakeOf = k => FAKE.find(f => f.k === k);
 
 function setView(v) {
+  stopRec(false); stopVoice();   // 녹음·재생은 방을 옮기면 그만
   if (isRoom(view) && R[view] && view !== v) R[view].divTs = 0;
   view = v;
   if (isRoom(v) && R[v]) {
@@ -1415,6 +1697,8 @@ function setView(v) {
   pollPres();
 }
 function decoy() {
+  stopRec(false); stopVoice();   // 위장 화면에서 소리가 나거나 녹음이 이어지지 않게
+  clearTimeout(toast.h); $('#toast').classList.remove('show');
   closePops();   // 앱 밖에 떠 있는 갤러리·프로필·사진 보기도 함께 숨김
   $('#viewer').classList.add('hidden');
   view = lastDecoy || 'team';
@@ -1474,8 +1758,8 @@ function render() {
     if (cur()) inp.value = editTo ? editText : (drafts[view] || '');
     inp.addEventListener('input', () => { saveDraft(); sendTyping(!!inp.value.trim() && !editTo); });
     inp.addEventListener('paste', e => {
-      const f = Array.from((e.clipboardData && e.clipboardData.files) || [])[0];
-      if (f) { e.preventDefault(); sendPic(f); }
+      const fs = Array.from((e.clipboardData && e.clipboardData.files) || []);
+      if (fs.length) { e.preventDefault(); sendFiles(fs); }
     });
     // 답장 띠·검색 띠는 입력창/목록 앞에 공통으로 붙인다
     const host = inp.closest('.ch-comp, .c-comp, .s-fx');
@@ -1502,8 +1786,10 @@ function render() {
     if (cfg.skin !== 'sheet') list.insertAdjacentHTML('afterend', '<div class="typing hidden" id="typing"></div>');
   }
   app.querySelectorAll('.roomBtn').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); if (cur()) openRoomMenu(el); }));
-  app.querySelectorAll('.picBtn').forEach(el => el.addEventListener('click', () => { if (cur()) $('#picFile').click(); }));
-  app.querySelectorAll('.fileBtn').forEach(el => el.addEventListener('click', () => { if (cur()) $('#anyFile').click(); }));
+  const pick = sel => { if (!cur()) return; pickRid = view; pickAt = Date.now(); $(sel).click(); };
+  app.querySelectorAll('.picBtn').forEach(el => el.addEventListener('click', () => pick('#picFile')));
+  app.querySelectorAll('.fileBtn').forEach(el => el.addEventListener('click', () => pick('#anyFile')));
+  app.querySelectorAll('.micBtn').forEach(el => el.addEventListener('click', () => { if (!cur()) return; if (rec) stopRec(true); else startRec(); }));
   app.querySelectorAll('.emoBtn').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); if (cur()) openEmo(el); }));
   app.querySelectorAll('.srchBtn').forEach(el => el.addEventListener('click', () => { if (cur()) toggleSearch(); }));
   renderList(); paintSide(); paintTitle(); setStatus(status); paintTyping();
@@ -1522,6 +1808,8 @@ function renderList() {
     } else list.scrollTop = keep;
   }
   fillPics();
+  if (player) paintVoice();
+  if (cur()) bmOf(view).forEach(id => { const el = list.querySelector(`[data-mid="${CSS.escape(id)}"]`); if (el) el.classList.add('bm'); });
   paintPin();
   if (searchQ || searchJump) paintSearch(searchJump);
   searchJump = false;
@@ -1569,7 +1857,8 @@ const IC = {
   tt: svg('<path d="M5 5h14M12 5v15"/>'),
   folder: svg('<path d="M3 6.5h6l2 2h10v10H3z"/><path d="M3 11h18"/>'),
   crop: svg('<path d="M6 2.5V18h15.5M2.5 6H18v15.5"/>'),
-  down: svg('<path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5M4 20h16"/>')
+  down: svg('<path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5M4 20h16"/>'),
+  mic: svg('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0013 0M12 17.5V21M9 21h6"/>')
 };
 const WD = '일월화수목금토';
 const chatTime = ts => { const d = new Date(ts), h = d.getHours(); return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}:${pad(d.getMinutes())}`; };
@@ -1676,7 +1965,7 @@ const SKINS = {
           <div class="ch-comp"><div class="ch-grip"></div>
             <textarea id="inp" placeholder="채팅 입력 [줄 바꿈 : Ctrl + Enter]"></textarea>
             <div class="ch-bar"><span class="b emoBtn" title="이모티콘">${IC.emo}</span><span class="b emoBtn" title="이모지">${IC.smile}</span><span class="b">${IC.tt}</span><span class="b fileBtn" title="파일">${IC.clip}</span>
-              <span class="b picBtn" title="사진">${IC.folder}</span><span class="b">${IC.crop}</span><span class="b">${IC.down}</span><i class="sp"></i><button id="sendBtn">전송</button></div>
+              <span class="b picBtn" title="사진">${IC.folder}</span><span class="b micBtn" title="음성 메시지">${IC.mic}</span><span class="b">${IC.crop}</span><span class="b">${IC.down}</span><i class="sp"></i><button id="sendBtn">전송</button></div>
           </div>
         </section></div>`;
     },
@@ -1759,7 +2048,7 @@ const SKINS = {
         <section class="c-main">
           <header class="c-head"><button class="ic back">‹</button><b>${esc(title)}</b><small>${rm ? '<span id="qt"></span>' : ''}</small><i style="flex:1"></i><span class="dot" data-peer="1" style="${rm ? '' : 'display:none'}"></span><button class="ic srchBtn" title="대화 검색">🔍</button><button class="ic roomBtn" title="더보기">⋯</button></header>
           <div class="c-list" id="list"></div>
-          <div class="c-comp"><div class="c-box"><button class="fileBtn pb" title="파일·사진">＋</button><button class="emoBtn pb" title="이모지">☺</button><textarea id="inp" placeholder="${esc(title)}에 메시지 보내기"></textarea><button id="sendBtn">➤</button></div></div>
+          <div class="c-comp"><div class="c-box"><button class="fileBtn pb" title="파일·사진">＋</button><button class="emoBtn pb" title="이모지">☺</button><button class="micBtn pb" title="음성 메시지">🎤</button><textarea id="inp" placeholder="${esc(title)}에 메시지 보내기"></textarea><button id="sendBtn">➤</button></div></div>
         </section></div>`;
     },
     side() {
@@ -1798,7 +2087,7 @@ const SKINS = {
     layout() {
       const tabs = ['파일', '홈', '삽입', '페이지 레이아웃', '수식', '데이터', '검토', '보기'];
       return `<div class="s">
-        <div class="s-tabs">${tabs.map(t => `<span class="${t === '홈' ? 'on' : t === '삽입' ? 'picBtn' : t === '보기' ? 'roomBtn' : ''}">${t}</span>`).join('')}<i class="sp"></i><button class="ic gear" title="설정">⚙</button></div>
+        <div class="s-tabs">${tabs.map(t => `<span class="${t === '홈' ? 'on' : t === '삽입' ? 'picBtn' : t === '보기' ? 'roomBtn' : t === '검토' ? 'micBtn' : ''}">${t}</span>`).join('')}<i class="sp"></i><button class="ic gear" title="설정">⚙</button></div>
         <div class="s-tool"><span class="tb">붙여넣기</span><span class="sep"></span><span class="bx">맑은 고딕</span><span class="bx">11</span>
           <span class="tb"><b>가</b></span><span class="tb"><i>가</i></span><span class="tb"><u>가</u></span><span class="sep"></span>
           <span class="tb">≡</span><span class="tb">병합하고 가운데 맞춤</span><span class="sep"></span><span class="bx">일반</span><span class="tb">%</span><span class="tb">,</span>
@@ -1959,8 +2248,11 @@ document.addEventListener('keydown', e => {
     toggleDecoy();
   }
 });
-$('#picFile').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) sendPic(f); });
-$('#anyFile').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) sendPic(f); });
+// 고르는 창을 연 방으로 보낸다(자동 숨김으로 그 사이 위장 화면이 됐어도)
+let pickRid = '', pickAt = 0;
+['#picFile', '#anyFile'].forEach(s => $(s).addEventListener('change', e => { const fs = Array.from(e.target.files || []); e.target.value = ''; sendFiles(fs, pickRid); }));
+$('#rec .rx').addEventListener('click', () => stopRec(false));
+$('#rec .rs').addEventListener('click', () => stopRec(true));
 $('#viewer').addEventListener('click', () => $('#viewer').classList.add('hidden'));
 document.addEventListener('click', e => {
   const t = e.target;
@@ -1978,6 +2270,8 @@ document.addEventListener('click', e => {
   }
   const q = t.closest('[data-jump]');
   if (q) { jumpTo(q.dataset.jump); return; }
+  const vc = t.closest('[data-voice]');
+  if (vc && cur()) { playVoice(vc.dataset.voice); return; }
   const fc = t.closest('[data-file]');
   if (fc && cur()) saveFile(view, fc.dataset.file);
 });
@@ -2011,17 +2305,53 @@ document.addEventListener('touchend', e => {
   else lastTap = {t: now, mid: el.dataset.mid};
 });
 ['touchend', 'touchmove', 'touchcancel'].forEach(n => document.addEventListener(n, () => { if (pressT) { clearTimeout(pressT); pressT = null; } }, {passive: true}));
+// 폰: 말풍선을 옆으로 밀면 답장(카톡·인스타처럼). 위아래로 움직이면 스크롤로 보고 놓아준다
+let swipe = null;
+document.addEventListener('touchstart', e => {
+  const el = e.target.closest && e.target.closest('#list [data-mid]'), tc = e.touches[0];
+  swipe = el && tc && e.touches.length === 1 && cur() && cfg.skin !== 'sheet' ? {el, x: tc.clientX, y: tc.clientY, dx: 0, on: false} : null;
+}, {passive: true});
+document.addEventListener('touchmove', e => {
+  const s = swipe, tc = e.touches[0];
+  if (!s || !tc) return;
+  const dx = tc.clientX - s.x, dy = tc.clientY - s.y;
+  if (!s.on) {
+    if (Math.abs(dy) > 10 && Math.abs(dy) >= Math.abs(dx)) { swipe = null; return; }
+    if (Math.abs(dx) < 14 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    s.on = true;
+  }
+  s.dx = Math.sign(dx) * Math.max(0, Math.min(72, Math.abs(dx) - 14));
+  s.el.style.transform = `translateX(${s.dx}px)`;
+  if (Math.abs(s.dx) >= 56 && !s.buzz) { s.buzz = true; if (navigator.vibrate) navigator.vibrate(12); }
+}, {passive: true});
+['touchend', 'touchcancel'].forEach(n => document.addEventListener(n, () => {
+  const s = swipe;
+  swipe = null;
+  if (!s || !s.on) return;
+  s.el.style.transition = 'transform .18s';
+  s.el.style.transform = '';
+  setTimeout(() => { s.el.style.transition = ''; }, 200);
+  if (n !== 'touchend' || Math.abs(s.dx) < 56 || !cur()) return;
+  const m = R[view].msgs.find(z => z.id === s.el.dataset.mid);
+  if (!m || isDel(view, m)) return;
+  setReply(m);
+  const i = $('#inp'); if (i) i.focus();
+}, {passive: true}));
 document.addEventListener('dragover', e => { if (cur()) e.preventDefault(); });
 document.addEventListener('drop', e => {
   if (!cur()) return;
   e.preventDefault();
-  const f = Array.from((e.dataTransfer && e.dataTransfer.files) || [])[0];
-  if (f) sendPic(f);
+  sendFiles((e.dataTransfer && e.dataTransfer.files) || []);
 });
-window.addEventListener('blur', () => { if (cfg && cfg.autoHide && cur()) decoy(); if (cfg && !isTouch()) heartbeat(true); });
+window.addEventListener('blur', () => {
+  if (cfg && cfg.autoHide && cur()) {
+    if (startRec.asking) startRec.blurred = true;     // 마이크 권한 창: 답한 뒤에 다시 본다
+    else if (Date.now() - pickAt > 1500) decoy();     // 사진·파일 고르는 창이 막 열린 것은 빼고
+  } if (cfg && !isTouch()) heartbeat(true); });
 window.addEventListener('focus', () => { if (cfg) heartbeat(); if (cur()) markRead(view); });
-window.addEventListener('pagehide', () => { if (cfg) { flushAllReads(); heartbeat(true); } });
+window.addEventListener('pagehide', () => { stopRec(false); stopVoice(); if (cfg) { flushAllReads(); heartbeat(true); } });
 document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { stopRec(false); stopVoice(); }   // 앱을 내리면 녹음·재생은 그만
   if (cfg && document.hidden) flushAllReads();   // 앱을 내리는 순간 남은 읽음 신호를 바로 보냄
   if (cfg) heartbeat(document.hidden);
   if (cfg && !document.hidden && cur() && !mobileSide) { R[view].unread = 0; paintSide(); paintTitle(); markRead(view); }
@@ -2042,7 +2372,7 @@ async function checkUpdate() {
     checkUpdate.busy = false;
   }
   const inp = $('#inp');
-  if (checkUpdate.ready && (!inp || !inp.value.trim()) && $('#setup').classList.contains('hidden')) location.reload();
+  if (checkUpdate.ready && (!inp || !inp.value.trim()) && !rec && !player && !upBusy && $('#setup').classList.contains('hidden')) location.reload();
 }
 setInterval(checkUpdate, 10 * 60000);
 
