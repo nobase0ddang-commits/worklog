@@ -393,7 +393,7 @@ const RELAY = 'https://ntfy.sh';   // 폰 알림(웹 푸시) 신호용
 const DB = 'https://worklog-chat-c0a54-default-rtdb.asia-southeast1.firebasedatabase.app';   // 대화·첨부 저장(Firebase 실시간 DB)
 const VAPID = 'BEMjM0sNxh41x0a6Lz3YaqkJ7AUhZefxsOQgw-at69i0fM1CybVBcj7-QQXf4N_tPCgFnOXdRbQ5jrSrr9Yg9Lc';   // ntfy.sh 웹 푸시 공개키
 const MAX_BYTES = 2800;   // 암호화 후 ntfy 본문 한도(4096바이트) 안에 들도록
-const VER = '2026.11.02d';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
+const VER = '2026.11.03a';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
 
 // ?p=xx 로 같은 브라우저에서 프로필을 나눠 쓸 수 있다(테스트용)
 const P = new URLSearchParams(location.search).get('p') || '';
@@ -1457,12 +1457,17 @@ function render() {
         doSend();
       }
     });
-    // 보내는 동안 방을 옮겨도 보낸 방의 임시 글만 지운다
+    // 입력창은 누르는 즉시 비운다(카톡처럼). 서버 응답을 기다렸다 비우면 그 사이 친 다음 글 때문에 보낸 글이 남았다.
+    // 실패하면 보내려던 글을 앞에 되돌려 놓는다. 화면이 다시 그려졌을 수 있어 입력창은 그때그때 찾는다.
     const doSend = async () => {
-      const t = inp.value, rid = view, wasEdit = !!editTo;
-      if (!await send(t)) return;
-      if (!wasEdit && drafts[rid] === t) { drafts[rid] = ''; save('drafts', drafts); }
-      if (view === rid && inp.value === t) inp.value = '';
+      const t = inp.value, rid = view, wasEdit = !!editTo, inRoom = !!cur();
+      if (!t.trim() && inRoom) return;   // 빈 글(엔터가 두 번 들어온 경우 포함)은 무시
+      inp.value = '';
+      if (inRoom && !wasEdit) { drafts[rid] = ''; save('drafts', drafts); }
+      if (await send(t)) return;
+      const i = $('#inp');
+      if (view === rid && i) { i.value = t + i.value; saveDraft(); }
+      else if (inRoom && !wasEdit) { drafts[rid] = t + (drafts[rid] || ''); save('drafts', drafts); }
     };
     const btn = $('#sendBtn');
     if (btn) btn.addEventListener('click', async () => { await doSend(); inp.focus(); });
