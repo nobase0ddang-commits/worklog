@@ -23,7 +23,7 @@ input,textarea,select{font:inherit;color:inherit}
 .back{display:none}
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#aaa;vertical-align:middle}
 .dot.on{background:#2fb35a}.dot.off{background:#d9534f}
-.badge{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#e5483f;color:#fff;font-size:11px;font-weight:700;display:inline-grid;place-items:center}
+.badge{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#e5483f;color:#fff;font-size:11px;font-weight:700;font-style:normal;line-height:1;white-space:nowrap;box-sizing:border-box;font-variant-numeric:tabular-nums;display:inline-grid;place-items:center}
 .txt{white-space:pre-wrap;word-break:break-word}
 .empty{color:#999;text-align:center;padding:40px 16px;line-height:1.7}
 
@@ -36,7 +36,7 @@ input,textarea,select{font:inherit;color:inherit}
 .ch-main{width:430px;flex:none;display:flex;flex-direction:column;border-right:1px solid #d9d9de;min-width:0}
 .ch-tool{height:58px;flex:none;display:flex;align-items:center;gap:18px;padding:0 14px 0 16px;border-bottom:1px solid #e1e1e6;color:var(--pk)}
 .ch-tool .t{width:32px;height:32px;position:relative;cursor:pointer}
-.ch-tool .t .badge{position:absolute;top:-6px;right:-10px;transform:scale(.85)}
+.ch-tool .t .badge{position:absolute;top:-5px;left:18px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;font-size:11px;border:2px solid #fff}
 .ch-tool .sp{flex:1}
 .ch-tool .bell{width:34px;height:34px;border-radius:50%;background:#ececf0;color:#9a9aa3;padding:7px}
 .ch-body{flex:1;display:flex;min-height:0}
@@ -478,7 +478,7 @@ const RELAY = 'https://ntfy.sh';   // 폰 알림(웹 푸시) 신호용
 const DB = 'https://worklog-chat-c0a54-default-rtdb.asia-southeast1.firebasedatabase.app';   // 대화·첨부 저장(Firebase 실시간 DB)
 const VAPID = 'BEMjM0sNxh41x0a6Lz3YaqkJ7AUhZefxsOQgw-at69i0fM1CybVBcj7-QQXf4N_tPCgFnOXdRbQ5jrSrr9Yg9Lc';   // ntfy.sh 웹 푸시 공개키
 const MAX_BYTES = 2800;   // 암호화 후 ntfy 본문 한도(4096바이트) 안에 들도록
-const VER = '2026.11.03f';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
+const VER = '2026.11.03g';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
 
 // ?p=xx 로 같은 브라우저에서 프로필을 나눠 쓸 수 있다(테스트용)
 const P = new URLSearchParams(location.search).get('p') || '';
@@ -492,7 +492,7 @@ if (cfg && !cfg.rooms) {   // 방 하나짜리 옛 설정 이어받기
   cfg = {me: cfg.me, skin: cfg.skin || 'msg', autoHide: !!cfg.autoHide, rooms: [{id: 'r_main', name: cfg.peer || '상대', pass: cfg.pass, group: false}]};
   save('cfg', cfg);
 }
-const R = {};   // 방 id → {pass, key, raw, topic, sk, msgs, seen, unread, nn(알림 받는 이름들)}
+const R = {};   // 방 id → {pass, key, raw, topic, sk, msgs, seen, rk(어디까지 읽었나), nn(알림 받는 이름들)}
 let streams = [], status = '', quota = null;
 let view = null, lastRoom = null, lastDecoy = null, mobileSide = false;
 let chTab = 'chat', selNote = 0;   // 메신저형 왼쪽 목록: 대화 / 쪽지
@@ -511,7 +511,15 @@ const mine = m => m.n === cfg.me;
 const isRoom = v => !!v && v.indexOf('r_') === 0;
 const room = id => cfg.rooms.find(r => r.id === id);
 const cur = () => (isRoom(view) && R[view]) ? room(view) : null;
-const totalUnread = () => Object.keys(R).reduce((a, id) => a + R[id].unread, 0);
+// 안 읽은 수: 이 방을 어디까지 봤는지(rk, 서버 키 순서) 그 뒤에 온 남의 메시지(지운 건 빼고).
+// 다른 기기에서 읽었거나 내가 답을 보냈으면 그 앞은 읽은 것으로 친다.
+// Firebase 키는 '-'로 시작하고 서버 시각 순으로 정렬된다. 그 전(ntfy 시절) id는 이미 읽은 옛 메시지.
+const isKey = k => typeof k === 'string' && k[0] === '-';
+const unreadOf = id => { const r = R[id]; if (!r || r.fresh) return 0; let n = 0; r.msgs.forEach(m => { if (isKey(m.id) && m.id > r.rk && !mine(m) && !r.ext.del[m.id]) n++; }); return n; };
+const totalUnread = () => Object.keys(R).reduce((a, id) => a + unreadOf(id), 0);
+const badgeN = n => n > 99 ? '99+' : n;   // 배지 숫자는 99+까지
+function readTo(id, k) { const r = R[id]; if (r && isKey(k) && k > r.rk) { r.rk = k; save('rk_' + r.sk, k); } }
+const lastKey = id => R[id].msgs.reduce((a, m) => isKey(m.id) && m.id > a ? m.id : a, '');
 const newId = () => 'r_' + Math.random().toString(36).slice(2, 9);
 // 보낸 사람 표시: 단톡은 각자 이름, 1:1은 내가 정한 상대 표시 이름
 const who = (rm, m) => mine(m) ? cfg.me : (rm.group ? (m.n || '?') : rm.name);
@@ -581,7 +589,10 @@ async function doConnect() {
     const d = await derive(rm.pass);
     const sk = d.topic.slice(2, 10);
     const msgs = load('msgs_' + sk, []);
-    R[rm.id] = {pass: rm.pass, key: d.key, raw: d.raw, topic: d.topic, sk, msgs, seen: new Set(msgs.map(m => m.id)), unread: 0, nn: load('nn_' + sk, []),
+    // rk: 어디까지 읽었나. 처음엔 받은 데까지(lk)로 시작해서 바로 저장(그래야 lk가 앞서가도 안 읽은 게 남는다)
+    const lk0 = load('lk_' + sk, ''), rk = load('rk_' + sk, '') || lk0;
+    if (rk) save('rk_' + sk, rk);
+    R[rm.id] = {pass: rm.pass, key: d.key, raw: d.raw, topic: d.topic, sk, msgs, seen: new Set(msgs.map(m => m.id)), rk, fresh: !lk0, nn: load('nn_' + sk, []),
       ext: Object.assign({react: {}, del: {}, pin: null, read: {}, edit: {}, prof: {}, vote: {}, vts: {}, vclose: {}}, load('ext_' + sk, {})), pres: {}, presAt: {}, myRead: load('mr2_' + sk, 0), divTs: 0};   // mr2: 옛 기록은 버리고 한 번 다시 보낸다
   }
   if (!view || (isRoom(view) && !room(view))) view = cfg.rooms[0].id;
@@ -614,9 +625,14 @@ async function doConnect() {
 let putChain = Promise.resolve();
 function onPut(id, e) {
   let d; try { d = JSON.parse(e.data); } catch (_) { return; }
-  if (!d || !d.data || !R[id]) return;
+  if (!d || !R[id]) return;
+  if (!d.data) { if (d.path === '/') R[id].fresh = false; return; }
   const items = d.path === '/' ? Object.keys(d.data).sort().map(k => [k, d.data[k]]) : [[d.path.replace(/^\//, '').split('/')[0], d.data]];
-  putChain = putChain.then(async () => { for (const it of items) await onItem(id, it[0], it[1]); });
+  putChain = putChain.then(async () => {
+    for (const it of items) await onItem(id, it[0], it[1]);
+    const r = R[id];   // 이 기기에서 처음 받은 방: 지난 대화는 읽은 것으로
+    if (r && r.fresh && d.path === '/') { r.fresh = false; readTo(id, items[items.length - 1][0]); paintSide(); paintTitle(); }
+  });
 }
 async function onItem(id, k, v) {
   const r = R[id];
@@ -770,7 +786,12 @@ function applySys(id, o) {
   } else if (o.sys === 'pin') {
     x.pin = o.id ? {id: String(o.id), n, t: String(o.t || '').slice(0, 80)} : null;
   } else if (o.sys === 'read') {
-    if (n === cfg.me || (x.read[n] || 0) >= o.ts) return;
+    if (n === cfg.me) {   // 내 다른 기기에서 읽음: 그 기기가 본 데까지 여기서도 읽은 것으로
+      const t = Number(o.ts) || 0;
+      readTo(id, r.msgs.reduce((a, m) => !mine(m) && m.ts <= t && isKey(m.id) && m.id > a ? m.id : a, ''));
+      paintSide(); paintTitle(); return;
+    }
+    if ((x.read[n] || 0) >= o.ts) return;
     x.read[n] = Number(o.ts) || 0;
   } else if (o.sys === 'vote' && typeof o.id === 'string' && Array.isArray(o.c)) {   // 투표: 사람마다 고른 항목 번호
     const m = r.msgs.find(z => z.id === o.id);
@@ -788,7 +809,7 @@ function applySys(id, o) {
   } else return;
   save('ext_' + r.sk, x);
   if (view === id) renderList();
-  paintSide();
+  paintSide(); paintTitle();
 }
 async function sendSys(id, obj) {
   const r = R[id];
@@ -846,7 +867,7 @@ function add(id, m) {
   r.msgs.sort((a, b) => a.ts - b.ts);
   if (r.msgs.length > 3000) r.msgs = r.msgs.slice(-3000);
   save('msgs_' + r.sk, r.msgs);
-  if (!mine(m) && (view !== id || mobileSide || document.hidden)) r.unread++;
+  if (mine(m) || (view === id && !mobileSide && !document.hidden)) readTo(id, m.id);   // 보고 있거나 내가 답했으면 그 앞까지 읽음
   if (view === id) renderList();
   paintSide(); paintTitle();
 }
@@ -1979,8 +2000,9 @@ function setView(v) {
     lastRoom = v;
     const r = R[v];
     // "여기까지 읽었습니다" 선: 안 읽은 첫 메시지 앞
-    if (r.unread) { const others = r.msgs.filter(m => !mine(m)); const f = others[others.length - r.unread]; r.divTs = f ? f.ts : 0; }
-    r.unread = 0;
+    const f = r.fresh ? null : r.msgs.find(m => isKey(m.id) && m.id > r.rk && !mine(m) && !r.ext.del[m.id]);
+    if (f) r.divTs = f.ts;
+    readTo(v, lastKey(v));
   } else if (!isRoom(v)) lastDecoy = v;
   mobileSide = false;
   setReply(null);
@@ -2262,7 +2284,7 @@ const SKINS = {
         <section class="ch-main">
           <div class="ch-tool">
             <span class="t" title="즐겨찾기">${IC.star}</span><span class="t" title="조직도">${IC.org}</span><span class="t" title="검색">${IC.search}</span>
-            <span class="t" data-tab="note" title="쪽지">${IC.note}</span><span class="t" data-tab="chat" title="대화" id="chatIc">${IC.chat}${n ? `<i class="badge">${n}</i>` : ''}</span>
+            <span class="t" data-tab="note" title="쪽지">${IC.note}</span><span class="t" data-tab="chat" title="대화" id="chatIc">${IC.chat}${n ? `<i class="badge">${badgeN(n)}</i>` : ''}</span>
             <span class="t gear" title="설정">${IC.more}</span><i class="sp"></i><span class="bell">${IC.bell}</span>
           </div>
           <div class="ch-body">
@@ -2293,7 +2315,7 @@ const SKINS = {
     },
     side() {
       const ic = $('#chatIc');
-      if (ic) { const n = totalUnread(), b = ic.querySelector('.badge'); if (b) b.remove(); if (n) ic.insertAdjacentHTML('beforeend', `<i class="badge">${n}</i>`); }
+      if (ic) { const n = totalUnread(), b = ic.querySelector('.badge'); if (b) b.remove(); if (n) ic.insertAdjacentHTML('beforeend', `<i class="badge">${badgeN(n)}</i>`); }
       const ul = $('#rooms'); if (!ul) return;
       if (chTab === 'note') {
         ul.innerHTML = NOTES().map((n, i) => `<li data-n="${i}" class="${selNote === i ? 'on' : ''}"><div class="av">${esc(n.f[0])}</div>
@@ -2306,7 +2328,7 @@ const SKINS = {
         const r = R[rm.id], lr = last(r.msgs);
         return {v: rm.id, f: lr ? (mine(lr) ? '나' : nameOnly(who(rm, lr))) : nameOnly(rm.name), w: lr ? listTime(lr.ts) : '',
           l2: (rm.group ? `<span class="ps">${IC.person}</span>${members(rm.id).length + 1}&nbsp; ${esc(rm.name)}` : esc(rm.name)) + (muted(rm.id) ? ' 🔕' : ''),
-          l3: lockOn() && (!isRoom(view) || !unlocked) ? '' : prevOf(rm.id, lr), badge: r.unread, av: roomAv(rm)};
+          l3: lockOn() && (!isRoom(view) || !unlocked) ? '' : prevOf(rm.id, lr), badge: unreadOf(rm.id), av: roomAv(rm)};
       }).concat(['team', 'notice', 'lab'].map(k => {
         const c = CHC[k], ln = last(c.lines);
         return {v: k, f: ln[0], w: dayStr(c.ago) + ' ' + ln[1], l3: ln[2],
@@ -2314,7 +2336,7 @@ const SKINS = {
           av: c.grp ? grpAv(c.grp) : avOf(c.name)};
       }));
       ul.innerHTML = items.map(r => `<li data-r="${r.v}" class="${view === r.v ? 'on' : ''}">${r.av}
-        <div class="meta"><div class="l1"><b>From ${esc(r.f)}</b><small>${r.w}</small>${r.badge ? `<i class="badge">${r.badge}</i>` : ''}</div>
+        <div class="meta"><div class="l1"><b>From ${esc(r.f)}</b><small>${r.w}</small>${r.badge ? `<i class="badge">${badgeN(r.badge)}</i>` : ''}</div>
         <div class="l2">${r.l2}</div><div class="l3">${esc(r.l3)}</div></div></li>`).join('');
       ul.querySelectorAll('li').forEach(li => li.addEventListener('click', () => setView(li.dataset.r)));
     },
@@ -2373,8 +2395,8 @@ const SKINS = {
     side() {
       const nav = $('#nav'); if (!nav) return;
       const real = (rm, h) => {
-        const u = R[rm.id].unread;
-        return `<div class="c-ch${view === rm.id ? ' on' : ''}${u ? ' unread' : ''}" data-r="${rm.id}"><span class="h">${h}</span><span>${esc(rm.name)}${muted(rm.id) ? ' 🔕' : ''}</span>${u ? `<i class="badge">${u}</i>` : ''}</div>`;
+        const u = unreadOf(rm.id);
+        return `<div class="c-ch${view === rm.id ? ' on' : ''}${u ? ' unread' : ''}" data-r="${rm.id}"><span class="h">${h}</span><span>${esc(rm.name)}${muted(rm.id) ? ' 🔕' : ''}</span>${u ? `<i class="badge">${badgeN(u)}</i>` : ''}</div>`;
       };
       const fake = v => `<div class="c-ch${view === v ? ' on' : ''}" data-r="${v}"><span class="h">#</span><span>${esc(fakeOf(v).name)}</span></div>`;
       const rs = cfg.rooms.filter(rm => R[rm.id]);
@@ -2418,7 +2440,7 @@ const SKINS = {
     side() {
       const el = $('#sheets'); if (!el) return;
       const rs = cfg.rooms.filter(rm => R[rm.id]);
-      el.innerHTML = rs.map(rm => `<span class="t${view === rm.id ? ' on' : ''}${R[rm.id].unread ? ' un' : ''}" data-r="${rm.id}">${esc(rm.name)}</span>`).join('')
+      el.innerHTML = rs.map(rm => `<span class="t${view === rm.id ? ' on' : ''}${unreadOf(rm.id) ? ' un' : ''}" data-r="${rm.id}">${esc(rm.name)}</span>`).join('')
         + `<span class="t${view === 'team' ? ' on' : ''}" data-r="team">집계</span><span class="t">Sheet3</span>`;
       el.querySelectorAll('[data-r]').forEach(t => t.addEventListener('click', () => setView(t.dataset.r)));
       paintStatus();
@@ -2732,7 +2754,7 @@ document.addEventListener('visibilitychange', () => {
   } else if (resumeRoom && !document.hidden) { const r = resumeRoom; resumeRoom = ''; if (!isRoom(view) && room(r)) setView(r); }   // 금방 돌아왔으면 보던 방으로
   if (cfg && document.hidden) flushAllReads();   // 앱을 내리는 순간 남은 읽음 신호를 바로 보냄
   if (cfg) heartbeat(document.hidden);
-  if (cfg && !document.hidden && cur() && !mobileSide) { R[view].unread = 0; paintSide(); paintTitle(); markRead(view); }
+  if (cfg && !document.hidden && cur() && !mobileSide) { readTo(view, lastKey(view)); paintSide(); paintTitle(); markRead(view); }
   if (!document.hidden) checkUpdate();
 });
 
