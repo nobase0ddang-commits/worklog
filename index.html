@@ -26,6 +26,7 @@ input,textarea,select{font:inherit;color:inherit}
 .badge{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#e5483f;color:#fff;font-size:11px;font-weight:700;font-style:normal;line-height:1;white-space:nowrap;box-sizing:border-box;font-variant-numeric:tabular-nums;display:inline-grid;place-items:center}
 .txt{white-space:pre-wrap;word-break:break-word}
 .sending{opacity:.5}
+#sendBtn{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 div.older{margin:6px auto 10px;padding:5px 14px;border-radius:14px;background:rgba(127,127,127,.12);color:#777;font-size:12px;cursor:pointer;width:max-content}
 tr.older td{color:#777;cursor:pointer}
 .empty{color:#999;text-align:center;padding:40px 16px;line-height:1.7}
@@ -432,7 +433,7 @@ const RELAY = 'https://ntfy.sh';   // 폰 알림(웹 푸시) 신호용
 const DB = 'https://worklog-chat-c0a54-default-rtdb.asia-southeast1.firebasedatabase.app';   // 대화·첨부 저장(Firebase 실시간 DB)
 const VAPID = 'BEMjM0sNxh41x0a6Lz3YaqkJ7AUhZefxsOQgw-at69i0fM1CybVBcj7-QQXf4N_tPCgFnOXdRbQ5jrSrr9Yg9Lc';   // ntfy.sh 웹 푸시 공개키
 const MAX_BYTES = 2800;   // 암호화 후 ntfy 본문 한도(4096바이트) 안에 들도록
-const VER = '2026.11.03i';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
+const VER = '2026.11.03j';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
 
 // ?p=xx 로 같은 브라우저에서 프로필을 나눠 쓸 수 있다(테스트용)
 const P = new URLSearchParams(location.search).get('p') || '';
@@ -2100,29 +2101,42 @@ function render() {
       else if (inRoom && !wasEdit) { drafts[rid] = t + (drafts[rid] || ''); save('drafts', drafts); }
     };
     const btn = $('#sendBtn');
+    // 전송 단추·조용히 보내기 메뉴를 눌러도 입력창 포커스를 지킨다. 폰에서 키보드가 열린 채 누르면
+    // 포커스가 빠지며 키보드가 닫히고 화면이 움직여서, 길게 눌러 띄운 메뉴가 엉뚱한 데로 가 눌리지 않았다.
+    const keepFocus = el => el.addEventListener('mousedown', e => e.preventDefault());
     if (btn) {
+      keepFocus(btn);
       btn.addEventListener('click', async e => {
         if (btn.lp) { btn.lp = false; e.stopPropagation(); return; }   // 길게 누른 뒤 떼는 클릭은 메뉴만
         await doSend(); inp.focus();
       });
       // 조용히 보내기: PC는 전송 단추 오른쪽 클릭, 폰은 길게 누르기
-      const quietMenu = (x, y) => {
+      const quietMenu = () => {
         if (!cur() || !inp.value.trim() || editTo) return;
         const mn = $('#menu');
-        mn.innerHTML = '<button data-a="quiet">🔕 조용히 보내기 <small>(상대에게 알림 없이)</small></button>';
+        mn.innerHTML = '<button type="button" data-a="quiet">🔕 조용히 보내기 <small>(상대에게 알림 없이)</small></button>';
         mn.classList.remove('hidden');
-        mn.style.left = Math.max(8, Math.min(x - mn.offsetWidth / 2, window.innerWidth - mn.offsetWidth - 8)) + 'px';
-        mn.style.top = Math.max(8, y - mn.offsetHeight - 12) + 'px';
-        mn.querySelector('button').addEventListener('click', async () => { mn.classList.add('hidden'); await doSend(true); inp.focus(); });
+        // 자리는 단추 바로 위(터치 좌표는 키보드가 열려 있으면 기준이 어긋날 수 있어서 단추 위치로 잡는다)
+        const b = btn.getBoundingClientRect(), h = mn.offsetHeight;
+        mn.style.left = Math.max(8, Math.min(b.right - mn.offsetWidth, window.innerWidth - mn.offsetWidth - 8)) + 'px';
+        mn.style.top = (b.top - h - 8 >= 8 ? b.top - h - 8 : b.bottom + 8) + 'px';
+        const qb = mn.querySelector('button');
+        keepFocus(qb);
+        qb.addEventListener('click', async () => { mn.classList.add('hidden'); await doSend(true); inp.focus(); });
+        if (navigator.vibrate) navigator.vibrate(10);
       };
-      btn.addEventListener('contextmenu', e => { e.preventDefault(); quietMenu(e.clientX, e.clientY); });
-      let lpT = null;
+      btn.addEventListener('contextmenu', e => { e.preventDefault(); quietMenu(); });
+      let lpT = null, lpAt = null;
       btn.addEventListener('touchstart', e => {
         const tc = e.touches[0];
         btn.lp = false;
-        lpT = setTimeout(() => { lpT = null; btn.lp = true; quietMenu(tc.clientX, tc.clientY); }, 500);
+        lpAt = tc ? {x: tc.clientX, y: tc.clientY} : null;
+        clearTimeout(lpT);
+        lpT = setTimeout(() => { lpT = null; btn.lp = true; quietMenu(); }, 450);
       }, {passive: true});
-      ['touchend', 'touchmove', 'touchcancel'].forEach(n => btn.addEventListener(n, () => clearTimeout(lpT), {passive: true}));
+      // 손가락이 살짝 떨리는 정도(10px 안)는 길게 누르기로 본다
+      btn.addEventListener('touchmove', e => { const tc = e.touches[0]; if (!lpAt || !tc || Math.abs(tc.clientX - lpAt.x) > 10 || Math.abs(tc.clientY - lpAt.y) > 10) clearTimeout(lpT); }, {passive: true});
+      ['touchend', 'touchcancel'].forEach(n => btn.addEventListener(n, () => clearTimeout(lpT), {passive: true}));
     }
     if (cur()) inp.value = editTo ? editText : (drafts[view] || '');
     inp.addEventListener('input', () => { saveDraft(); sendTyping(!!inp.value.trim() && !editTo); });
