@@ -203,6 +203,11 @@ mark.cur{background:#ff9f1c}
 .replyBar button,.pinBar button{width:24px;height:24px;border-radius:50%;color:#777;flex:none}
 .pinBar{display:flex;align-items:center;gap:8px;padding:7px 12px;background:#fff8e1;border-bottom:1px solid #f0e2b0;font-size:12.5px;flex:none}
 .pinBar .pt{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
+.idBar{padding:9px 12px;background:#fff1f0;border-bottom:1px solid #f2c9c5;font-size:12.5px;color:#333;flex:none}
+.idBar b{display:block;font-weight:600;margin-bottom:7px}
+.idBar div{display:flex;flex-wrap:wrap;gap:6px}
+.idBar button{padding:6px 12px;border:1px solid #d5a7a2;border-radius:6px;background:#fff;color:#333;font-size:12.5px}
+.idBar button.no{border-color:transparent;background:none;color:#777}
 .srchBar{display:flex;align-items:center;gap:6px;padding:6px 10px;background:#fff;border-bottom:1px solid #dcdcdc;flex:none}
 .srchBar input{flex:1;height:28px;border:1px solid #ccc;border-radius:4px;padding:0 8px;font-size:13px;min-width:0}
 .srchBar .cnt{font-size:11.5px;color:#777;min-width:34px;text-align:center}
@@ -374,7 +379,7 @@ body[data-fs="xl"] .s-grid td.e{font-size:15px}
   <div class="card">
     <h2>환경 설정</h2>
     <p class="d">방마다 암호를 정해요. 같은 암호를 넣은 사람끼리 그 방에서 연결되고, 대화는 그 암호로 암호화돼요.</p>
-    <label for="fMe">내 이름 (같은 방 사람들과 겹치지 않게)</label>
+    <label for="fMe">내 이름 (다른 기기에서 쓰는 이름과 똑같이)</label>
     <input id="fMe" type="text" maxlength="20">
     <label>내 프로필 (같은 방 사람들에게 보여요)</label>
     <div class="pfr"><div class="pfa" id="fPfA"></div><div class="pfc"><input id="fPfS" type="text" maxlength="40" placeholder="상태메시지 (비워도 돼요)">
@@ -433,7 +438,7 @@ const RELAY = 'https://ntfy.sh';   // 폰 알림(웹 푸시) 신호용
 const DB = 'https://worklog-chat-c0a54-default-rtdb.asia-southeast1.firebasedatabase.app';   // 대화·첨부 저장(Firebase 실시간 DB)
 const VAPID = 'BEMjM0sNxh41x0a6Lz3YaqkJ7AUhZefxsOQgw-at69i0fM1CybVBcj7-QQXf4N_tPCgFnOXdRbQ5jrSrr9Yg9Lc';   // ntfy.sh 웹 푸시 공개키
 const MAX_BYTES = 2800;   // 암호화 후 ntfy 본문 한도(4096바이트) 안에 들도록
-const VER = '2026.11.05a';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
+const VER = '2026.11.05b';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
 
 // ?p=xx 로 같은 브라우저에서 프로필을 나눠 쓸 수 있다(테스트용)
 const P = new URLSearchParams(location.search).get('p') || '';
@@ -463,7 +468,8 @@ const COLORS = ['#5b7fd6', '#d6875b', '#4ea786', '#9b6bd1', '#d65b7f', '#5ba8d6'
 const colorOf = s => COLORS[[...s].reduce((a, c) => a + c.charCodeAt(0), 0) % COLORS.length];
 const initial = s => (s.replace(/^.*\s/, '') || s).slice(0, 1);
 const last = a => a[a.length - 1];
-const mine = m => m.n === cfg.me;
+const isMe = n => n === cfg.me || (cfg.alt || []).indexOf(n) >= 0;   // alt: 이 기기가 전에 쓰던 이름(이름을 고른 뒤에도 그 이름으로 보낸 글은 내 글)
+const mine = m => isMe(m.n);
 const isRoom = v => !!v && v.indexOf('r_') === 0;
 const room = id => cfg.rooms.find(r => r.id === id);
 const cur = () => (isRoom(view) && R[view]) ? room(view) : null;
@@ -477,8 +483,23 @@ const badgeN = n => n > 99 ? '99+' : n;   // 배지 숫자는 99+까지
 function readTo(id, k) { const r = R[id]; if (r && isKey(k) && k > r.rk) { r.rk = k; save('rk_' + r.sk, k); } }
 const lastKey = id => R[id].msgs.reduce((a, m) => isKey(m.id) && m.id > a ? m.id : a, '');
 const newId = () => 'r_' + Math.random().toString(36).slice(2, 9);
+// 이 기기 이름이 기록과 안 맞는 경우(폰에 노트북과 다른 이름을 넣었을 때 등): 내가 처음 말하기 전에 이름이 둘 이상 보이면 그중 하나가 나일 수 있다.
+// 1:1에서 이대로 상대 표시 이름으로 묶으면 두 사람 말이 한 사람 말처럼 보이므로, 고를 때까지 실제 이름으로 보여 주고 어느 쪽이 나인지 묻는다.
+// 단톡은 늦게 들어온 사람도 여기 걸리지만 "다 아니에요" 한 번이면 끝난다.
+// 내가 먼저 말한 방에서 상대 이름만 둘인 것(상대가 이름을 바꿈)은 여기 걸리지 않아서 표시 이름이 그대로 유지된다.
+function idAsk(rm) {
+  const r = R[rm.id];
+  if (!r || r.idOk) return null;
+  const k = r.msgs.length + '|' + cfg.me;
+  if (r.idMemo && r.idMemo.k === k) return r.idMemo.v;
+  const out = [];
+  for (const m of r.msgs) { if (mine(m)) break; if (m.n && out.indexOf(m.n) < 0) out.push(m.n); }
+  r.idMemo = {k, v: out.length > 1 ? out : null};
+  return r.idMemo.v;
+}
 // 보낸 사람 표시: 단톡은 각자 이름, 1:1은 내가 정한 상대 표시 이름
-const who = (rm, m) => mine(m) ? cfg.me : (rm.group ? (m.n || '?') : rm.name);
+const showName = (rm, n) => isMe(n) ? cfg.me : (rm.group || rm.name === cfg.me || idAsk(rm) ? (n || '?') : rm.name);
+const who = (rm, m) => showName(rm, m.n);
 // 단톡 참여자(나 제외, 최근 말한 순)
 function members(id) {
   const out = [];
@@ -560,7 +581,7 @@ async function doConnect() {
     // rk: 어디까지 읽었나. 처음엔 받은 데까지(lk)로 시작해서 바로 저장(그래야 lk가 앞서가도 안 읽은 게 남는다)
     const lk0 = load('lk_' + sk, ''), rk = load('rk_' + sk, '') || lk0;
     if (rk) save('rk_' + sk, rk);
-    R[rm.id] = {pass: rm.pass, key: d.key, raw: d.raw, topic: d.topic, sk, dh: d.h, msgs, seen: new Set(msgs.map(m => m.id)), lk: lk0, rk, fresh: !lk0, lim: PAGE, first: '', nn: load('nn_' + sk, []),
+    R[rm.id] = {pass: rm.pass, key: d.key, raw: d.raw, topic: d.topic, sk, dh: d.h, msgs, seen: new Set(msgs.map(m => m.id)), lk: lk0, rk, fresh: !lk0, lim: PAGE, first: '', nn: load('nn_' + sk, []), idOk: load('idok_' + sk, 0),
       ext: Object.assign({react: {}, del: {}, pin: null, read: {}, edit: {}, prof: {}, vote: {}, vts: {}, vclose: {}}, load('ext_' + sk, {})), pres: {}, presAt: {}, myRead: load('mr2_' + sk, 0), divId: ''};   // mr2: 옛 기록은 버리고 한 번 다시 보낸다
   });
   const keep = {};
@@ -796,7 +817,7 @@ function applySys(id, o) {
   } else if (o.sys === 'pin') {
     x.pin = o.id ? {id: String(o.id), n, t: String(o.t || '').slice(0, 80)} : null;
   } else if (o.sys === 'read') {
-    if (n === cfg.me) {   // 내 다른 기기에서 읽음: 그 기기가 본 데까지 여기서도 읽은 것으로
+    if (isMe(n)) {   // 내 다른 기기에서 읽음: 그 기기가 본 데까지 여기서도 읽은 것으로
       const t = Number(o.ts) || 0;
       readTo(id, r.msgs.reduce((a, m) => !mine(m) && m.ts <= t && isKey(m.id) && m.id > a ? m.id : a, ''));
       if (!r.bulk) { paintSide(); paintTitle(); }
@@ -1332,7 +1353,7 @@ function prevOf(rid, m) {
 function bodyOf(rm, m) {
   if (isDel(rm.id, m)) return {kind: 'del', html: '<span class="gone">삭제된 메시지입니다.</span>'};
   let q = '';
-  if (m.re) q = `<div class="quote" data-jump="${esc(m.re.id)}"><b>${esc(m.re.n === cfg.me ? cfg.me : nameOnly(rm.group ? m.re.n : rm.name))}</b><span>${esc(m.re.t)}</span></div>`;
+  if (m.re) q = `<div class="quote" data-jump="${esc(m.re.id)}"><b>${esc(isMe(m.re.n) ? cfg.me : nameOnly(showName(rm, m.re.n)))}</b><span>${esc(m.re.t)}</span></div>`;
   if (m.img) return {kind: 'img', html: q + picTag(m.id)};
   if (m.file) return {kind: 'file', html: q + `<span class="fcard" data-file="${esc(m.id)}"><i>📄</i><span><b>${esc(m.fname)}</b><small>${kb(m.fsize)} · 눌러서 저장</small></span></span>`};
   if (m.voice) return {kind: 'voice', html: q + voiceTag(m)};
@@ -1359,7 +1380,7 @@ function readMap(id) {
   if (readMemo && readMemo[id]) return readMemo[id];
   const r = R[id], out = {};
   if (readMemo) readMemo[id] = out;
-  Object.keys(r.ext.read).forEach(n => { if (n !== cfg.me) out[n] = Number(r.ext.read[n]) || 0; });
+  Object.keys(r.ext.read).forEach(n => { if (!isMe(n)) out[n] = Number(r.ext.read[n]) || 0; });
   r.msgs.forEach(m => { if (!mine(m) && m.n && !(out[m.n] >= m.ts)) out[m.n] = m.ts; });
   return out;
 }
@@ -1413,7 +1434,7 @@ function setReply(m) {
   const bar = $('#replyBar');
   if (!bar) return;
   bar.classList.toggle('hidden', !replyTo);
-  if (replyTo) bar.querySelector('span').textContent = `↳ ${replyTo.n === cfg.me ? '나' : nameOnly(rm.group ? replyTo.n : rm.name)}에게 답장: ${replyTo.t}`;
+  if (replyTo) bar.querySelector('span').textContent = `↳ ${isMe(replyTo.n) ? '나' : nameOnly(showName(rm, replyTo.n))}에게 답장: ${replyTo.t}`;
 }
 
 // ---------- 이모지 ----------
@@ -1556,12 +1577,12 @@ function openBookmarks() {
 const okPic = p => typeof p === 'string' && p.length < 16000 && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(p);
 function profFor(rm, n) {   // n: 보낸 사람 실제 이름. 1:1에서 null이면 상대
   if (!rm || !R[rm.id]) return null;
-  if (n === cfg.me) return cfg.prof || null;
-  const pf = R[rm.id].ext.prof || {};
-  if (n && pf[n]) return pf[n];
-  if (rm.group) return null;
+  const pf = R[rm.id].ext.prof || {}, has = p => p && (p.s || p.p);
+  if (isMe(n)) return has(cfg.prof) ? cfg.prof : (pf[cfg.me] || cfg.prof || null);   // 이 기기에 안 넣었으면 내 다른 기기에서 올린 것
+  if (n && has(pf[n])) return pf[n];
+  if (rm.group || idAsk(rm)) return null;   // 누가 누군지 모르는 방에서 다른 사람 사진을 붙이지 않는다
   let best = null;
-  Object.keys(pf).forEach(k => { if (k !== cfg.me && (!best || pf[k].ts > best.ts)) best = pf[k]; });
+  Object.keys(pf).forEach(k => { if (!isMe(k) && has(pf[k]) && (!best || pf[k].ts > best.ts)) best = pf[k]; });
   return best;
 }
 async function avatarFrom(file) {
@@ -1576,7 +1597,7 @@ async function avatarFrom(file) {
   throw new Error('too big');
 }
 async function announceProf(force) {
-  if (!cfg || !cfg.prof) return;
+  if (!cfg || !cfg.prof || (!force && !cfg.prof.s && !cfg.prof.p)) return;   // 프로필을 안 넣은 새 기기가 같은 이름의 다른 기기 사진을 빈 것으로 덮지 않게
   for (const rm of cfg.rooms) {
     const r = R[rm.id];
     if (!r) continue;
@@ -1919,6 +1940,35 @@ function paintPin() {
   bar.querySelector('button').addEventListener('click', () => { if (confirm('공지를 내릴까요?')) sendSys(rm.id, {sys: 'pin', id: null}); });
 }
 
+// ---------- 이름이 안 맞는 방 ----------
+function paintId() {
+  const bar = $('#idBar');
+  if (!bar) return;
+  const rm = cur(), names = rm && idAsk(rm);
+  bar.classList.toggle('hidden', !names);
+  if (!names) return;
+  bar.innerHTML = `<b>이 기기의 내 이름이 대화 기록에 없어요. 어느 쪽이 나인가요?</b><div>${names.slice(0, 4).map(n => `<button type="button" data-n="${esc(n)}">${esc(n)}</button>`).join('')}<button type="button" class="no">다 아니에요</button></div>`;
+  bar.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.n) { pickMe(rm.id, b.dataset.n); return; }
+    const r = R[rm.id];
+    r.idOk = 1; save('idok_' + r.sk, 1);
+    render();
+  }));
+}
+async function pickMe(id, n) {
+  if (!confirm(`이 기기의 내 이름을 "${n}"(으)로 바꿀까요?\n모든 방에서 이 이름으로 보내게 돼요.`)) return;
+  const rm = room(id), r = R[id], names = idAsk(rm) || [], old = cfg.me;
+  const said = x => r.msgs.filter(m => m.n === x).length;
+  const peer = names.filter(x => x !== n).sort((a, b) => said(b) - said(a))[0];
+  // 상대 표시 이름이 내 이름(또는 비슷한 이름)으로 돼 있으면 다시 전부 나로 보이므로 상대 이름으로 바꾼다. 일부러 지어 둔 표시 이름은 건드리지 않는다
+  if (!rm.group && peer && [n, old].some(x => rm.name.indexOf(x) >= 0 || x.indexOf(rm.name) >= 0)) rm.name = peer;
+  cfg.alt = (cfg.alt || []).concat(old).filter((x, i, a) => x !== n && a.indexOf(x) === i);
+  cfg.me = n;
+  save('cfg', cfg);
+  await connectAll();
+  if (cfg.notify) refreshPush(true).catch(() => {});
+}
+
 // ---------- 대화 검색 ----------
 let searchQ = '', searchIdx = 0, searchJump = false;
 function toggleSearch() {
@@ -2183,7 +2233,7 @@ function render() {
     if (list.scrollTop < 150 && cfg.skin !== 'sheet') loadOlder();
   }, {passive: true});
   if (list && cur()) {
-    list.insertAdjacentHTML('beforebegin', '<div class="pinBar hidden" id="pinBar"></div><div class="srchBar hidden" id="srchBar"><input placeholder="대화 내용 검색"><span class="cnt"></span><button type="button" data-d="1" title="이전">▲</button><button type="button" data-d="-1" title="다음">▼</button><button type="button" data-d="0" title="닫기">✕</button></div>');
+    list.insertAdjacentHTML('beforebegin', '<div class="idBar hidden" id="idBar"></div><div class="pinBar hidden" id="pinBar"></div><div class="srchBar hidden" id="srchBar"><input placeholder="대화 내용 검색"><span class="cnt"></span><button type="button" data-d="1" title="이전">▲</button><button type="button" data-d="-1" title="다음">▼</button><button type="button" data-d="0" title="닫기">✕</button></div>');
     const sb = $('#srchBar'), si = sb.querySelector('input');
     const go = d => { searchIdx += d; searchJump = true; renderList(); };
     si.addEventListener('input', () => { clearTimeout(si.t); si.t = setTimeout(() => { if (!si.isConnected) return; searchQ = si.value.trim(); searchIdx = 0; searchJump = true; renderList(); }, 200); });
@@ -2261,6 +2311,7 @@ function renderList() {
   if (cur()) bmOf(view).forEach(id => { const el = list.querySelector(`[data-mid="${CSS.escape(id)}"]`); if (el) el.classList.add('bm'); });
   noteNew(atBottom);
   paintPin();
+  paintId();
   if (searchQ || searchJump) paintSearch(searchJump);
   searchJump = false;
   if (cur()) markRead(view);
@@ -2490,7 +2541,7 @@ const SKINS = {
         while (j < src.length && src[j].me === m.me && src[j].n === m.n && src[j].day === day && !src[j].div) j++;
         const run = src.slice(i, j);
         if (m.me) out += run.map((r, k) => `<div class="ch-m${k ? '' : ' first'}"${mid(r)}>${meta(r)}${cell(r)}</div>`).join('');
-        else out += `<div class="ch-o">${m.m ? avOf(m.n, profFor(rm, m.m.n), rm.group ? m.m.n : '') : avOf(m.n)}<div class="oc"><div class="nm">${esc(m.n)}</div>
+        else out += `<div class="ch-o">${m.m ? avOf(m.n, profFor(rm, m.m.n), rm.group || idAsk(rm) ? m.m.n : '') : avOf(m.n)}<div class="oc"><div class="nm">${esc(m.n)}</div>
           ${run.map(r => `<div class="row"${mid(r)}>${cell(r)}${meta(r)}</div>`).join('')}</div></div>`;
         i = j;
       }
@@ -2646,7 +2697,7 @@ $('#fSave').addEventListener('click', async () => {
   if (!me) return warn('내 이름을 넣어주세요.');
   if (!rooms.length) return warn('대화방을 하나 이상 넣어주세요.');
   if (rooms.some(r => r.pass.length < 4)) return warn('방 암호는 4자 이상으로 넣어주세요.');
-  if (new Set(rooms.map(r => r.pass)).size !== rooms.length) return warn('방마다 암호를 다르게 해주세요.');
+  if (new Set(rooms.map(r => r.pass)).size !== rooms.length) return warn('암호가 같으면 같은 방이라 한 번만 넣을 수 있어요. 하나를 지워 주세요.');
   const lk = $('#fLock').value.trim();
   if (lk && !/^\d{4}$/.test(lk)) return warn('잠금 비밀번호는 숫자 4자리로 넣어주세요.');
   rooms.forEach(r => { if (!r.name) r.name = r.group ? '단톡방' : '상대'; });
@@ -2654,7 +2705,7 @@ $('#fSave').addEventListener('click', async () => {
   const op = (old && old.prof) || {s: '', p: ''}, ps = $('#fPfS').value.trim().slice(0, 40);
   const pfChanged = ps !== (op.s || '') || (pfDraft.p || '') !== (op.p || '') || !old || old.me !== me;
   const prof = {s: ps, p: pfDraft.p || '', ts: pfChanged ? Date.now() : (op.ts || Date.now())};
-  cfg = {me, skin: $('#fSkin').value, autoHide: $('#fAuto').checked, readRcpt: $('#fRead').checked, notify: !!(old && old.notify), rooms, prof,
+  cfg = {me, skin: $('#fSkin').value, autoHide: $('#fAuto').checked, readRcpt: $('#fRead').checked, notify: !!(old && old.notify), rooms, prof, alt: ((old && old.alt) || []).filter(x => x !== me),
     fs: $('#fFs').value, mute: ((old && old.mute) || []).filter(id => rooms.some(r => r.id === id)),
     lock: $('#fLockOff').checked ? '' : ((old && old.lock) || ''), lockSalt: (old && old.lockSalt) || ''};
   if (lk) {
