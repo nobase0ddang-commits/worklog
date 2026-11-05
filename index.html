@@ -433,7 +433,7 @@ const RELAY = 'https://ntfy.sh';   // 폰 알림(웹 푸시) 신호용
 const DB = 'https://worklog-chat-c0a54-default-rtdb.asia-southeast1.firebasedatabase.app';   // 대화·첨부 저장(Firebase 실시간 DB)
 const VAPID = 'BEMjM0sNxh41x0a6Lz3YaqkJ7AUhZefxsOQgw-at69i0fM1CybVBcj7-QQXf4N_tPCgFnOXdRbQ5jrSrr9Yg9Lc';   // ntfy.sh 웹 푸시 공개키
 const MAX_BYTES = 2800;   // 암호화 후 ntfy 본문 한도(4096바이트) 안에 들도록
-const VER = '2026.11.03j';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
+const VER = '2026.11.05a';   // 고칠 때마다 올린다. 폰 홈 화면 앱이 옛 화면을 계속 쓰지 않게 비교용
 
 // ?p=xx 로 같은 브라우저에서 프로필을 나눠 쓸 수 있다(테스트용)
 const P = new URLSearchParams(location.search).get('p') || '';
@@ -570,20 +570,10 @@ async function doConnect() {
   if (isRoom(view)) lastRoom = view;
   if (isRoom(view) && lockDue()) { view = lastDecoy || 'team'; chTab = 'note'; mobileSide = true; }   // 잠금: 위장 화면에서 시작
   setStatus('');
-  const open = new Set();
+  liveRooms = new Set();
   for (const rm of cfg.rooms) {
-    const r = R[rm.id];
-    // 처음엔 최근 1000건, 그다음부터는 마지막으로 받은 것 이후만
-    const lk = r.lk;
-    const q = 'orderBy=%22%24key%22&' + (lk ? 'startAt=%22' + encodeURIComponent(lk) + '%22' : 'limitToLast=1000');
-    const st = new EventSource(`${DB}/m/${r.topic}.json?${q}`);
-    st.onopen = () => { open.add(rm.id); setStatus('on'); };
-    st.onerror = () => { open.delete(rm.id); if (!open.size) setStatus('off'); };
-    const onData = e => onPut(rm.id, e);
-    st.addEventListener('put', onData);
-    st.addEventListener('patch', onData);
-    streams.push(st);
-    r.myKey = await presKey(rm.id);
+    openStream(rm);
+    R[rm.id].myKey = await presKey(rm.id);
   }
   render();
   heartbeat();
@@ -591,6 +581,38 @@ async function doConnect() {
   announceProf(false);
   if (cfg.notify) refreshPush(false).catch(() => {});
 }
+// 받기 연결. 폰은 앱을 내렸다 올리거나 와이파이·데이터가 바뀌면 끊긴 채로 남아서(보내기는 되는데 받기만 멈춘다) 직접 살핀다.
+// Firebase가 30초마다 keep-alive를 보내므로 45초 넘게 아무것도 안 오면 끊긴 것으로 보고 다시 연다.
+const STREAM_STALE = 45000;
+let liveRooms = new Set();
+function openStream(rm) {
+  const r = R[rm.id];
+  if (r.st) { r.st.close(); streams = streams.filter(s => s !== r.st); liveRooms.delete(rm.id); }
+  // 처음엔 최근 1000건, 그다음부터는 마지막으로 받은 것 이후만
+  const q = 'orderBy=%22%24key%22&' + (r.lk ? 'startAt=%22' + encodeURIComponent(r.lk) + '%22' : 'limitToLast=1000');
+  const st = new EventSource(`${DB}/m/${r.topic}.json?${q}`);
+  const alive = () => { r.evAt = Date.now(); };
+  st.onopen = () => { alive(); liveRooms.add(rm.id); setStatus('on'); };
+  st.onerror = () => { liveRooms.delete(rm.id); if (!liveRooms.size) setStatus('off'); };
+  const onData = e => { alive(); onPut(rm.id, e); };
+  st.addEventListener('put', onData);
+  st.addEventListener('patch', onData);
+  st.addEventListener('keep-alive', alive);
+  r.st = st;
+  alive();
+  streams.push(st);
+}
+function checkStreams(force) {
+  if (!cfg) return;
+  const now = Date.now();
+  cfg.rooms.forEach(rm => {
+    const r = R[rm.id];
+    if (r && r.st && (force === true || r.st.readyState === 2 || now - r.evAt > STREAM_STALE)) openStream(rm);
+  });
+}
+setInterval(checkStreams, 10000);
+window.addEventListener('online', () => checkStreams(true));
+window.addEventListener('pageshow', e => { if (e.persisted) checkStreams(true); });
 
 // Firebase 스트림 이벤트: 처음엔 path "/"로 여러 건, 이후엔 "/키"로 한 건씩
 let putChain = Promise.resolve();
@@ -638,6 +660,7 @@ function take(id, k, o, v) {
   const at = o.fid && typeof o.fid === 'string' ? attOf(o) : null;
   if (at) Object.assign(m, at, {u: `${DB}/f/${r.topic}/${encodeURIComponent(o.fid)}.json`, x: 9e15, mime: o.mime});
   add(id, m);
+  if (!mine(m) && !o.q && !r.fresh && !muted(id) && !(view === id && !mobileSide && isHere())) { ring++; if (!r.bulk) paintTitle(); }   // 조용히 보낸 것·알림 끈 방은 빼고
   if (at && !r.fresh) fetchPic(id, m);   // 이 기기에서 처음 받는 지난 대화의 첨부는 화면에 나올 때 받는다
   if (m.nudge && !mine(m) && view === id && Math.abs(Date.now() - m.ts) < 60000) shake();
 }
@@ -862,7 +885,7 @@ function add(id, m) {
   if (m.c) { const p = r.msgs.findIndex(z => z.pend && z.id === m.c); if (p >= 0) r.msgs.splice(p, 1); delete m.c; }   // 보내는 중 말풍선 → 진짜 메시지로
   insertMsg(r, m);
   if (r.msgs.length > 3000) r.msgs = r.msgs.slice(-3000);
-  if (mine(m) || (view === id && !mobileSide && !document.hidden)) readTo(id, m.id);   // 보고 있거나 내가 답했으면 그 앞까지 읽음
+  if (mine(m) || (view === id && !mobileSide && isHere())) readTo(id, m.id);   // 보고 있거나 내가 답했으면 그 앞까지 읽음
   if (r.bulk) return;
   saveMsgs(r);
   if (view === id) renderList();
@@ -2243,8 +2266,12 @@ function renderList() {
   if (cur()) markRead(view);
 }
 function paintSide() { if (cfg && SKINS[cfg.skin].side) SKINS[cfg.skin].side(); }
+// 새 메시지가 오면 창 제목 끝에 보이지 않는 표시를 붙인다. PC의 보조 프로그램(_도구\\work-chat-alert)이 이걸 보고
+// 작업표시줄 단추를 빨갛게 한다. 메시지마다 표시가 번갈아 바뀌어서, 창을 한 번 본 뒤에 온 것도 다시 알린다.
+let ring = 0;
 function paintTitle() {
-  document.title = {msg: 'CH Messenger', sheet: '업무관리대장.xlsx'}[cfg.skin];
+  if (!Object.keys(R).some(id => !muted(id) && unreadOf(id))) ring = 0;
+  document.title = {msg: 'CH Messenger', sheet: '업무관리대장.xlsx'}[cfg.skin] + (ring ? (ring % 2 ? '\u2060\u200b' : '\u2060\u200c') : '');
   document.querySelector('meta[name=theme-color]').content = {msg: '#bd1d63', sheet: '#1f6e43'}[cfg.skin];
 }
 function paintStatus() {
@@ -2789,7 +2816,10 @@ window.addEventListener('blur', () => {
     if (permAsking) permBlurred = true;               // 마이크·위치 권한 창: 답한 뒤에 다시 본다
     else if (Date.now() - pickAt > 1500) decoy();     // 사진·파일 고르는 창이 막 열린 것은 빼고
   } if (cfg && !isTouch()) heartbeat(true); });
-window.addEventListener('focus', () => { if (cfg) heartbeat(); if (cur()) markRead(view); });
+window.addEventListener('focus', () => {
+  if (cfg) heartbeat();
+  if (cur() && !mobileSide) { readTo(view, lastKey(view)); paintSide(); paintTitle(); markRead(view); }
+});
 window.addEventListener('pagehide', () => { stopRec(false); stopVoice(); if (cfg) { flushAllReads(); heartbeat(true); } });
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {   // 앱을 내리면 녹음·재생은 그만
@@ -2803,6 +2833,7 @@ document.addEventListener('visibilitychange', () => {
   if (cfg && document.hidden) flushAllReads();   // 앱을 내리는 순간 남은 읽음 신호를 바로 보냄
   if (cfg) heartbeat(document.hidden);
   if (cfg && !document.hidden && cur() && !mobileSide) { readTo(view, lastKey(view)); paintSide(); paintTitle(); markRead(view); }
+  if (!document.hidden) checkStreams(isTouch() && Date.now() - hiddenAt > 3000);   // 폰은 앱을 올릴 때마다 연결을 새로
   if (!document.hidden) checkUpdate();
 });
 
