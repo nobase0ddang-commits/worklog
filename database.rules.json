@@ -4,27 +4,30 @@
     ".write": false,
     "m": {
       "$t": {
-        ".read": true,
+        ".read": "$t.matches(/^wt[0-9a-f]{32}$/)",
         "$id": {
-          ".write": "!data.exists()",
-          ".validate": "newData.hasChildren(['d', 't']) && newData.child('d').isString() && newData.child('d').val().length < 20000"
+          ".write": "!data.exists() && $t.matches(/^wt[0-9a-f]{32}$/) && $id.matches(/^-[-0-9A-Za-z_]{19}$/)",
+          ".validate": "newData.hasChildren(['d', 't'])",
+          "d": { ".validate": "newData.isString() && newData.val().length < 20000" },
+          "t": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+          "$other": { ".validate": false }
         }
       }
     },
     "f": {
       "$t": {
         "$id": {
-          ".read": true,
-          ".write": "!data.exists()",
+          ".read": "$t.matches(/^wt[0-9a-f]{32}$/)",
+          ".write": "!data.exists() && $t.matches(/^wt[0-9a-f]{32}$/) && $id.matches(/^-[-0-9A-Za-z_]{19}$/)",
           ".validate": "newData.isString() && newData.val().length < 7500000"
         }
       }
     },
     "p": {
       "$t": {
-        ".read": true,
+        ".read": "$t.matches(/^wt[0-9a-f]{32}$/)",
         "$k": {
-          ".write": true,
+          ".write": "$t.matches(/^wt[0-9a-f]{32}$/) && $k.matches(/^[0-9a-f]{16}t?$/)",
           ".validate": "newData.isNumber()"
         }
       }
